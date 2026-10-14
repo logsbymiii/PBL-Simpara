@@ -1,0 +1,174 @@
+.auth-page {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    min-height: 100vh;
+}
+
+.auth-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 30px;
+}
+
+.logo-big {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    margin-bottom: 12px;
+}
+
+.auth-left h2 {
+    color: var(--blue);
+    font-size: 30px;
+}
+
+.auth-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+}
+
+.auth-card {
+    background: #fff;
+    width: 100%;
+    max-width: 360px;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .12);
+}
+
+.auth-card h3 {
+    text-align: center;
+    color: var(--blue);
+    margin-bottom: 4px;
+}
+
+.auth-card .desc {
+    text-align: center;
+    font-size: 11px;
+    margin-bottom: 16px;
+}
+
+.auth-card .btn {
+    width: 100%;
+    padding: 11px;
+    margin-top: 6px;
+}
+
+.auth-card .switch {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 12px;
+}
+
+.auth-card .switch a {
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.error {
+    color: #c00;
+    font-size: 12px;
+    margin-bottom: 8px;
+    display: none;
+}
+
+@media (max-width: 800px) {
+    .auth-page {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-left {
+        display: none;
+    }
+}
+
+/* ===== Login: kartu di tengah + tab ===== */
+.auth-center {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.auth-center .auth-card {
+    max-width: 340px;
+}
+
+.auth-card .brand-top {
+    text-align: center;
+    margin-bottom: 14px;
+}
+
+.auth-card .brand-top img {
+    width: 64px;
+    height: 64px;
+    object-fit: contain;
+}
+
+.auth-card .brand-top h2 {
+    color: var(--blue);
+    font-size: 22px;
+    line-height: 1.1;
+    margin-top: 4px;
+}
+
+.auth-card .brand-top p {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--blue);
+}
+
+.tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--input);
+    border-radius: 6px;
+    padding: 3px;
+    margin-bottom: 14px;
+}
+
+.tab {
+    border: 0;
+    background: transparent;
+    padding: 6px;
+    border-radius: 5px;
+    font-family: inherit;
+    font-size: 11px;
+    cursor: pointer;
+    color: var(--muted);
+}
+
+.tab.active {
+    background: var(--blue);
+    color: #fff;
+    font-weight: 600;
+}
+
+.pw-wrap {
+    position: relative;
+}
+
+.pw-wrap input {
+    padding-right: 38px;
+}
+
+.pw-wrap .eye {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 0;
+    background: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.hidden {
+    display: none;
+}

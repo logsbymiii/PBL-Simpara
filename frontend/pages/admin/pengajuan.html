@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengajuan | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Daftar Pengajuan</h1>
+                <p class="sub">Semua pengajuan peminjaman dari anggota.</p>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="num" id="statTotal">0</div>
+                        <div class="label">Total</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statMenunggu">0</div>
+                        <div class="label">Menunggu</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statDipinjam">0</div>
+                        <div class="label">Dipinjam</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statSelesai">0</div>
+                        <div class="label">Selesai</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="toolbar">
+                        <input type="text" id="cari" placeholder="Cari nama / barang...">
+                        <select id="filter">
+                            <option value="">Semua status</option>
+                            <option>Menunggu</option>
+                            <option>Dipinjam</option>
+                            <option>Selesai</option>
+                            <option>Ditolak</option>
+                        </select>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Peminjam</th>
+                                <th>Barang</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/pengajuan-admin.js"></script>
+</body>
+
+</html>

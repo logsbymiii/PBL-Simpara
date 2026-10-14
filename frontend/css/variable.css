@@ -1,0 +1,15 @@
+:root {
+    --blue: #1a1494;
+    --blue-dark: #120e6e;
+    --bg: #c9cdea;
+    --yellow: #ffe600;
+    --white: #ffffff;
+    --text: #1f1f3a;
+    --muted: #6b6b8a;
+    --input: #e6e8f8;
+    --green: #8fe3a0;
+    --red: #ff8f8f;
+    --orange: #ffc27a;
+    --radius: 10px;
+    --sidebar-w: 220px;
+}

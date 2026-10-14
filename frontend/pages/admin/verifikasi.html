@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verifikasi | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Verifikasi Pengajuan</h1>
+                <p class="sub">Tinjau pengajuan yang menunggu persetujuan. Saat ini: <b id="jumlah">0</b> pengajuan.</p>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Peminjam</th>
+                                <th>Barang</th>
+                                <th>Tanggal</th>
+                                <th>Keperluan</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/verifikasi.js"></script>
+</body>
+
+</html>

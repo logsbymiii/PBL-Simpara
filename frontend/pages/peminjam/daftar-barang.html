@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Barang | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Daftar Barang</h1>
+                <p class="sub">Lihat barang inventaris yang tersedia untuk dipinjam.</p>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="num" id="statTotal">0</div>
+                        <div class="label">Total Barang</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statTersedia">0</div>
+                        <div class="label">Tersedia</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statDipinjam">0</div>
+                        <div class="label">Dipinjam</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="toolbar">
+                        <input type="text" id="cari" placeholder="Cari barang...">
+                        <select id="filter">
+                            <option value="">Semua status</option>
+                            <option>Tersedia</option>
+                            <option>Dipinjam</option>
+                        </select>
+                    </div>
+                    <div class="grid-items" id="daftar"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/barang.js"></script>
+</body>
+
+</html>

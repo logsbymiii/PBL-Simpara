@@ -1,0 +1,163 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: var(--sidebar-w);
+    background: var(--blue);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 20px 14px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    font-size: 18px;
+    margin-bottom: 28px;
+    padding-left: 6px;
+}
+
+.brand img {
+    width: 34px;
+    height: 34px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+
+.menu a,
+.logout {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    color: #dcdcff;
+    transition: .2s;
+}
+
+.menu a:hover {
+    background: rgba(255, 255, 255, .12);
+}
+
+.menu a.active {
+    background: #e8e8ff;
+    color: var(--blue);
+    font-weight: 600;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    background: #fff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 24px;
+}
+
+.topbar input {
+    width: 260px;
+    padding: 8px 12px;
+    border: 0;
+    background: #eef;
+    border-radius: 8px;
+    font-family: inherit;
+}
+
+.user {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 12px;
+}
+
+.avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--bg);
+    display: grid;
+    place-items: center;
+}
+
+.content {
+    padding: 24px;
+}
+
+.content .sub {
+    color: var(--muted);
+    margin: 4px 0 18px;
+    font-size: 12px;
+}
+
+@media (max-width: 800px) {
+    .sidebar {
+        width: 70px;
+    }
+
+    .sidebar .text {
+        display: none;
+    }
+}
+
+/* ===== Sidebar bisa dikecilkan ===== */
+.sidebar {
+    transition: width .25s ease;
+    overflow: hidden;
+}
+
+.layout.collapsed .sidebar {
+    width: 70px;
+}
+
+.layout.collapsed .sidebar .text {
+    display: none;
+}
+
+.layout.collapsed .brand {
+    justify-content: center;
+    padding-left: 0;
+}
+
+.layout.collapsed .menu a,
+.layout.collapsed .logout {
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.topbar-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-toggle {
+    border: 0;
+    background: var(--input);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    color: var(--blue);
+}
+
+.menu-toggle:hover {
+    filter: brightness(.95);
+}
