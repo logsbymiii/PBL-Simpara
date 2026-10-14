@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/dashboard.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1 id="welcome"></h1>
+                <p class="sub">Berikut ringkasan peminjaman yang masuk.</p>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="num" id="statMenunggu">0</div>
+                        <div class="label">Pengajuan Masuk</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statDipinjam">0</div>
+                        <div class="label">Sedang Dipinjam</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statSelesai">0</div>
+                        <div class="label">Selesai</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statDitolak">0</div>
+                        <div class="label">Ditolak</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="section-head">
+                        <h3>Pengajuan Terbaru</h3>
+                        <a href="pengajuan.html" class="link">Lihat semua</a>
+                    </div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Peminjam</th>
+                                <th>Barang</th>
+                                <th>Tanggal</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/dashboard-admin.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Pengajuan | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <div class="card form-card">
+                    <h1>Ajukan Peminjaman</h1><br>
+                    <form id="formAjuan">
+                        <div class="form-group"><label>Nama Peminjam</label>
+                            <input type="text" id="nama" readonly>
+                        </div>
+                        <div class="form-group"><label>Pilih Barang *</label>
+                            <select id="barang" required>
+                                <option value="">Pilih barang</option>
+                            </select>
+                        </div>
+                        <div class="row-2">
+                            <div class="form-group"><label>Tanggal Pinjam *</label>
+                                <input type="date" id="tglPinjam" required>
+                            </div>
+                            <div class="form-group"><label>Tanggal Kembali *</label>
+                                <input type="date" id="tglKembali" required>
+                            </div>
+                        </div>
+                        <div class="form-group"><label>Keperluan / Kegiatan *</label>
+                            <textarea id="keperluan" placeholder="Jelaskan keperluan peminjaman..." required></textarea>
+                        </div>
+                        <div class="actions">
+                            <a href="daftar-barang.html" class="btn btn-gray">Batal</a>
+                            <button type="submit" class="btn btn-yellow">Ajukan</button>
+                        </div>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/pengajuan.js"></script>
+</body>
+
+</html>

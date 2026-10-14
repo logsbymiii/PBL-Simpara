@@ -1,0 +1,138 @@
+.content h1 {
+    color: var(--blue);
+    font-size: 26px;
+}
+
+.content .sub {
+    color: var(--blue);
+    font-size: 14px;
+}
+
+.cal-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.cal-nav {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.cal-nav h2 {
+    color: var(--blue);
+    font-size: 20px;
+}
+
+.cal-nav button {
+    border: 0;
+    background: none;
+    color: var(--blue);
+    font-size: 22px;
+    font-weight: 700;
+    cursor: pointer;
+    padding: 0 6px;
+}
+
+.legend {
+    display: flex;
+    gap: 10px;
+}
+
+.legend span {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 14px;
+    border-radius: 4px;
+    color: var(--blue);
+}
+
+.cal-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 16px;
+}
+
+.cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+}
+
+.cal-dow {
+    text-align: center;
+    color: #7a7ab5;
+    font-weight: 600;
+    font-size: 13px;
+    padding: 6px 0 8px;
+}
+
+.cal-day {
+    background: #f2f3f9;
+    border-radius: 8px;
+    min-height: 80px;
+    padding: 8px;
+    min-width: 0;
+}
+
+.cal-day .tgl {
+    font-weight: 700;
+    font-size: 13px;
+    color: var(--blue);
+}
+
+.cal-day.luar {
+    background: #fafafd;
+}
+
+.cal-day.luar .tgl {
+    color: #b9b9d6;
+}
+
+.cal-day.hari-ini {
+    outline: 2px solid var(--blue);
+}
+
+.event {
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--blue);
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selesai {
+    background: #a8e6c4;
+}
+
+.menunggu {
+    background: #f6d6b0;
+}
+
+.dipinjam {
+    background: #b6caf8;
+}
+
+@media (max-width: 700px) {
+    .cal-grid {
+        gap: 4px;
+    }
+
+    .cal-day {
+        min-height: 56px;
+        padding: 4px;
+    }
+
+    .event {
+        font-size: 8px;
+        padding: 1px 3px;
+    }
+}

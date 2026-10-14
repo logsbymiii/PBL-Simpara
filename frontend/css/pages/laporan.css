@@ -1,0 +1,25 @@
+.toolbar input[type="month"] {
+    flex: 0 0 auto;
+}
+
+@media print {
+
+    .sidebar,
+    .topbar,
+    .toolbar,
+    .no-print {
+        display: none !important;
+    }
+
+    .layout {
+        display: block;
+    }
+
+    body {
+        background: #fff;
+    }
+
+    .content {
+        padding: 0;
+    }
+}

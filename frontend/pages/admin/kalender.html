@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/kalender.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Kalender Peminjaman</h1>
+                <p class="sub">Jadwal barang yang dipinjam setiap hari.</p>
+
+                <div class="cal-bar">
+                    <div class="cal-nav">
+                        <button id="prev" aria-label="Bulan sebelumnya"><</button>
+                        <h2 id="judul"></h2>
+                        <button id="next" aria-label="Bulan berikutnya">></button>
+                    </div>
+                    <div class="legend">
+                        <span class="selesai">Selesai</span>
+                        <span class="menunggu">Menunggu</span>
+                        <span class="dipinjam">Dipinjam</span>
+                    </div>
+                </div>
+
+                <div class="cal-card">
+                    <div class="cal-grid" id="kalender"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/kalender.js"></script>
+</body>
+
+</html>

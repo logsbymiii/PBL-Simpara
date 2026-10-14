@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/auth.css">
+</head>
+
+<body>
+    <div class="auth-page">
+        <div class="auth-left">
+            <img src="../../assets/images/logo-hmti.png" alt="Logo HMTI" class="logo-big">
+            <h2>SIMPARA</h2>
+            <p>Sistem Informasi Manajemen<br>Peminjaman dan Pengelolaan Barang</p>
+        </div>
+        <div class="auth-right">
+            <form class="auth-card" id="formDaftar">
+                <h3>Daftar Akun</h3>
+                <p class="desc">Buat akun untuk mengakses SIMPARA</p>
+                <p class="error" id="error"></p>
+                <div class="form-group"><label>NIM</label>
+                    <input type="text" id="nim" placeholder="Masukkan NIM" required>
+                </div>
+                <div class="form-group"><label>Email</label>
+                    <input type="email" id="email" placeholder="Masukkan email" required>
+                </div>
+                <div class="form-group"><label>Password</label>
+                    <input type="password" id="password" placeholder="Masukkan password" required>
+                </div>
+                <button type="submit" class="btn btn-yellow">Daftar</button>
+                <p class="switch">Sudah punya akun? <a href="login.html">Masuk</a></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/pages/register.js"></script>
+</body>
+
+</html>

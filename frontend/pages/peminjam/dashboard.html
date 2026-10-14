@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | SIMPARA</title>
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/dashboard.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1 id="welcome"></h1>
+                <p class="sub">Sistem manajemen barang inventaris Anda.</p>
+
+                <div class="stats">
+                    <div class="stat">
+                        <div class="num" id="statDipinjam">0</div>
+                        <div class="label">Dipinjam</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statMenunggu">0</div>
+                        <div class="label">Menunggu</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statSelesai">0</div>
+                        <div class="label">Selesai</div>
+                    </div>
+                    <div class="stat">
+                        <div class="num" id="statDitolak">0</div>
+                        <div class="label">Ditolak</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Pengajuan Terbaru</h3>
+                    <div class="recent" id="pengajuanTerbaru"></div>
+                </div>
+
+                <div class="card">
+                    <h3>Barang Terbaru</h3>
+                    <div class="grid-items" id="barangTerbaru"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/dashboard.js"></script>
+</body>
+
+</html>
