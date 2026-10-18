@@ -6,7 +6,7 @@ function renderTopbar(user) {
     </div>
     <div class="user">
       <div class="avatar"><i class="bi bi-person-circle"></i></div>
-      <div><b>${user.nama}</b><br><small>${user.role === 'admin' ? 'Admin' : 'Peminjam'}</small></div>
+      <div><b>${user.nama}</b><br><small>${user.role === 'admin' ? 'Admin' : (user.oki || 'Peminjam')}</small></div>
     </div>`;
 
     document.getElementById('btnToggle').addEventListener('click', () => {

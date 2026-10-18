@@ -1,5 +1,6 @@
 document.getElementById('formDaftar').addEventListener('submit', e => {
   e.preventDefault();
+  const nama = document.getElementById('nama').value.trim();
   const nim = document.getElementById('nim').value.trim();
   const email = document.getElementById('email').value.trim();
   const oki = document.getElementById('oki').value.trim();
@@ -17,7 +18,7 @@ document.getElementById('formDaftar').addEventListener('submit', e => {
     return;
   }
 
-  registerUser({ nama: email.split('@')[0], nim, email, password, oki });
+  registerUser({ nama, nim, email, password, oki });
   alert('Pendaftaran berhasil! Silakan masuk.');
   location.href = 'login.html';
 });
