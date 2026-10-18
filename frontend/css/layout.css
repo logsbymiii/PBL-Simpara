@@ -42,6 +42,7 @@
     border-radius: 8px;
     margin-bottom: 6px;
     font-size: 13px;
+    font-weight: 600;
     color: #dcdcff;
     transition: .2s;
 }
@@ -78,6 +79,7 @@
     background: #eef;
     border-radius: 8px;
     font-family: inherit;
+    font-weight: 700;
 }
 
 .user {
@@ -85,6 +87,14 @@
     align-items: center;
     gap: 10px;
     font-size: 12px;
+}
+
+.user b {
+    font-weight: 600;
+}
+
+.user small {
+    font-weight: 500;
 }
 
 .avatar {
@@ -104,6 +114,11 @@
     color: var(--muted);
     margin: 4px 0 18px;
     font-size: 12px;
+    font-weight: 500;
+}
+
+.content .sub a {
+    font-weight: 600;
 }
 
 @media (max-width: 800px) {

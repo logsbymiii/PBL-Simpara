@@ -1,7 +1,9 @@
 document.getElementById('formDaftar').addEventListener('submit', e => {
   e.preventDefault();
+  const nama = document.getElementById('nama').value.trim();
   const nim = document.getElementById('nim').value.trim();
   const email = document.getElementById('email').value.trim();
+  const oki = document.getElementById('oki').value.trim();
   const password = document.getElementById('password').value;
   const err = document.getElementById('error');
 
@@ -16,7 +18,15 @@ document.getElementById('formDaftar').addEventListener('submit', e => {
     return;
   }
 
-  registerUser({ nama: email.split('@')[0], nim, email, password });
+  registerUser({ nama, nim, email, password, oki });
   alert('Pendaftaran berhasil! Silakan masuk.');
   location.href = 'login.html';
+});
+
+// Ikon mata: lihat / sembunyikan password
+document.querySelectorAll('.eye').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    input.type = input.type === 'password' ? 'text' : 'password';
+  });
 });
