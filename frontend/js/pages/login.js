@@ -37,6 +37,10 @@ formPeminjam.addEventListener('submit', e => {
         document.getElementById('pwPeminjam').value
     );
     if (!user) return tampilError('NIM, email, atau password salah');
+    if (!akunAktif(user)) {
+        localStorage.removeItem('currentUser');
+        return tampilError('Akun kamu dinonaktifkan admin. Hubungi pengurus HMTI.');
+    }
     location.href = '../peminjam/dashboard.html';
 });
 

@@ -2,14 +2,12 @@ const user = requireLogin('admin');
 renderSidebar('admin', 'Pengajuan');
 renderTopbar(user);
 
-const AKSI = { setuju: 'Dipinjam', tolak: 'Ditolak', kembali: 'Dikembalikan' };
-
+// Setiap tahap diproses di halamannya: Verifikasi (setujui/tolak + alasan),
+// Pengembalian (serahkan barang), Form Kondisi (terima kembali)
 function tombolAksi(p) {
-    if (p.status === 'Menunggu') return `
-    <button class="btn btn-green btn-sm" data-aksi="setuju" data-id="${p.id}">Setujui</button>
-    <button class="btn btn-red btn-sm" data-aksi="tolak" data-id="${p.id}">Tolak</button>`;
-    if (p.status === 'Dipinjam') return `
-    <button class="btn btn-yellow btn-sm" data-aksi="kembali" data-id="${p.id}">Tandai Kembali</button>`;
+    if (p.status === 'Menunggu') return `<a href="verifikasi.html" class="btn btn-green btn-sm">Verifikasi</a>`;
+    if (p.status === 'Disetujui') return `<a href="pengembalian.html" class="btn btn-yellow btn-sm">Serahkan</a>`;
+    if (p.status === 'Dipinjam') return `<a href="form-kondisi.html?id=${p.id}" class="btn btn-yellow btn-sm">Terima Kembali</a>`;
     return '-';
 }
 
@@ -38,12 +36,6 @@ function tampilkan() {
     </tr>`).join('') : '<tr><td colspan="6" class="empty">Tidak ada data.</td></tr>';
 }
 
-document.getElementById('tabel').addEventListener('click', e => {
-    const btn = e.target.closest('button[data-id]');
-    if (!btn) return;
-    setStatusPengajuan(Number(btn.dataset.id), AKSI[btn.dataset.aksi]);
-    tampilkan();
-});
 document.getElementById('cari').addEventListener('input', tampilkan);
 document.getElementById('filter').addEventListener('change', tampilkan);
 tampilkan();

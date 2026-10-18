@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Terima Pengembalian | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <p class="sub"><a href="pengembalian.html"><i class="bi bi-chevron-left"></i> Kembali ke Serah Terima &amp; Pengembalian</a></p>
+                <div class="title-row">
+                    <h1>Terima Pengembalian</h1>
+                    <span id="statusBadge"></span>
+                </div>
+
+                <form class="card form-kondisi" id="formKondisi">
+                    <div class="info-row" id="infoPinjam"></div>
+                    <table class="kondisi-table">
+                        <thead>
+                            <tr>
+                                <th>Barang</th>
+                                <th>Jumlah</th>
+                                <th>Kondisi Kembali</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                    <p class="form-hint">Barang berstatus Rusak atau Hilang tidak akan dihitung tersedia sampai admin memperbarui kondisinya di halaman Barang.</p>
+                    <div class="actions">
+                        <a href="pengembalian.html" class="btn btn-gray">Batal</a>
+                        <button type="submit" class="btn btn-success">Simpan Pengembalian</button>
+                    </div>
+                </form>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/form-kondisi.js"></script>
+</body>
+
+</html>

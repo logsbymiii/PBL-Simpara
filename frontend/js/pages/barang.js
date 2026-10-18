@@ -23,6 +23,7 @@ function tampilkan() {
       ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
+      <a href="detail-barang.html?id=${b.id}" class="btn btn-gray">Detail</a>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
 }
 

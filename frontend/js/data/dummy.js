@@ -1,15 +1,19 @@
 const DUMMY_USERS = [
     { nama: 'Aqilah Zakky', nim: '2341720001', email: 'aqilah@gmail.com', password: '123456', role: 'peminjam', oki: 'UKM Theateristic' },
+    { nama: 'Samuelo Adhitiasa', nim: '2341720002', email: 'samuelo@gmail.com', password: '123456', role: 'peminjam', oki: 'HMTI' },
+    { nama: 'Lana Aprilana', nim: '2341720003', email: 'lana@gmail.com', password: '123456', role: 'peminjam', oki: 'UKM Jurnalistik' },
+    { nama: 'Gilne Ayu', nim: '2341720004', email: 'gilne@gmail.com', password: '123456', role: 'peminjam', oki: 'BEM' },
+    { nama: 'Nagustan Kalmorina', nim: '2341720005', email: 'nagustan@gmail.com', password: '123456', role: 'peminjam', oki: 'UKM Seni', aktif: false },
     { nama: 'Inventaris HMTI', username: 'admin', nim: '', email: 'admin@simpara.com', password: 'admin123', role: 'admin' },
 ];
 
 const DUMMY_BARANG = [
-    { id: 1, nama: 'Mikrofon', icon: 'bi-mic-fill', stok: 5, status: 'Tersedia' },
-    { id: 2, nama: 'Proyektor', icon: 'bi-projector-fill', stok: 2, status: 'Tersedia' },
-    { id: 3, nama: 'Kamera', icon: 'bi-camera-fill', stok: 0, status: 'Dipinjam' },
-    { id: 4, nama: 'Kabel HDMI', icon: 'bi-plug-fill', stok: 8, status: 'Tersedia' },
-    { id: 5, nama: 'White Screen', icon: 'bi-easel-fill', stok: 1, status: 'Tersedia' },
-    { id: 6, nama: 'Handy Talkie', icon: 'bi-broadcast-pin', stok: 0, status: 'Dipinjam' },
+    { id: 1, nama: 'Mikrofon', icon: 'bi-mic-fill', stok: 5, status: 'Tersedia', kategori: 'Audio' },
+    { id: 2, nama: 'Proyektor', icon: 'bi-projector-fill', stok: 2, status: 'Tersedia', kategori: 'Multimedia' },
+    { id: 3, nama: 'Kamera', icon: 'bi-camera-fill', stok: 0, status: 'Dipinjam', kategori: 'Dokumentasi' },
+    { id: 4, nama: 'Kabel HDMI', icon: 'bi-plug-fill', stok: 8, status: 'Tersedia', kategori: 'Aksesoris' },
+    { id: 5, nama: 'White Screen', icon: 'bi-easel-fill', stok: 1, status: 'Tersedia', kategori: 'Multimedia' },
+    { id: 6, nama: 'Handy Talkie', icon: 'bi-broadcast-pin', stok: 0, status: 'Dipinjam', kategori: 'Komunikasi' },
 ];
 
 // icon barang = nama kelas Bootstrap Icons (placeholder, nanti diganti foto dari database).
@@ -53,7 +57,7 @@ const DUMMY_PENGAJUAN = [
         id: 4, peminjam: 'Samuelo Adhitiasa', oki: 'HMTI',
         items: [{ nama: 'Laptop', jumlah: 2 }],
         tglPinjam: '2026-10-12T08:00', tglKembali: '2026-10-14T16:00', diajukanPada: '2026-10-08T14:00',
-        keperluan: 'Lomba coding', status: 'Menunggu',
+        keperluan: 'Lomba coding', status: 'Disetujui',
     },
     {
         id: 5, peminjam: 'Lana Aprilana', oki: 'UKM Jurnalistik',
@@ -89,11 +93,15 @@ function waktuLokal(d = new Date()) {
 
 // Samakan bentuk data: data lama (barang: 'string', status 'Selesai') diubah ke model baru.
 // Kolom `barang` tetap diisi (teks gabungan) supaya halaman admin yang masih memakainya tidak rusak.
+// override[id] bisa berupa status (data lama) atau objek perubahan dari updatePengajuan.
 function normalisasiPengajuan(p, override) {
-    const items = p.items || (p.barang ? [{ nama: p.barang, jumlah: 1 }] : []);
-    let status = override[p.id] || p.status;
+    const o = override[p.id];
+    const ubah = typeof o === 'string' ? { status: o } : (o || {});
+    const gabung = { ...p, ...ubah };
+    const items = gabung.items || (gabung.barang ? [{ nama: gabung.barang, jumlah: 1 }] : []);
+    let status = gabung.status;
     if (status === 'Selesai') status = 'Dikembalikan';
-    return { ...p, items, status, barang: items.map(it => `${it.nama} ×${it.jumlah}`).join(', ') };
+    return { ...gabung, items, status, barang: items.map(it => `${it.nama} ×${it.jumlah}`).join(', ') };
 }
 
 function getAllPengajuan() {
@@ -102,11 +110,22 @@ function getAllPengajuan() {
     return [...stored, ...DUMMY_PENGAJUAN].map(p => normalisasiPengajuan(p, override));
 }
 
-// Dipakai admin untuk setujui / tolak / tandai kembali
-function setStatusPengajuan(id, status) {
+// Dipakai admin untuk mengubah pengajuan: status, alasanTolak, kondisi per barang, dll.
+function updatePengajuan(id, perubahan) {
     const o = JSON.parse(localStorage.getItem('statusPengajuan') || '{}');
-    o[id] = status;
+    const lama = typeof o[id] === 'string' ? { status: o[id] } : (o[id] || {});
+    o[id] = { ...lama, ...perubahan };
     localStorage.setItem('statusPengajuan', JSON.stringify(o));
+}
+
+// Alur status: Menunggu -> Disetujui (siap diambil) -> Dipinjam -> Dikembalikan, atau Ditolak
+function setStatusPengajuan(id, status) {
+    updatePengajuan(id, { status });
+}
+
+// Sudah lewat tanggal kembali tapi barang belum dikembalikan
+function terlambat(p) {
+    return p.status === 'Dipinjam' && p.tglKembali < waktuLokal();
 }
 
 // Barang yang bisa diubah admin (disimpan di localStorage)
@@ -116,6 +135,26 @@ function getAllBarang() {
 }
 function saveBarang(list) {
     localStorage.setItem('barang', JSON.stringify(list));
+}
+
+// Jumlah unit barang yang sedang dibawa peminjam (status Dipinjam)
+function jumlahDipinjam(barangId) {
+    return getAllPengajuan()
+        .filter(p => p.status === 'Dipinjam')
+        .flatMap(p => p.items)
+        .filter(it => it.barangId === barangId)
+        .reduce((n, it) => n + it.jumlah, 0);
+}
+
+// Akun peminjam bisa dinonaktifkan admin (disimpan di localStorage, kunci: email)
+function akunAktif(u) {
+    const status = JSON.parse(localStorage.getItem('statusAkun') || '{}');
+    return u.email in status ? status[u.email] : u.aktif !== false;
+}
+function setAkunAktif(email, aktif) {
+    const status = JSON.parse(localStorage.getItem('statusAkun') || '{}');
+    status[email] = aktif;
+    localStorage.setItem('statusAkun', JSON.stringify(status));
 }
 
 // p: { peminjam, oki, items: [{ barangId, nama, jumlah }], tglPinjam, tglKembali, keperluan }
