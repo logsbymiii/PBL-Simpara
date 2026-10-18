@@ -172,3 +172,13 @@
 .hidden {
     display: none;
 }
+
+/* ===== Daftar: semua teks Poppins Bold (sesuai Figma) ===== */
+.auth-page,
+.auth-page label,
+.auth-page input,
+.auth-page input::placeholder,
+.auth-page .btn,
+.auth-page .switch a {
+    font-weight: 700;
+}
