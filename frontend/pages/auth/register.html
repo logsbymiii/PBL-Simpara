@@ -17,7 +17,7 @@
         <div class="auth-left">
             <img src="../../assets/images/logo-hmti.png" alt="Logo HMTI" class="logo-big">
             <h2>SIMPARA</h2>
-            <p>Sistem Informasi Manajemen<br>Peminjaman dan Pengelolaan Barang</p>
+            <p>Sistem Informasi Manajemen<br>Peminjaman dan Pengembalian Barang</p>
         </div>
         <div class="auth-right">
             <form class="auth-card" id="formDaftar">
@@ -30,11 +30,17 @@
                 <div class="form-group"><label>Email</label>
                     <input type="email" id="email" placeholder="Masukkan email" required>
                 </div>
+                <div class="form-group"><label>OKI</label>
+                    <input type="text" id="oki" placeholder="Masukkan nama OKI" required>
+                </div>
                 <div class="form-group"><label>Password</label>
-                    <input type="password" id="password" placeholder="Masukkan password" required>
+                    <div class="pw-wrap">
+                        <input type="password" id="password" placeholder="Masukkan password" required>
+                        <button type="button" class="eye" data-target="password" aria-label="Lihat password"><i class="bi bi-eye"></i></button>
+                    </div>
                 </div>
                 <button type="submit" class="btn btn-yellow">Daftar</button>
-                <p class="switch">Sudah punya akun? <a href="login.html">Masuk</a></p>
+                <p class="switch">Sudah punya akun? <a href="login.html">masuk disini.</a></p>
             </form>
         </div>
     </div>
