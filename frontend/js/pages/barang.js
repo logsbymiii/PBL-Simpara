@@ -19,7 +19,7 @@ function tampilkan() {
     <div class="item">
       <div class="img">${ikonBarang(b.icon)}</div>
       <b>${b.nama}</b><br>
-      ${badge(b.status)}<br><br>
+      ${badge(b.status, 'barang')}<br><br>
       ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
