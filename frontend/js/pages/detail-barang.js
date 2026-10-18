@@ -19,7 +19,7 @@ if (!b) {
     // Barang rusak/hilang tidak bisa diajukan, jadi tersedia = 0
     const tersedia = kondisi === 'Baik' ? b.stok : 0;
     const status = kondisi !== 'Baik' ? kondisi : tersedia > 0 ? 'Tersedia' : 'Dipinjam';
-    document.getElementById('statusBadge').innerHTML = badge(status);
+    document.getElementById('statusBadge').innerHTML = badge(status, 'barang');
 
     box.innerHTML = `
     <div class="detail-card">

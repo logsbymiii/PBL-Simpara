@@ -1,5 +1,5 @@
 :root {
-    --blue: #1a1494;
+    --blue: #181389;
     --blue-dark: #120e6e;
     --bg: #c9cdea;
     --yellow: #ffe600;
@@ -17,6 +17,7 @@
     --status-ditolak: rgba(255, 55, 55, 0.3);
     --status-dipinjam: rgba(64, 128, 245, 0.25);
     --status-dikembalikan: rgba(217, 217, 217, 0.65);
+    --badge-stok-text: rgba(0, 0, 0, 0.5);
     --event-dipinjam: rgba(64, 128, 245, 0.35);
     --event-disetujui: rgba(37, 211, 102, 0.35);
     /* Peringatan: terlambat, catatan penting (dari Figma) */

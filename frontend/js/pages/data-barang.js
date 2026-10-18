@@ -22,7 +22,7 @@ function tampilkan() {
       <td><a href="detail-barang.html?id=${b.id}" class="nama-barang"><span class="ico">${ikonBarang(b.icon)}</span>${b.nama}</a></td>
       <td>${b.stok}</td>
       <td>${badge(b.kondisi || 'Baik')}</td>
-      <td>${badge(b.status)}</td>
+      <td>${badge(b.status, 'barang')}</td>
       <td><div class="actions-cell">
         <button class="btn btn-yellow btn-sm" data-aksi="edit" data-id="${b.id}">Edit</button>
         <button class="btn btn-red btn-sm" data-aksi="hapus" data-id="${b.id}">Hapus</button>
