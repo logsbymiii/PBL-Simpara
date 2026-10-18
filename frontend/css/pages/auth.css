@@ -120,7 +120,7 @@
 
 .auth-card .brand-top p {
     font-size: 9px;
-    font-weight: 600;
+    font-weight: 700;
     color: var(--blue);
 }
 
@@ -140,6 +140,7 @@
     border-radius: 5px;
     font-family: inherit;
     font-size: 11px;
+    font-weight: 600;
     cursor: pointer;
     color: var(--muted);
 }
@@ -173,12 +174,18 @@
     display: none;
 }
 
-/* ===== Daftar: semua teks Poppins Bold (sesuai Figma) ===== */
+/* ===== Masuk & Daftar: semua teks Poppins Bold (sesuai Figma) ===== */
 .auth-page,
 .auth-page label,
 .auth-page input,
 .auth-page input::placeholder,
 .auth-page .btn,
-.auth-page .switch a {
+.auth-page .switch a,
+.auth-center,
+.auth-center label,
+.auth-center input,
+.auth-center input::placeholder,
+.auth-center .btn,
+.auth-center .switch a {
     font-weight: 700;
 }
