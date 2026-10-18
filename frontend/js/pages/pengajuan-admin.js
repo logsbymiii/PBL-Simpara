@@ -2,7 +2,7 @@ const user = requireLogin('admin');
 renderSidebar('admin', 'Pengajuan');
 renderTopbar(user);
 
-const AKSI = { setuju: 'Dipinjam', tolak: 'Ditolak', kembali: 'Selesai' };
+const AKSI = { setuju: 'Dipinjam', tolak: 'Ditolak', kembali: 'Dikembalikan' };
 
 function tombolAksi(p) {
     if (p.status === 'Menunggu') return `
@@ -19,7 +19,7 @@ function tampilkan() {
     document.getElementById('statTotal').textContent = semua.length;
     document.getElementById('statMenunggu').textContent = hitung('Menunggu');
     document.getElementById('statDipinjam').textContent = hitung('Dipinjam');
-    document.getElementById('statSelesai').textContent = hitung('Selesai');
+    document.getElementById('statDikembalikan').textContent = hitung('Dikembalikan');
 
     const q = document.getElementById('cari').value.toLowerCase();
     const status = document.getElementById('filter').value;

@@ -109,16 +109,16 @@
     white-space: nowrap;
 }
 
-.selesai {
-    background: #a8e6c4;
+.dikembalikan {
+    background: var(--status-dikembalikan);
 }
 
 .menunggu {
-    background: #f6d6b0;
+    background: var(--status-menunggu);
 }
 
 .dipinjam {
-    background: #b6caf8;
+    background: var(--event-dipinjam);
 }
 
 @media (max-width: 700px) {
