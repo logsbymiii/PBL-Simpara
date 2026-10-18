@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Profil Saya</h1>
+                <p class="sub">Kelola informasi akun admin.</p>
+
+                <div class="card">
+                    <div class="profile-grid">
+                        <div class="profile-photo"><i class="bi bi-person-circle"></i></div>
+                        <div>
+                            <div class="form-group"><label>Nama</label><input type="text" id="nama" readonly></div>
+                            <div class="form-group"><label>Username</label><input type="text" id="nim" readonly></div>
+                            <div class="form-group"><label>Email</label><input type="text" id="email" readonly></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3>Ubah Password</h3>
+                    <form id="formPassword">
+                        <div class="row-2">
+                            <div class="form-group"><label>Password Lama</label><input type="password" id="lama"
+                                    required></div>
+                            <div class="form-group"><label>Password Baru</label><input type="password" id="baru"
+                                    required></div>
+                        </div>
+                        <div class="form-group"><label>Konfirmasi Password Baru</label><input type="password"
+                                id="konfirmasi" required></div>
+                        <button type="submit" class="btn btn-yellow">Simpan</button>
+                    </form>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/profil.js"></script>
+</body>
+
+</html>

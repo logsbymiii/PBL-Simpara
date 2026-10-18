@@ -409,3 +409,31 @@ td {
 .modal-box .actions {
     text-align: right;
 }
+/* Ikon (Bootstrap Icons): warna mengikuti palet di variable.css */
+.bi {
+    line-height: 1;
+}
+
+.menu .bi,
+.logout .bi {
+    font-size: 18px;
+}
+
+.img .bi,
+.ico .bi,
+.avatar .bi,
+.profile-photo .bi {
+    color: var(--blue);
+}
+
+.ico .bi {
+    font-size: 16px;
+}
+
+.avatar .bi {
+    font-size: 22px;
+}
+
+.pw-wrap .eye .bi {
+    color: var(--muted);
+}

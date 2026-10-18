@@ -17,7 +17,7 @@ if (!p) {
     document.getElementById('statusBadge').innerHTML = badge(p.status);
 
     const pertama = (p.items[0] || {}).nama || '';
-    const icon = (DUMMY_BARANG.find(b => pertama.includes(b.nama)) || {}).icon || '📦';
+    const icon = (DUMMY_BARANG.find(b => pertama.includes(b.nama)) || {}).icon;
 
     // Kondisi & catatan per barang hanya ada setelah barang dikembalikan
     const daftarItem = p.items.map(it => `
@@ -29,7 +29,7 @@ if (!p) {
 
     box.innerHTML = `
     <div class="detail-card">
-      <div class="img">${icon}</div>
+      <div class="img">${ikonBarang(icon)}</div>
       <div class="detail-info">
         <div class="info"><small class="info-label">Barang yang Dipinjam</small><ul class="item-list">${daftarItem}</ul></div>
         ${info('Peminjam', p.peminjam)}

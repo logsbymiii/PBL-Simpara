@@ -4,13 +4,20 @@ const DUMMY_USERS = [
 ];
 
 const DUMMY_BARANG = [
-    { id: 1, nama: 'Mikrofon', icon: '🎤', stok: 5, status: 'Tersedia' },
-    { id: 2, nama: 'Proyektor', icon: '📽️', stok: 2, status: 'Tersedia' },
-    { id: 3, nama: 'Kamera', icon: '📷', stok: 0, status: 'Dipinjam' },
-    { id: 4, nama: 'Kabel HDMI', icon: '🔌', stok: 8, status: 'Tersedia' },
-    { id: 5, nama: 'White Screen', icon: '🖼️', stok: 1, status: 'Tersedia' },
-    { id: 6, nama: 'Handy Talkie', icon: '📻', stok: 0, status: 'Dipinjam' },
+    { id: 1, nama: 'Mikrofon', icon: 'bi-mic-fill', stok: 5, status: 'Tersedia' },
+    { id: 2, nama: 'Proyektor', icon: 'bi-projector-fill', stok: 2, status: 'Tersedia' },
+    { id: 3, nama: 'Kamera', icon: 'bi-camera-fill', stok: 0, status: 'Dipinjam' },
+    { id: 4, nama: 'Kabel HDMI', icon: 'bi-plug-fill', stok: 8, status: 'Tersedia' },
+    { id: 5, nama: 'White Screen', icon: 'bi-easel-fill', stok: 1, status: 'Tersedia' },
+    { id: 6, nama: 'Handy Talkie', icon: 'bi-broadcast-pin', stok: 0, status: 'Dipinjam' },
 ];
+
+// icon barang = nama kelas Bootstrap Icons (placeholder, nanti diganti foto dari database).
+// Data lama di localStorage yang masih berisi emoji tetap ditampilkan apa adanya.
+function ikonBarang(icon) {
+    if (!icon) icon = 'bi-box-seam-fill';
+    return icon.startsWith('bi-') ? `<i class="bi ${icon}"></i>` : icon;
+}
 
 // Satu pengajuan bisa berisi beberapa barang (items).
 // Tanggal pakai format 'YYYY-MM-DDTHH:mm' (sama dengan input datetime-local).

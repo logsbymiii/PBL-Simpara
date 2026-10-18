@@ -3,7 +3,7 @@ renderSidebar(user.role, 'Profil');
 renderTopbar(user);
 
 document.getElementById('nama').value = user.nama;
-document.getElementById('nim').value = user.nim || '-';
+document.getElementById('nim').value = user.nim || user.username || '-';  // admin tidak punya NIM
 document.getElementById('email').value = user.email;
 
 document.getElementById('formPassword').addEventListener('submit', e => {
