@@ -27,7 +27,7 @@ function render() {
         const d = new Date(tahun, bulan, 1 - awalMinggu + i);
         const tgl = keStr(d);
         const luar = d.getMonth() !== bulan;
-        const events = pengajuan.filter(p => tgl >= p.tglPinjam && tgl <= p.tglKembali);
+        const events = pengajuan.filter(p => tgl >= p.tglPinjam.slice(0, 10) && tgl <= p.tglKembali.slice(0, 10));
 
         html += `
       <div class="cal-day ${luar ? 'luar' : ''} ${tgl === hariIni ? 'hari-ini' : ''}">
