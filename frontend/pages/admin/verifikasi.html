@@ -19,7 +19,7 @@
             <header class="topbar" id="topbar"></header>
             <main class="content">
                 <h1>Verifikasi Pengajuan</h1>
-                <p class="sub">Tinjau pengajuan yang menunggu persetujuan. Saat ini: <b id="jumlah">0</b> pengajuan.</p>
+                <p class="sub">Tinjau pengajuan yang menunggu persetujuan, lalu setujui atau tolak. Saat ini: <b id="jumlah">0</b> pengajuan.</p>
 
                 <div class="card">
                     <table>
@@ -27,9 +27,10 @@
                             <tr>
                                 <th>No</th>
                                 <th>Nama Peminjam</th>
-                                <th>Barang</th>
+                                <th>Barang &amp; Jumlah</th>
                                 <th>Tanggal</th>
                                 <th>Keperluan</th>
+                                <th>Status</th>
                                 <th>Aksi</th>
                             </tr>
                         </thead>
@@ -38,6 +39,21 @@
                 </div>
             </main>
         </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <form class="modal-box" id="formTolak">
+            <h3>Tolak Pengajuan</h3>
+            <p class="meta" id="modalInfo"></p>
+            <div class="form-group"><label>Alasan Penolakan *</label>
+                <textarea id="alasan" placeholder="Tuliskan alasan penolakan, misalnya stok sedang dipakai kegiatan lain..." required></textarea>
+            </div>
+            <p class="hint">Alasan akan terlihat oleh peminjam di halaman riwayat.</p>
+            <div class="actions">
+                <button type="button" class="btn btn-gray" id="btnBatal">Batal</button>
+                <button type="submit" class="btn btn-danger">Tolak Pengajuan</button>
+            </div>
+        </form>
     </div>
 
     <script src="../../js/data/dummy.js"></script>

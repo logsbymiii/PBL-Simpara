@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Pengguna | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Kelola Pengguna</h1>
+                <p class="sub">Aktifkan atau nonaktifkan akun peminjam. Akun nonaktif tidak bisa masuk.</p>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama</th>
+                                <th>NIM</th>
+                                <th>Organisasi</th>
+                                <th>Peran</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/pengguna.js"></script>
+</body>
+
+</html>

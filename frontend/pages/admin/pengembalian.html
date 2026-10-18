@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengembalian | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Serah Terima &amp; Pengembalian</h1>
+                <p class="sub">Serahkan barang yang sudah disetujui dan terima barang yang dikembalikan.</p>
+
+                <div class="seg-tabs">
+                    <button type="button" data-tab="Disetujui" class="active">Siap Diambil (<span id="jmlSiap">0</span>)</button>
+                    <button type="button" data-tab="Dipinjam">Sedang Dipinjam (<span id="jmlPinjam">0</span>)</button>
+                </div>
+
+                <div class="card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Peminjam</th>
+                                <th>Barang &amp; Jumlah</th>
+                                <th id="kolomTanggal">Pinjam</th>
+                                <th>Status</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal" id="modal">
+        <div class="modal-box">
+            <h3>Serahkan Barang</h3>
+            <p class="meta" id="modalInfo"></p>
+            <div class="notice">Pastikan peminjam membawa surat peminjaman dan KTM fisik sebelum barang diserahkan.</div>
+            <div class="actions">
+                <button type="button" class="btn btn-gray" id="btnBatal">Batal</button>
+                <button type="button" class="btn btn-success" id="btnSerahkan">Serahkan Barang</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/pengembalian.js"></script>
+</body>
+
+</html>

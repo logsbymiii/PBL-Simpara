@@ -113,6 +113,10 @@
     background: var(--status-dikembalikan);
 }
 
+.disetujui {
+    background: var(--event-disetujui);
+}
+
 .menunggu {
     background: var(--status-menunggu);
 }

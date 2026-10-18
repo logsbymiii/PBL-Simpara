@@ -1,10 +1,10 @@
 function badge(status) {
   const warna = {
-    Tersedia: 'green', Disetujui: 'green-tua',
+    Tersedia: 'green', Aktif: 'green', Disetujui: 'green-tua',
     Menunggu: 'orange',
     Dipinjam: 'blue',
-    Dikembalikan: 'gray',
-    Ditolak: 'red', Habis: 'red',
+    Dikembalikan: 'gray', Nonaktif: 'gray',
+    Ditolak: 'red', Habis: 'red', Rusak: 'red', Hilang: 'red',
   };
   return `<span class="badge ${warna[status] || 'orange'}">${status}</span>`;
 }

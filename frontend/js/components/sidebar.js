@@ -12,7 +12,9 @@ const MENU = {
         { label: 'Pengajuan', href: 'pengajuan.html', icon: 'bi-file-earmark-text' },
         { label: 'Kalender', href: 'kalender.html', icon: 'bi-calendar3' },
         { label: 'Verifikasi', href: 'verifikasi.html', icon: 'bi-check-circle' },
+        { label: 'Pengembalian', href: 'pengembalian.html', icon: 'bi-box-arrow-in-left' },
         { label: 'Laporan', href: 'laporan.html', icon: 'bi-file-earmark-bar-graph' },
+        { label: 'Pengguna', href: 'pengguna.html', icon: 'bi-people' },
         { label: 'Profil', href: 'profil.html', icon: 'bi-person' },
     ],
 };

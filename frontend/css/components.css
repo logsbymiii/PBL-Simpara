@@ -134,7 +134,9 @@ td {
 
 .form-group input,
 .form-group select,
-.form-group textarea {
+.form-group textarea,
+.kondisi-table select,
+.kondisi-table input {
     width: 100%;
     padding: 10px 12px;
     border: 0;
@@ -457,4 +459,104 @@ td {
 
 .pw-wrap .eye .bi {
     color: var(--muted);
+}
+
+/* Tab segmen (Pengembalian: Siap Diambil / Sedang Dipinjam) */
+.seg-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+}
+
+.seg-tabs button {
+    border: none;
+    background: var(--white);
+    color: var(--blue);
+    font-family: inherit;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.seg-tabs button.active {
+    background: var(--blue);
+    color: var(--white);
+}
+
+/* Penanda terlambat / menunggu terlalu lama */
+tr.alert td {
+    background: var(--row-alert);
+}
+
+.telat {
+    display: block;
+    margin-top: 4px;
+    color: var(--danger);
+    font-size: 10px;
+    font-weight: 600;
+}
+
+/* Kotak catatan penting di modal Serahkan Barang */
+.notice {
+    background: var(--notice-bg);
+    border: 1.5px solid var(--yellow);
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.modal-box .meta {
+    font-size: 13px;
+    margin-bottom: 14px;
+}
+
+.modal-box .hint {
+    font-size: 11px;
+    margin: -6px 0 14px;
+}
+
+.form-hint {
+    font-size: 11px;
+    margin: 14px 0;
+}
+
+.btn-success {
+    background: var(--success);
+    color: var(--white);
+}
+
+.btn-danger {
+    background: var(--danger);
+    color: var(--white);
+}
+
+/* Form Kondisi: tabel barang dengan pilihan kondisi & catatan */
+.info-row {
+    display: flex;
+    gap: 36px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
+}
+
+.kondisi-table .catatan-isi {
+    font-weight: 500;
+}
+
+.kondisi-table td {
+    vertical-align: middle;
+}
+
+/* Detail Barang */
+.aksi-bawah {
+    display: flex;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.form-kondisi .actions {
+    text-align: right;
 }

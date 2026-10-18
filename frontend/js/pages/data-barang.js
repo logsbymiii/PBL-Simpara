@@ -19,7 +19,7 @@ function tampilkan() {
     document.getElementById('tabel').innerHTML = hasil.length ? hasil.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><div class="nama-barang"><span class="ico">${ikonBarang(b.icon)}</span>${b.nama}</div></td>
+      <td><a href="detail-barang.html?id=${b.id}" class="nama-barang"><span class="ico">${ikonBarang(b.icon)}</span>${b.nama}</a></td>
       <td>${b.stok}</td>
       <td>${badge(b.kondisi || 'Baik')}</td>
       <td>${badge(b.status)}</td>
@@ -78,3 +78,10 @@ form.addEventListener('submit', e => {
 });
 
 tampilkan();
+
+// Dari Detail Barang: data-barang.html?edit=<id> langsung membuka form edit
+const editParam = Number(new URLSearchParams(location.search).get('edit'));
+if (editParam) {
+    const target = daftar.find(b => b.id === editParam);
+    if (target) bukaModal(target);
+}
