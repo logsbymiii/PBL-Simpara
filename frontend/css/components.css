@@ -86,6 +86,14 @@
     background: var(--orange);
 }
 
+.badge.blue {
+    background: var(--light-blue);
+}
+
+.badge.gray {
+    background: var(--gray);
+}
+
 table {
     width: 100%;
     border-collapse: collapse;
@@ -191,36 +199,114 @@ td {
     resize: vertical;
 }
 
-.detail-grid {
+.barang-row {
     display: grid;
-    grid-template-columns: 140px 1fr;
-    gap: 10px 16px;
-    font-size: 13px;
-}
-
-.detail-grid dt {
-    color: var(--muted);
-}
-
-.detail-grid dd {
-    font-weight: 600;
-}
-
-.detail-top {
-    display: flex;
+    grid-template-columns: 1fr 120px 28px;
+    gap: 12px;
     align-items: center;
-    gap: 16px;
-    margin-bottom: 18px;
+    margin-bottom: 10px;
 }
 
-.detail-top .img {
-    width: 90px;
-    height: 90px;
+.barang-head {
+    margin-bottom: 5px;
+}
+
+.barang-head label {
+    margin-bottom: 0;
+}
+
+.btn-hapus {
+    border: 0;
+    background: none;
+    color: var(--muted);
+    font-size: 18px;
+    cursor: pointer;
+}
+
+.btn-hapus:hover {
+    color: var(--text);
+}
+
+.link-btn {
+    border: 0;
+    background: none;
+    padding: 0;
+    color: var(--blue);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+
+.title-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+}
+
+.detail-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+}
+
+.detail-card .img {
+    flex-shrink: 0;
+    width: 100px;
+    height: 100px;
     background: var(--input);
     border-radius: 10px;
     display: grid;
     place-items: center;
-    font-size: 36px;
+    font-size: 40px;
+}
+
+.detail-info {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px 24px;
+    font-size: 13px;
+}
+
+.detail-info .full {
+    grid-column: 1 / -1;
+}
+
+.info-label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 3px;
+}
+
+.item-list {
+    list-style: none;
+    display: grid;
+    gap: 6px;
+}
+
+.item-list small {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+}
+
+.kondisi {
+    margin-left: 6px;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-size: 10px;
+    font-weight: 600;
+}
+
+.kondisi.baik {
+    background: var(--green);
+}
+
+.kondisi.rusak {
+    background: var(--red);
 }
 
 .profile-grid {
@@ -241,8 +327,17 @@ td {
 @media (max-width: 700px) {
 
     .profile-grid,
-    .row-2 {
+    .row-2,
+    .detail-info {
         grid-template-columns: 1fr;
+    }
+
+    .detail-card {
+        flex-direction: column;
+    }
+
+    .barang-row {
+        grid-template-columns: 1fr 80px 28px;
     }
 }
 
