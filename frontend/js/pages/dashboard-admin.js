@@ -8,7 +8,7 @@ const semua = getAllPengajuan();
 const hitung = s => semua.filter(p => p.status === s).length;
 document.getElementById('statMenunggu').textContent = hitung('Menunggu');
 document.getElementById('statDipinjam').textContent = hitung('Dipinjam');
-document.getElementById('statSelesai').textContent = hitung('Selesai');
+document.getElementById('statDikembalikan').textContent = hitung('Dikembalikan');
 document.getElementById('statDitolak').textContent = hitung('Ditolak');
 
 document.getElementById('tabel').innerHTML = semua.slice(0, 5).map((p, i) => `

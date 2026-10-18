@@ -76,23 +76,29 @@
 }
 
 .badge.green {
-    background: var(--green);
+    background: var(--status-tersedia);
+}
+
+.badge.green-tua {
+    background: var(--status-disetujui);
 }
 
 .badge.red {
-    background: var(--red);
+    background: var(--status-ditolak);
 }
 
 .badge.orange {
-    background: var(--orange);
+    background: var(--status-menunggu);
 }
 
 .badge.blue {
-    background: var(--light-blue);
+    background: var(--status-dipinjam);
+    color: var(--blue);
 }
 
 .badge.gray {
-    background: var(--gray);
+    background: var(--status-dikembalikan);
+    color: var(--blue);
 }
 
 table {

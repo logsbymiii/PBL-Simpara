@@ -10,8 +10,14 @@
     --green: #8fe3a0;
     --red: #ff8f8f;
     --orange: #ffc27a;
-    --light-blue: #cfdcff;
-    --gray: #e0e0e6;
+    /* Warna badge status & event kalender (dari Figma) */
+    --status-menunggu: rgba(250, 153, 41, 0.35);
+    --status-disetujui: rgba(37, 211, 102, 0.6);
+    --status-tersedia: rgba(37, 211, 102, 0.3);
+    --status-ditolak: rgba(255, 55, 55, 0.3);
+    --status-dipinjam: rgba(64, 128, 245, 0.25);
+    --status-dikembalikan: rgba(217, 217, 217, 0.65);
+    --event-dipinjam: rgba(64, 128, 245, 0.35);
     --radius: 10px;
     --sidebar-w: 220px;
 }

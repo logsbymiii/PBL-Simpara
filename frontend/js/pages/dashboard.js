@@ -9,7 +9,7 @@ const mine = getAllPengajuan().filter(p => p.peminjam === user.nama);
 const hitung = s => mine.filter(p => p.status === s).length;
 document.getElementById('statDipinjam').textContent = hitung('Dipinjam');
 document.getElementById('statMenunggu').textContent = hitung('Menunggu');
-document.getElementById('statSelesai').textContent = hitung('Dikembalikan');
+document.getElementById('statDikembalikan').textContent = hitung('Dikembalikan');
 document.getElementById('statDitolak').textContent = hitung('Ditolak');
 
 // Pengajuan terbaru
