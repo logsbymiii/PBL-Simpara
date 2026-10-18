@@ -1,11 +1,11 @@
 function renderTopbar(user) {
     document.getElementById('topbar').innerHTML = `
     <div class="topbar-left">
-      <button class="menu-toggle" id="btnToggle" aria-label="Kecilkan sidebar">☰</button>
+      <button class="menu-toggle" id="btnToggle" aria-label="Kecilkan sidebar"><i class="bi bi-list"></i></button>
       <input type="text" placeholder="Cari...">
     </div>
     <div class="user">
-      <div class="avatar">👤</div>
+      <div class="avatar"><i class="bi bi-person-circle"></i></div>
       <div><b>${user.nama}</b><br><small>${user.role === 'admin' ? 'Admin' : 'Peminjam'}</small></div>
     </div>`;
 

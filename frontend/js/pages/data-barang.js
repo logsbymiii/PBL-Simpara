@@ -19,7 +19,7 @@ function tampilkan() {
     document.getElementById('tabel').innerHTML = hasil.length ? hasil.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><div class="nama-barang"><span class="ico">${b.icon}</span>${b.nama}</div></td>
+      <td><div class="nama-barang"><span class="ico">${ikonBarang(b.icon)}</span>${b.nama}</div></td>
       <td>${b.stok}</td>
       <td>${badge(b.kondisi || 'Baik')}</td>
       <td>${badge(b.status)}</td>
@@ -63,7 +63,7 @@ form.addEventListener('submit', e => {
     const stok = Number(document.getElementById('stok').value);
     const data = {
         nama: document.getElementById('nama').value.trim(),
-        icon: document.getElementById('icon').value.trim() || '📦',
+        icon: document.getElementById('icon').value.trim() || 'bi-box-seam-fill',
         stok,
         kondisi: document.getElementById('kondisi').value,
         status: stok > 0 ? 'Tersedia' : 'Dipinjam',  // stok 0 = tidak bisa diajukan

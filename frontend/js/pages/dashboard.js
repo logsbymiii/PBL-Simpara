@@ -24,7 +24,7 @@ document.getElementById('pengajuanTerbaru').innerHTML = terbaru ? `
 // Barang terbaru
 document.getElementById('barangTerbaru').innerHTML = DUMMY_BARANG.slice(0, 4).map(b => `
   <div class="item">
-    <div class="img">${b.icon}</div>
+    <div class="img">${ikonBarang(b.icon)}</div>
     <b>${b.nama}</b><br>${badge(b.status)}<br><br>
     <a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama)}" class="btn btn-yellow">Ajukan</a>
   </div>`).join('');

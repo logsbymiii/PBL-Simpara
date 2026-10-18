@@ -17,7 +17,7 @@ function tampilkan() {
 
     document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
     <div class="item">
-      <div class="img">${b.icon}</div>
+      <div class="img">${ikonBarang(b.icon)}</div>
       <b>${b.nama}</b><br>
       ${badge(b.status)}<br><br>
       ${b.status === 'Tersedia'
