@@ -1,0 +1,2 @@
+# Setelan lokal dan rahasia, jangan di-commit
+.env
