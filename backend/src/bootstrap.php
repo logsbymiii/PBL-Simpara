@@ -5,6 +5,7 @@ require_once __DIR__ . '/env.php';
 require_once __DIR__ . '/response.php';
 require_once __DIR__ . '/database.php';
 require_once __DIR__ . '/Router.php';
+require_once __DIR__ . '/session.php';
 
 load_env(__DIR__ . '/../.env');
 
