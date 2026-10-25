@@ -104,7 +104,7 @@ class AuthController
         }
 
         $stmt = db()->prepare(
-            'SELECT id_peminjam, nim, nama_peminjam, email, password
+            'SELECT id_peminjam, nim, nama_peminjam, email, password, status_akun
              FROM peminjam
              WHERE nim = :nim AND LOWER(email) = LOWER(:email)'
         );
@@ -114,6 +114,11 @@ class AuthController
         // Pesan sengaja disamakan: jangan beri tahu mana yang salah
         if ($row === false || !password_verify($password, $row['password'])) {
             json_error('NIM, email, atau password salah', 401);
+        }
+
+        // Password benar, tapi akun dinonaktifkan admin
+        if ($row['status_akun'] !== 'Aktif') {
+            json_error('Akun Anda dinonaktifkan. Hubungi admin.', 403);
         }
 
         $user = [
@@ -136,9 +141,10 @@ class AuthController
             json_error('Username dan password wajib diisi', 422);
         }
 
-        // PERHATIAN: nama kolom id_admin perlu dicek dengan skema database asli
         $stmt = db()->prepare(
-            'SELECT id_admin, username, password FROM admin WHERE username = :username'
+            'SELECT id_admin, username, password, nama_admin, jabatan
+             FROM admin
+             WHERE username = :username'
         );
         $stmt->execute(['username' => $username]);
         $row = $stmt->fetch();
@@ -151,6 +157,8 @@ class AuthController
             'id'       => (int)$row['id_admin'],
             'role'     => 'admin',
             'username' => $row['username'],
+            'nama'     => $row['nama_admin'],
+            'jabatan'  => $row['jabatan'],
         ];
         self::startLoginSession($user);
         json_success($user, 'Login berhasil');
