@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 
+require_once __DIR__ . '/../src/controllers/PengajuanController.php';
 require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/BarangController.php';
 
@@ -43,3 +44,8 @@ $router->post('/api/barang',          [BarangController::class, 'store']);
 $router->get('/api/barang/{id}',      [BarangController::class, 'show']);
 $router->put('/api/barang/{id}',      [BarangController::class, 'update']);
 $router->delete('/api/barang/{id}',   [BarangController::class, 'destroy']);
+
+// Pengajuan
+$router->post('/api/pengajuan',     [PengajuanController::class, 'store']);
+$router->get('/api/pengajuan',      [PengajuanController::class, 'index']);
+$router->get('/api/pengajuan/{id}', [PengajuanController::class, 'show']);
