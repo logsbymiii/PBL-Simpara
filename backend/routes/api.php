@@ -49,3 +49,8 @@ $router->delete('/api/barang/{id}',   [BarangController::class, 'destroy']);
 $router->post('/api/pengajuan',     [PengajuanController::class, 'store']);
 $router->get('/api/pengajuan',      [PengajuanController::class, 'index']);
 $router->get('/api/pengajuan/{id}', [PengajuanController::class, 'show']);
+
+// Verifikasi pengajuan
+$router->post('/api/pengajuan/{id}/setujui', [PengajuanController::class, 'setujui']);
+$router->post('/api/pengajuan/{id}/tolak',   [PengajuanController::class, 'tolak']);
+$router->post('/api/pengajuan/{id}/batal',   [PengajuanController::class, 'batal']);

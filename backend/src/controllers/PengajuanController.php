@@ -153,7 +153,108 @@ class PengajuanController
         json_success($detail);
     }
 
+        // POST /api/pengajuan/{id}/setujui  (admin)
+    // Prosedur database mengecek agenda HMTI dan stok SEMUA barang lagi,
+    // lalu mengubah status jadi Disetujui. Kalau gagal, status tidak berubah.
+    public static function setujui(array $params): void
+    {
+        $admin = requireAdmin();
+        $id    = self::parseId($params['id'] ?? '');
+        self::pastikanAda($id);
+
+        try {
+            $stmt = db()->prepare(
+                'CALL sp_setujui_pengajuan(CAST(:id AS INT), CAST(:admin AS INT))'
+            );
+            $stmt->execute(['id' => $id, 'admin' => $admin['id']]);
+        } catch (PDOException $e) {
+            // pesan dari RAISE EXCEPTION: stok kurang / agenda HMTI / sudah diproses
+            $pesan = self::pesanRaise($e);
+            if ($pesan !== null) {
+                json_error($pesan, 409);
+            }
+            throw $e;
+        }
+
+        json_success(self::ambilDetail($id), 'Pengajuan disetujui');
+    }
+
+    // POST /api/pengajuan/{id}/tolak  (admin)
+    // Body JSON: { "alasan": "Barang sedang dipakai kegiatan lain" }
+    public static function tolak(array $params): void
+    {
+        $admin  = requireAdmin();
+        $id     = self::parseId($params['id'] ?? '');
+        $alasan = trim((string)(get_json_body()['alasan'] ?? ''));
+
+        if ($alasan === '') {
+            json_error('Data tidak valid', 422, ['alasan' => 'Alasan penolakan wajib diisi']);
+        }
+        if (mb_strlen($alasan) > 255) {
+            json_error('Data tidak valid', 422, ['alasan' => 'Alasan penolakan maksimal 255 karakter']);
+        }
+        self::pastikanAda($id);
+
+        try {
+            $stmt = db()->prepare(
+                'CALL sp_tolak_pengajuan(CAST(:id AS INT), CAST(:admin AS INT), CAST(:alasan AS VARCHAR))'
+            );
+            $stmt->execute(['id' => $id, 'admin' => $admin['id'], 'alasan' => $alasan]);
+        } catch (PDOException $e) {
+            $pesan = self::pesanRaise($e);
+            if ($pesan !== null) {
+                json_error($pesan, 409);
+            }
+            throw $e;
+        }
+
+        json_success(self::ambilDetail($id), 'Pengajuan ditolak');
+    }
+
+    // POST /api/pengajuan/{id}/batal  (peminjam)
+    // Hanya pengajuan milik sendiri yang masih Menunggu.
+    public static function batal(array $params): void
+    {
+        $user = requireLogin();
+        if ($user['role'] !== 'peminjam') {
+            json_error('Hanya peminjam yang dapat membatalkan pengajuannya', 403);
+        }
+        $id = self::parseId($params['id'] ?? '');
+
+        // Satu perintah UPDATE yang memeriksa pemilik DAN status sekaligus
+        $stmt = db()->prepare(
+            "UPDATE pengajuan SET status = 'Dibatalkan'
+             WHERE id_pengajuan = :id AND id_peminjam = :peminjam AND status = 'Menunggu'"
+        );
+        $stmt->execute(['id' => $id, 'peminjam' => $user['id']]);
+
+        if ($stmt->rowCount() === 0) {
+            // Tidak ada yang berubah: pengajuan bukan miliknya / tidak ada (404),
+            // atau miliknya tapi sudah diproses (409)
+            $cek = db()->prepare(
+                'SELECT 1 FROM pengajuan WHERE id_pengajuan = :id AND id_peminjam = :peminjam'
+            );
+            $cek->execute(['id' => $id, 'peminjam' => $user['id']]);
+            if ($cek->fetchColumn() === false) {
+                json_error('Pengajuan tidak ditemukan', 404);
+            }
+            json_error('Pengajuan sudah diproses dan tidak dapat dibatalkan', 409);
+        }
+
+        json_success(self::ambilDetail($id), 'Pengajuan dibatalkan');
+    }
+
     // ---------- fungsi bantu ----------
+
+    // Pastikan pengajuan ada, supaya "tidak ditemukan" jadi 404 (bukan 409 dari prosedur)
+    private static function pastikanAda(int $id): void
+    {
+        $stmt = db()->prepare('SELECT 1 FROM pengajuan WHERE id_pengajuan = :id');
+        $stmt->execute(['id' => $id]);
+        if ($stmt->fetchColumn() === false) {
+            json_error('Pengajuan tidak ditemukan', 404);
+        }
+    }
 
     // Header pengajuan + daftar barangnya (null kalau tidak ada)
     private static function ambilDetail(int $id): ?array
