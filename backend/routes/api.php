@@ -5,6 +5,7 @@ require_once __DIR__ . '/../src/controllers/PengajuanController.php';
 require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/BarangController.php';
 require_once __DIR__ . '/../src/controllers/PengembalianController.php';
+require_once __DIR__ . '/../src/controllers/PenggunaController.php';
 
 // GET /api/ping  -> cek server hidup + cek koneksi database
 $router->get('/api/ping', function (): void {
@@ -60,3 +61,9 @@ $router->post('/api/pengajuan/{id}/batal',   [PengajuanController::class, 'batal
 $router->get('/api/pengembalian/dipinjam',        [PengembalianController::class, 'dipinjam']);
 $router->get('/api/pengajuan/{id}/pengembalian',  [PengembalianController::class, 'show']);
 $router->post('/api/pengajuan/{id}/pengembalian', [PengembalianController::class, 'store']);
+
+// Kelola pengguna (admin)
+$router->get('/api/pengguna',                   [PenggunaController::class, 'index']);
+$router->get('/api/pengguna/{id}',              [PenggunaController::class, 'show']);
+$router->post('/api/pengguna/{id}/nonaktifkan', [PenggunaController::class, 'nonaktifkan']);
+$router->post('/api/pengguna/{id}/aktifkan',    [PenggunaController::class, 'aktifkan']);
