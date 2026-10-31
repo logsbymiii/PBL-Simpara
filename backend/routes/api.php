@@ -4,6 +4,7 @@ declare(strict_types=1);
 require_once __DIR__ . '/../src/controllers/PengajuanController.php';
 require_once __DIR__ . '/../src/controllers/AuthController.php';
 require_once __DIR__ . '/../src/controllers/BarangController.php';
+require_once __DIR__ . '/../src/controllers/PengembalianController.php';
 
 // GET /api/ping  -> cek server hidup + cek koneksi database
 $router->get('/api/ping', function (): void {
@@ -54,3 +55,8 @@ $router->get('/api/pengajuan/{id}', [PengajuanController::class, 'show']);
 $router->post('/api/pengajuan/{id}/setujui', [PengajuanController::class, 'setujui']);
 $router->post('/api/pengajuan/{id}/tolak',   [PengajuanController::class, 'tolak']);
 $router->post('/api/pengajuan/{id}/batal',   [PengajuanController::class, 'batal']);
+
+// Pengembalian
+$router->get('/api/pengembalian/dipinjam',        [PengembalianController::class, 'dipinjam']);
+$router->get('/api/pengajuan/{id}/pengembalian',  [PengembalianController::class, 'show']);
+$router->post('/api/pengajuan/{id}/pengembalian', [PengembalianController::class, 'store']);
