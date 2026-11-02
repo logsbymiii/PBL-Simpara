@@ -1,200 +1,311 @@
 
-INSERT INTO oki (nama_oki) VALUES
- ('HMTI'), ('UKM Theateristic'), ('UKM Musik'), ('BEM Fakultas'), ('UKM Fotografi'), ('UKM Olahraga');
+CREATE FUNCTION now_wib() RETURNS TIMESTAMP
+LANGUAGE sql STABLE
+AS $$ SELECT now() AT TIME ZONE 'Asia/Jakarta' $$;
 
-INSERT INTO admin (username, password, nama_admin, jabatan, role) VALUES
- ('inventaris_hmti', '$2y$10$pvoLPce.4LCmWW5UImZJL.iyDIE5p.eMYKaOjMbhIi8qgzmlZdSV.', 'Raja Moreno Putra S.', 'Staf Inventaris', 'admin'),
- ('ketua_hmti',      '$2y$10$pvoLPce.4LCmWW5UImZJL.iyDIE5p.eMYKaOjMbhIi8qgzmlZdSV.', 'Daffa Azzi',          'Ketua HMTI',     'super_admin'),
- ('admin',           '$2y$10$pvoLPce.4LCmWW5UImZJL.iyDIE5p.eMYKaOjMbhIi8qgzmlZdSV.', 'Administrator',       'Super Admin',    'super_admin');
+-- 1. oki (organisasi asal peminjam)
+CREATE TABLE oki (
+    id_oki    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nama_oki  VARCHAR(100) NOT NULL UNIQUE
+);
 
-INSERT INTO peminjam (nim, nama_peminjam, email, no_hp, id_oki, password)
-SELECT v.nim, v.nama, v.email, v.hp, o.id_oki, '$2y$10$3cvBzUKKZT7GGdbOVVe2Ae935HfnbP8wwGt9tqxWbZ/OPO1.UQu6K'
-FROM (VALUES
- ('2310001','Aqillah Zakky Ramadhana','aqilah@mail.com','081200000001','UKM Theateristic'),
- ('2310002','Samudra Adhikara',       'samudra@mail.com','081200000002','HMTI'),
- ('2310003','Luna Apriana',           'luna@mail.com',   '081200000003','UKM Musik'),
- ('2310004','Citra Ayu',              'citra@mail.com',  '081200000004','BEM Fakultas'),
- ('2310005','Ragaska Abimana',        'ragaska@mail.com','081200000005','HMTI'),
- ('2310006','Dimas Pratama',          'dimas@mail.com',  '081200000006','UKM Fotografi'),
- ('2310007','Saba Nabila',            'saba@mail.com',   '081200000007','UKM Olahraga'),
- ('2310008','Rizky Fadillah',         'rizky@mail.com',  '081200000008','HMTI'),
- ('2310009','Nadia Putri',            'nadia@mail.com',  '081200000009','UKM Musik'),
- ('2310010','Bagas Saputra',          'bagas@mail.com',  '081200000010','BEM Fakultas')
-) AS v(nim, nama, email, hp, oki) JOIN oki o ON o.nama_oki = v.oki;
+-- 2. admin (admin biasa dan super admin)
+CREATE TABLE admin (
+    id_admin     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    username     VARCHAR(50)  NOT NULL UNIQUE,
+    password     VARCHAR(255) NOT NULL,                 -- hash dari password_hash(), bukan teks asli
+    nama_admin   VARCHAR(100) NOT NULL,
+    jabatan      VARCHAR(50),
+    email        VARCHAR(100),
+    no_hp        VARCHAR(20),
+    foto_profil  VARCHAR(255),
+    role         VARCHAR(20)  NOT NULL DEFAULT 'admin'
+                 CHECK (role IN ('admin', 'super_admin')),
+    status_akun  VARCHAR(20)  NOT NULL DEFAULT 'Aktif'
+                 CHECK (status_akun IN ('Aktif', 'Nonaktif'))
+);
 
-INSERT INTO kategori_barang (nama_kategori) VALUES ('Elektronik'), ('Audio'), ('Perlengkapan Acara');
+-- 3. peminjam
+CREATE TABLE peminjam (
+    id_peminjam    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nim            VARCHAR(20)  NOT NULL UNIQUE,
+    nama_peminjam  VARCHAR(100) NOT NULL,
+    email          VARCHAR(100) NOT NULL,
+    no_hp          VARCHAR(20),
+    id_oki         INT REFERENCES oki(id_oki),
+    password       VARCHAR(255) NOT NULL,               -- hash dari password_hash()
+    foto_profil    VARCHAR(255),
+    tanggal_daftar DATE NOT NULL DEFAULT (now() AT TIME ZONE 'Asia/Jakarta')::date,
+    status_akun    VARCHAR(20)  NOT NULL DEFAULT 'Aktif'
+                   CHECK (status_akun IN ('Aktif', 'Nonaktif'))
+);
+-- email unik tanpa membedakan huruf besar/kecil (kode PHP memakai LOWER(email))
+CREATE UNIQUE INDEX ux_peminjam_email ON peminjam (LOWER(email));
 
-INSERT INTO barang (kode_barang, nama_barang, id_kategori, stok_total, kondisi)
-SELECT v.kode, v.nama, k.id_kategori, v.stok, v.kondisi
-FROM (VALUES
- ('BRG-001','Laptop',          'Elektronik',         3,'Baik'),
- ('BRG-002','Proyektor Epson', 'Elektronik',         1,'Baik'),
- ('BRG-003','Kamera',          'Elektronik',         3,'Baik'),
- ('BRG-004','Mikrofon',        'Audio',              4,'Baik'),
- ('BRG-005','Sound System',    'Audio',              1,'Baik'),
- ('BRG-006','White Screen',    'Perlengkapan Acara', 1,'Baik'),
- ('BRG-007','Kabel HDMI',      'Elektronik',         3,'Baik'),
- ('BRG-008','Handy Talky',     'Audio',              4,'Baik'),
- ('BRG-009','Karpet',          'Perlengkapan Acara', 2,'Baik'),
- ('BRG-010','Backdrop',        'Perlengkapan Acara', 1,'Rusak'),
- ('BRG-011','Tripod Kamera',   'Elektronik',         3,'Baik'),
- ('BRG-012','Terminal Kabel',  'Elektronik',         4,'Baik')   -- awalnya 5, 1 hilang (lihat pengajuan 3)
-) AS v(kode, nama, kat, stok, kondisi) JOIN kategori_barang k ON k.nama_kategori = v.kat;
+-- 4. kategori_barang
+CREATE TABLE kategori_barang (
+    id_kategori    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nama_kategori  VARCHAR(50) NOT NULL UNIQUE
+);
 
--- Agenda HMTI (tanggal terkunci), relatif dari hari ini. Sengaja tidak bentrok dengan pengajuan di bawah.
-INSERT INTO agenda_hmti (nama_agenda, tanggal_mulai, tanggal_selesai, keterangan, id_admin)
-SELECT v.nama, now_wib()::date + v.d1, now_wib()::date + v.d2, v.ket, a.id_admin
-FROM (VALUES
- ('Rapat Pleno HMTI',      -20, -20, 'Rapat internal pengurus'),
- ('Seminar Nasional HMTI',  10,  11, 'Seluruh inventaris dipakai panitia internal'),
- ('Dies Natalis HMTI',      21,  22, 'Acara puncak tahunan')
-) AS v(nama, d1, d2, ket)
-CROSS JOIN (SELECT id_admin FROM admin WHERE username = 'ketua_hmti') a;
+-- 5. barang
+--    Stok "tersedia" TIDAK disimpan. Yang disimpan hanya stok_total (jumlah fisik).
+--    Ketersediaan dihitung per rentang waktu lewat fn_stok_tersedia().
+--    Kalau ada unit yang hilang, kurangi stok_total.
+CREATE TABLE barang (
+    id_barang    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    kode_barang  VARCHAR(20)  NOT NULL UNIQUE,
+    nama_barang  VARCHAR(100) NOT NULL,
+    id_kategori  INT REFERENCES kategori_barang(id_kategori),
+    stok_total   INT NOT NULL CHECK (stok_total >= 0),
+    kondisi      VARCHAR(20) NOT NULL CHECK (kondisi IN ('Baik', 'Rusak')),
+    foto_barang  VARCHAR(255)
+);
 
--- Pengajuan. id peminjam/admin dicari lewat nim/username supaya tidak bergantung urutan.
--- d(n) = hari ini (WIB) digeser n hari
-CREATE TEMP TABLE _t AS SELECT now_wib()::date AS hari_ini;
+-- 5b. agenda_hmti: tanggal (seharian penuh) yang dikunci untuk kegiatan internal HMTI.
+--     Selama rentang agenda, SEMUA pengajuan peminjaman ditolak sistem.
+CREATE TABLE agenda_hmti (
+    id_agenda        INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    nama_agenda      VARCHAR(150) NOT NULL,
+    tanggal_mulai    DATE NOT NULL,
+    tanggal_selesai  DATE NOT NULL,
+    keterangan       VARCHAR(255),
+    id_admin         INT REFERENCES admin(id_admin),    -- admin yang mengunci tanggal
+    CONSTRAINT chk_rentang_agenda CHECK (tanggal_selesai >= tanggal_mulai)
+);
+CREATE INDEX idx_agenda_tanggal ON agenda_hmti (tanggal_mulai, tanggal_selesai);
 
-INSERT INTO pengajuan
- (id_pengajuan, id_peminjam, nama_peminjaman, keperluan, tanggal_pinjam, tanggal_kembali, status,
-  tanggal_diajukan, id_admin, tanggal_verifikasi, alasan_penolakan, id_admin_serah, tanggal_serah_terima)
-OVERRIDING SYSTEM VALUE
-SELECT v.id, (SELECT id_peminjam FROM peminjam WHERE nim = v.nim), v.judul, v.perlu,
-       t.hari_ini + v.d_pinjam + v.j_pinjam, t.hari_ini + v.d_kembali + v.j_kembali, v.status,
-       t.hari_ini + v.d_ajuan + TIME '10:00',
-       (SELECT id_admin FROM admin WHERE username = v.adm),
-       CASE WHEN v.adm IS NOT NULL THEN t.hari_ini + v.d_ajuan + TIME '14:00' END,
-       v.tolak,
-       CASE WHEN v.status IN ('Dipinjam','Dikembalikan') THEN (SELECT id_admin FROM admin WHERE username = v.adm) END,
-       CASE WHEN v.status IN ('Dipinjam','Dikembalikan') THEN t.hari_ini + v.d_pinjam + v.j_pinjam END
-FROM _t t, (VALUES
- -- id, nim, judul, keperluan, d_pinjam, jam, d_kembali, jam, status, d_ajuan, admin, alasan tolak
- (1,'2310001','Dokumentasi latihan teater','Merekam latihan',   -14,TIME '09:00',-12,TIME '17:00','Dikembalikan',-17,'inventaris_hmti',NULL),
- (2,'2310002','Presentasi proker HMTI',    'Rapat pleno',        -10,TIME '08:00', -9,TIME '17:00','Dikembalikan',-13,'inventaris_hmti',NULL),
- (3,'2310003','Koordinasi panitia konser', 'Gladi bersih',        -8,TIME '14:00', -7,TIME '22:00','Dikembalikan',-11,'ketua_hmti',     NULL),
- (4,'2310009','Acara gathering',           'Gathering anggota',   -5,TIME '08:00', -4,TIME '17:00','Ditolak',     -8,'inventaris_hmti','Barang sudah dipesan pihak lain'),
- (5,'2310006','Workshop fotografi',        'Workshop internal',   -3,TIME '09:00', -2,TIME '17:00','Dibatalkan',  -6,NULL,NULL),
- (6,'2310004','Rapat kerja BEM',           'Presentasi proker',    1,TIME '08:00',  2,TIME '17:00','Disetujui',    -2,'inventaris_hmti',NULL),
- (7,'2310001','Latihan pentas teater',     'Latihan vokal',       -1,TIME '13:00',  1,TIME '17:00','Dipinjam',     -3,'inventaris_hmti',NULL),
- (8,'2310004','Seminar fakultas',          'Seminar tamu',        -4,TIME '08:00', -1,TIME '20:00','Dipinjam',     -6,'ketua_hmti',     NULL),
- (9,'2310009','Latihan konser musik',      'Persiapan konser',     3,TIME '09:00',  4,TIME '21:00','Menunggu',      0,NULL,NULL),
- (10,'2310006','Dokumentasi turnamen',     'Dokumentasi acara',    5,TIME '08:00',  5,TIME '17:00','Menunggu',      0,NULL,NULL)
-) AS v(id, nim, judul, perlu, d_pinjam, j_pinjam, d_kembali, j_kembali, status, d_ajuan, adm, tolak);
+-- 6. pengajuan (satu baris = satu pengajuan, isi barangnya ada di detail_pengajuan)
+CREATE TABLE pengajuan (
+    id_pengajuan          INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_peminjam           INT NOT NULL REFERENCES peminjam(id_peminjam),
+    nama_peminjaman       VARCHAR(100) NOT NULL,        -- judul kegiatan
+    keperluan             TEXT,
+    tanggal_pinjam        TIMESTAMP NOT NULL,
+    tanggal_kembali       TIMESTAMP NOT NULL,           -- rencana kembali
+    status                VARCHAR(20) NOT NULL DEFAULT 'Menunggu'
+                          CHECK (status IN ('Menunggu', 'Disetujui', 'Dipinjam',
+                                            'Dikembalikan', 'Ditolak', 'Dibatalkan')),
+    tanggal_diajukan      TIMESTAMP NOT NULL DEFAULT now_wib(),
+    id_admin              INT REFERENCES admin(id_admin),   -- yang memverifikasi
+    tanggal_verifikasi    TIMESTAMP,
+    alasan_penolakan      VARCHAR(255),
+    id_admin_serah        INT REFERENCES admin(id_admin),   -- yang menyerahkan barang
+    tanggal_serah_terima  TIMESTAMP,
+    CONSTRAINT chk_rentang CHECK (tanggal_kembali >= tanggal_pinjam),
+    CONSTRAINT chk_alasan_tolak CHECK (status <> 'Ditolak' OR alasan_penolakan IS NOT NULL)
+);
 
-INSERT INTO detail_pengajuan (id_detail, id_pengajuan, id_barang, jumlah)
-OVERRIDING SYSTEM VALUE
-SELECT v.id, v.pj, (SELECT id_barang FROM barang WHERE kode_barang = v.kode), v.jml
-FROM (VALUES
- (1,1,'BRG-001',1),(2,1,'BRG-003',1),
- (3,2,'BRG-007',2),(4,2,'BRG-011',1),
- (5,3,'BRG-012',1),(6,3,'BRG-004',1),
- (7,4,'BRG-002',1),
- (8,5,'BRG-003',1),
- (9,6,'BRG-002',1),(10,6,'BRG-006',1),
- (11,7,'BRG-004',2),(12,7,'BRG-005',1),
- (13,8,'BRG-008',2),
- (14,9,'BRG-001',2),
- (15,10,'BRG-003',1),(16,10,'BRG-011',1)
-) AS v(id, pj, kode, jml);
+-- 7. detail_pengajuan (barang apa saja dalam satu pengajuan)
+CREATE TABLE detail_pengajuan (
+    id_detail     INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengajuan  INT NOT NULL REFERENCES pengajuan(id_pengajuan) ON DELETE CASCADE,
+    id_barang     INT NOT NULL REFERENCES barang(id_barang),
+    jumlah        INT NOT NULL CHECK (jumlah > 0),
+    UNIQUE (id_pengajuan, id_barang)
+);
 
--- Pengembalian untuk pengajuan 1-3 (baik semua, ada yang rusak, ada yang hilang)
-INSERT INTO pengembalian (id_pengembalian, id_pengajuan, id_admin, tanggal_kembali_aktual, catatan)
-OVERRIDING SYSTEM VALUE
-SELECT v.id, v.pj, (SELECT id_admin FROM admin WHERE username = 'inventaris_hmti'),
-       p.tanggal_kembali - v.selisih, v.cat
-FROM (VALUES
- (1,1, INTERVAL '30 minutes','Dikembalikan tepat waktu'),
- (2,2, INTERVAL '15 minutes','Satu kabel HDMI rusak'),
- (3,3, INTERVAL '-10 hours', 'Terlambat; satu terminal kabel hilang')
-) AS v(id, pj, selisih, cat) JOIN pengajuan p ON p.id_pengajuan = v.pj;
+-- Index untuk mempercepat pengecekan jadwal yang tumpang tindih
+CREATE INDEX idx_pengajuan_status_waktu ON pengajuan (status, tanggal_pinjam, tanggal_kembali);
+CREATE INDEX idx_detail_barang ON detail_pengajuan (id_barang);
+CREATE INDEX idx_pengajuan_peminjam ON pengajuan (id_peminjam);
 
-INSERT INTO detail_pengembalian (id_pengembalian, id_detail, kondisi, catatan, foto_bukti) VALUES
- (1,1,'Baik',NULL,NULL),(1,2,'Baik',NULL,NULL),
- (2,3,'Rusak','Konektor patah',NULL),(2,4,'Baik',NULL,NULL),
- (3,5,'Hilang','Tidak ditemukan saat pengecekan',NULL),(3,6,'Baik',NULL,NULL);
+-- 8. pengembalian (satu pengajuan dikembalikan satu kali)
+CREATE TABLE pengembalian (
+    id_pengembalian         INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengajuan            INT NOT NULL UNIQUE REFERENCES pengajuan(id_pengajuan),
+    id_admin                INT REFERENCES admin(id_admin),
+    tanggal_kembali_aktual  TIMESTAMP NOT NULL DEFAULT now_wib(),
+    catatan                 VARCHAR(255)
+);
 
--- Riwayat status (dibuat dari data pengajuan di atas)
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu, alasan)
-SELECT id_pengajuan, NULL, 'Menunggu', 'peminjam', id_peminjam, tanggal_diajukan, NULL FROM pengajuan;
+-- 9. detail_pengembalian (kondisi tiap barang saat dikembalikan)
+CREATE TABLE detail_pengembalian (
+    id_detail_pengembalian  INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengembalian         INT NOT NULL REFERENCES pengembalian(id_pengembalian) ON DELETE CASCADE,
+    id_detail               INT NOT NULL REFERENCES detail_pengajuan(id_detail),
+    kondisi                 VARCHAR(20) NOT NULL CHECK (kondisi IN ('Baik', 'Rusak', 'Hilang')),
+    catatan                 VARCHAR(255),
+    foto_bukti              VARCHAR(255),               -- lokasi/URL foto bukti
+    UNIQUE (id_pengembalian, id_detail)
+);
 
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu, alasan)
-SELECT id_pengajuan, 'Menunggu', 'Disetujui', 'admin', id_admin, tanggal_verifikasi, NULL
-FROM pengajuan WHERE status IN ('Disetujui','Dipinjam','Dikembalikan');
+-- 10. riwayat_status (log setiap perubahan status: untuk tracking dan koreksi)
+CREATE TABLE riwayat_status (
+    id_riwayat    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_pengajuan  INT NOT NULL REFERENCES pengajuan(id_pengajuan) ON DELETE CASCADE,
+    status_lama   VARCHAR(20),                          -- NULL untuk pengajuan baru
+    status_baru   VARCHAR(20) NOT NULL,
+    pelaku_role   VARCHAR(20) NOT NULL
+                  CHECK (pelaku_role IN ('peminjam', 'admin', 'super_admin', 'sistem')),
+    id_pelaku     INT,                                  -- id_peminjam atau id_admin, sesuai pelaku_role
+    waktu         TIMESTAMP NOT NULL DEFAULT now_wib(),
+    alasan        VARCHAR(255)
+);
+CREATE INDEX idx_riwayat_pengajuan ON riwayat_status (id_pengajuan, waktu);
 
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu, alasan)
-SELECT id_pengajuan, 'Menunggu', 'Ditolak', 'admin', id_admin, tanggal_verifikasi, alasan_penolakan
-FROM pengajuan WHERE status = 'Ditolak';
+-- =====================================================
+-- LOGIKA STOK PER RENTANG WAKTU
+-- Sisa stok pada rentang [mulai, selesai] =
+--   stok_total - SUM(jumlah pada pengajuan yang menahan stok dan tumpang tindih)
+-- Pengajuan yang menahan stok:
+--   - Disetujui : menahan sampai tanggal_kembali (belum diambil)
+--   - Dipinjam  : menahan sampai tanggal_kembali, atau sampai sekarang kalau terlambat
+-- Dua rentang tumpang tindih jika: mulai_A <= selesai_B  DAN  selesai_A >= mulai_B
+-- Barang berkondisi 'Rusak' dianggap tidak bisa dipinjam (sisa = 0).
+-- =====================================================
 
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu, alasan)
-SELECT id_pengajuan, 'Menunggu', 'Dibatalkan', 'peminjam', id_peminjam, tanggal_diajukan + INTERVAL '1 hour', 'Dibatalkan oleh peminjam'
-FROM pengajuan WHERE status = 'Dibatalkan';
+-- 11. Fungsi: sisa stok satu barang pada rentang waktu tertentu
+CREATE FUNCTION fn_stok_tersedia(p_id_barang INT, p_mulai TIMESTAMP, p_selesai TIMESTAMP)
+RETURNS INT
+LANGUAGE plpgsql
+STABLE
+AS $$
+DECLARE
+    v_total    INT;
+    v_terpakai INT;
+BEGIN
+    SELECT stok_total INTO v_total
+    FROM barang
+    WHERE id_barang = p_id_barang AND kondisi <> 'Rusak';
 
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu)
-SELECT id_pengajuan, 'Disetujui', 'Dipinjam', 'admin', id_admin_serah, tanggal_serah_terima
-FROM pengajuan WHERE status IN ('Dipinjam','Dikembalikan');
+    SELECT COALESCE(SUM(d.jumlah), 0) INTO v_terpakai
+    FROM detail_pengajuan d
+    JOIN pengajuan p ON p.id_pengajuan = d.id_pengajuan
+    WHERE d.id_barang = p_id_barang
+      AND p.status IN ('Disetujui', 'Dipinjam')
+      AND p.tanggal_pinjam <= p_selesai
+      AND (CASE WHEN p.status = 'Dipinjam'
+                THEN GREATEST(p.tanggal_kembali, now_wib())
+                ELSE p.tanggal_kembali
+           END) >= p_mulai;
 
-INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku, waktu)
-SELECT p.id_pengajuan, 'Dipinjam', 'Dikembalikan', 'admin', g.id_admin, g.tanggal_kembali_aktual
-FROM pengajuan p JOIN pengembalian g ON g.id_pengajuan = p.id_pengajuan;
+    RETURN GREATEST(COALESCE(v_total, 0) - v_terpakai, 0);
+END;
+$$;
 
--- Karena id diisi manual, geser penghitung identity supaya INSERT berikutnya tidak bentrok
-SELECT setval(pg_get_serial_sequence('pengajuan','id_pengajuan'),               (SELECT MAX(id_pengajuan) FROM pengajuan));
-SELECT setval(pg_get_serial_sequence('detail_pengajuan','id_detail'),           (SELECT MAX(id_detail) FROM detail_pengajuan));
-SELECT setval(pg_get_serial_sequence('pengembalian','id_pengembalian'),         (SELECT MAX(id_pengembalian) FROM pengembalian));
+-- 11b. Fungsi: jumlah agenda HMTI yang bertepatan dengan rentang waktu (> 0 = terkunci).
+--      Agenda berlaku seharian, jadi yang dibandingkan hanya bagian tanggalnya.
+CREATE FUNCTION fn_tanggal_terkunci(p_mulai TIMESTAMP, p_selesai TIMESTAMP)
+RETURNS INT
+LANGUAGE sql STABLE
+AS $$
+    SELECT COUNT(*)::INT
+    FROM agenda_hmti
+    WHERE tanggal_mulai <= p_selesai::DATE AND tanggal_selesai >= p_mulai::DATE;
+$$;
 
+-- 12. View: stok dan status barang "hari ini" (dipakai kartu statistik dan Data Barang admin)
+CREATE VIEW v_barang_hari_ini AS
+SELECT b.id_barang, b.kode_barang, b.nama_barang, b.id_kategori,
+       b.stok_total, b.kondisi, b.foto_barang,
+       s.stok_tersedia,
+       CASE
+         WHEN b.kondisi = 'Rusak'  THEN 'Tidak Tersedia'
+         WHEN s.stok_tersedia = 0  THEN 'Dipinjam'
+         ELSE 'Tersedia'
+       END AS status
+FROM barang b
+CROSS JOIN LATERAL (
+    SELECT fn_stok_tersedia(
+               b.id_barang,
+               now_wib()::date::timestamp,
+               now_wib()::date::timestamp + INTERVAL '1 day' - INTERVAL '1 second'
+           ) AS stok_tersedia
+) s;
 
--- =====================================================================
--- SIMPARA - Menampilkan tabel untuk presentasi schema dan seed
--- Jalankan SETELAH schema.sql dan seed.sql. Tiap baris SELECT dijalankan
--- sendiri-sendiri (urutan sama dengan schema.sql).
--- =====================================================================
+-- 12b. View: status pengajuan untuk front-end.
+--   status           = nilai asli di database
+--   status_tampil    = Menunggu Verifikasi / Disetujui / Dipinjam / Terlambat /
+--                      Dikembalikan / Ditolak / Dibatalkan
+--                      ("Terlambat" = Dipinjam yang sudah melewati tanggal_kembali)
+--   peringatan_5_jam = 1 bila masih Menunggu dan sudah > 5 jam sejak diajukan
+CREATE VIEW v_pengajuan_status AS
+SELECT p.id_pengajuan, p.id_peminjam, p.nama_peminjaman, p.keperluan,
+       p.tanggal_pinjam, p.tanggal_kembali, p.status, p.tanggal_diajukan,
+       p.id_admin, p.tanggal_verifikasi, p.alasan_penolakan,
+       p.id_admin_serah, p.tanggal_serah_terima,
+       CASE
+         WHEN p.status = 'Menunggu'                                     THEN 'Menunggu Verifikasi'
+         WHEN p.status = 'Dipinjam' AND now_wib() > p.tanggal_kembali   THEN 'Terlambat'
+         ELSE p.status
+       END AS status_tampil,
+       CASE WHEN p.status = 'Menunggu'
+            THEN FLOOR(EXTRACT(EPOCH FROM (now_wib() - p.tanggal_diajukan)) / 3600)::INT
+       END AS jam_menunggu,
+       CASE WHEN p.status = 'Menunggu'
+             AND now_wib() - p.tanggal_diajukan > INTERVAL '5 hours'
+            THEN 1 ELSE 0
+       END AS peringatan_5_jam
+FROM pengajuan p;
 
--- 0. Daftar semua tabel dan view
-SELECT table_name AS nama, table_type AS jenis
-FROM information_schema.tables
-WHERE table_schema = 'public'
-ORDER BY table_type, table_name;
+-- 12c. View: kalender = peminjaman (Disetujui / Dipinjam / Dikembalikan) + agenda HMTI
+--      (agenda seharian penuh: 00:00 - 23:59:59). status_tampil dibawa supaya UI bisa
+--      memberi warna (mis. Terlambat merah).
+CREATE VIEW v_kalender AS
+SELECT 'Peminjaman'::text AS jenis, v.id_pengajuan AS id_ref,
+       m.nama_peminjam || ' - ' || v.nama_peminjaman AS judul,
+       v.tanggal_pinjam AS tanggal_mulai, v.tanggal_kembali AS tanggal_selesai,
+       v.status_tampil
+FROM v_pengajuan_status v
+JOIN peminjam m ON m.id_peminjam = v.id_peminjam
+WHERE v.status IN ('Disetujui', 'Dipinjam', 'Dikembalikan')
+UNION ALL
+SELECT 'Agenda HMTI'::text, id_agenda, nama_agenda::text,
+       tanggal_mulai + TIME '00:00:00', tanggal_selesai + TIME '23:59:59',
+       'Agenda'::text
+FROM agenda_hmti;
 
--- 1. Struktur kolom satu tabel (ganti nama tabel di bawah sesuai kebutuhan)
-SELECT column_name AS kolom, data_type AS tipe, is_nullable AS boleh_kosong
-FROM information_schema.columns
-WHERE table_schema = 'public' AND table_name = 'pengajuan'
-ORDER BY ordinal_position;
+-- 13. Prosedur persetujuan: cek stok SEMUA barang dalam pengajuan, lalu setujui,
+--     dalam satu transaksi. Jika ada RAISE EXCEPTION, semua perubahan dibatalkan.
+--     Baris dikunci (FOR UPDATE, urut id_barang agar tidak saling kunci) supaya dua
+--     admin tidak bisa menyetujui dua pengajuan yang berebut sisa stok terakhir.
+CREATE PROCEDURE sp_setujui_pengajuan(p_id_pengajuan INT, p_id_admin INT)
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_status  VARCHAR(20);
+    v_mulai   TIMESTAMP;
+    v_selesai TIMESTAMP;
+    r         RECORD;
+BEGIN
+    SELECT status, tanggal_pinjam, tanggal_kembali
+      INTO v_status, v_mulai, v_selesai
+    FROM pengajuan
+    WHERE id_pengajuan = p_id_pengajuan
+    FOR UPDATE;
 
--- =====================================================================
--- ISI TIAP TABEL (urutan sesuai schema.sql)
--- =====================================================================
-SELECT * FROM oki;
-SELECT * FROM admin;
-SELECT * FROM peminjam;
-SELECT * FROM kategori_barang;
-SELECT * FROM barang;
-SELECT * FROM agenda_hmti;
-SELECT * FROM pengajuan;
-SELECT * FROM detail_pengajuan;
-SELECT * FROM pengembalian;
-SELECT * FROM detail_pengembalian;
-SELECT * FROM riwayat_status;
+    IF NOT FOUND OR v_status <> 'Menunggu' THEN
+        RAISE EXCEPTION 'Pengajuan tidak ditemukan atau sudah diproses';
+    END IF;
 
--- =====================================================================
--- VIEW (hasil perhitungan, bukan tabel asli)
--- =====================================================================
-SELECT * FROM v_barang_hari_ini;
-SELECT * FROM v_pengajuan_status;
-SELECT * FROM v_kalender;
+    IF NOT EXISTS (SELECT 1 FROM detail_pengajuan WHERE id_pengajuan = p_id_pengajuan) THEN
+        RAISE EXCEPTION 'Pengajuan tidak berisi barang';
+    END IF;
 
--- =====================================================================
--- RINGKASAN: jumlah baris semua tabel dalam satu tampilan
--- =====================================================================
-SELECT 'oki' AS tabel, COUNT(*) AS jumlah_baris FROM oki
-UNION ALL SELECT 'admin',               COUNT(*) FROM admin
-UNION ALL SELECT 'peminjam',            COUNT(*) FROM peminjam
-UNION ALL SELECT 'kategori_barang',     COUNT(*) FROM kategori_barang
-UNION ALL SELECT 'barang',              COUNT(*) FROM barang
-UNION ALL SELECT 'agenda_hmti',         COUNT(*) FROM agenda_hmti
-UNION ALL SELECT 'pengajuan',           COUNT(*) FROM pengajuan
-UNION ALL SELECT 'detail_pengajuan',    COUNT(*) FROM detail_pengajuan
-UNION ALL SELECT 'pengembalian',        COUNT(*) FROM pengembalian
-UNION ALL SELECT 'detail_pengembalian', COUNT(*) FROM detail_pengembalian
-UNION ALL SELECT 'riwayat_status',      COUNT(*) FROM riwayat_status;
+    PERFORM 1
+    FROM barang
+    WHERE id_barang IN (SELECT id_barang FROM detail_pengajuan WHERE id_pengajuan = p_id_pengajuan)
+    ORDER BY id_barang
+    FOR UPDATE;
+
+    FOR r IN
+        SELECT d.id_barang, d.jumlah, b.nama_barang
+        FROM detail_pengajuan d
+        JOIN barang b ON b.id_barang = d.id_barang
+        WHERE d.id_pengajuan = p_id_pengajuan
+    LOOP
+        IF fn_stok_tersedia(r.id_barang, v_mulai, v_selesai) < r.jumlah THEN
+            RAISE EXCEPTION 'Stok % tidak mencukupi pada rentang waktu tersebut', r.nama_barang;
+        END IF;
+    END LOOP;
+
+    UPDATE pengajuan
+    SET status = 'Disetujui', id_admin = p_id_admin, tanggal_verifikasi = now_wib()
+    WHERE id_pengajuan = p_id_pengajuan;
+
+    INSERT INTO riwayat_status (id_pengajuan, status_lama, status_baru, pelaku_role, id_pelaku)
+    VALUES (p_id_pengajuan, 'Menunggu', 'Disetujui', 'admin', p_id_admin);
+END;
+$$;
 
