@@ -13,8 +13,7 @@ class BarangController
     // GET /api/barang?q=mik&kategori=2
     public static function index(array $params = []): void
     {
-        requireLogin();
-
+        // Publik: tamu (belum login) boleh melihat katalog.
         $where = [];
         $bind  = [];
 
@@ -97,8 +96,7 @@ class BarangController
     // GET /api/barang/{id}
     public static function show(array $params): void
     {
-        requireLogin();
-
+        // Publik: tamu (belum login) boleh melihat katalog.
         $barang = self::cariBarang(self::parseId($params['id'] ?? ''));
         if ($barang === false) {
             json_error('Barang tidak ditemukan', 404);
@@ -109,8 +107,7 @@ class BarangController
     // GET /api/kategori  -> isi dropdown kategori di form admin
     public static function kategori(array $params = []): void
     {
-        requireLogin();
-
+        // Publik: tamu (belum login) boleh melihat katalog.
         $stmt = db()->query(
             'SELECT id_kategori, nama_kategori FROM kategori_barang ORDER BY nama_kategori'
         );

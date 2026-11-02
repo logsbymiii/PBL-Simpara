@@ -3,10 +3,61 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="refresh" content="0; url=pages/auth/login.html">
-    <title>SIMPARA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIMPARA | Peminjaman Barang HMTI</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="css/variable.css">
+    <link rel="stylesheet" href="css/base.css">
+    <link rel="stylesheet" href="css/components.css">
+    <link rel="stylesheet" href="css/pages/landing.css">
 </head>
 
-<body></body>
+<body>
+    <header class="landing-nav">
+        <a href="index.html" class="landing-brand">
+            <img src="assets/images/logo-hmti.png" alt="Logo HMTI">
+            <span>SIMPARA</span>
+        </a>
+        <nav class="landing-actions" id="aksiNav">
+            <a href="pages/auth/login.html" class="btn btn-gray">Masuk</a>
+            <a href="pages/auth/register.html" class="btn btn-yellow">Daftar</a>
+        </nav>
+    </header>
+
+    <main class="landing">
+        <section class="hero">
+            <h1>Pinjam barang inventaris HMTI, tanpa bentrok jadwal.</h1>
+            <p>Lihat barang yang tersedia dan agenda HMTI terlebih dahulu. Masuk atau daftar untuk mengajukan peminjaman.</p>
+            <a href="#katalog" class="btn btn-yellow">Lihat Barang</a>
+        </section>
+
+        <section class="card" id="agenda">
+            <h3><i class="bi bi-calendar-event"></i> Agenda HMTI</h3>
+            <p class="sub">Pada tanggal ini inventaris dipakai kegiatan internal HMTI, jadi tidak bisa diajukan pihak lain.</p>
+            <div class="agenda-list" id="daftarAgenda"></div>
+        </section>
+
+        <section class="card" id="katalog">
+            <h3><i class="bi bi-box-seam"></i> Barang Inventaris</h3>
+            <div class="toolbar">
+                <input type="text" id="cari" placeholder="Cari barang...">
+                <select id="filter">
+                    <option value="">Semua status</option>
+                    <option>Tersedia</option>
+                    <option>Dipinjam</option>
+                </select>
+            </div>
+            <div class="grid-items" id="daftar"></div>
+            <p class="landing-note"><i class="bi bi-info-circle"></i> Ingin meminjam? <a href="pages/auth/login.html">Masuk</a> atau <a href="pages/auth/register.html">daftar</a> dulu.</p>
+        </section>
+    </main>
+
+    <footer class="landing-footer">SIMPARA &middot; PBL Kelompok 1 &middot; SIB 2F</footer>
+
+    <script src="js/data/dummy.js"></script>
+    <script src="js/utils/auth.js"></script>
+    <script src="js/components/badge.js"></script>
+    <script src="js/pages/landing.js"></script>
+</body>
 
 </html>

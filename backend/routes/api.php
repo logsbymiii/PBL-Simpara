@@ -7,6 +7,7 @@ require_once __DIR__ . '/../src/controllers/BarangController.php';
 require_once __DIR__ . '/../src/controllers/PengembalianController.php';
 require_once __DIR__ . '/../src/controllers/PenggunaController.php';
 require_once __DIR__ . '/../src/controllers/LaporanController.php';
+require_once __DIR__ . '/../src/controllers/AgendaController.php';
 
 // GET /api/ping  -> cek server hidup + cek koneksi database
 $router->get('/api/ping', function (): void {
@@ -47,6 +48,9 @@ $router->post('/api/barang',          [BarangController::class, 'store']);
 $router->get('/api/barang/{id}',      [BarangController::class, 'show']);
 $router->put('/api/barang/{id}',      [BarangController::class, 'update']);
 $router->delete('/api/barang/{id}',   [BarangController::class, 'destroy']);
+
+// Agenda HMTI (publik: tanggal yang dikunci untuk acara internal)
+$router->get('/api/agenda', [AgendaController::class, 'index']);
 
 // Pengajuan
 $router->post('/api/pengajuan',     [PengajuanController::class, 'store']);
