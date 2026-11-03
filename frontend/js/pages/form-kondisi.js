@@ -41,7 +41,7 @@ if (!p) {
             }));
         }
 
-        updatePengajuan(p.id, { status: 'Dikembalikan', items, dikembalikanPada: waktuLokal() });
+        updatePengajuan(p.id, { status: 'Dikembalikan', items, dikembalikanPada: waktuLokal(), diterimaOleh: user.nama });
         location.href = 'pengembalian.html';
     });
 }

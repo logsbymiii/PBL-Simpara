@@ -38,7 +38,11 @@ document.getElementById('tabel').addEventListener('click', e => {
 
     if (btn.dataset.aksi === 'setuju') {
         if (!confirm('Setujui pengajuan ini?')) return;
-        setStatusPengajuan(id, 'Disetujui');   // barang lalu diserahkan di halaman Pengembalian
+        updatePengajuan(id, {
+            status: 'Disetujui',
+            disetujuiPada: waktuLokal(),
+            disetujuiOleh: user.nama
+        });                                     // barang lalu diserahkan di halaman Pengembalian
         tampilkan();
         return;
     }
@@ -53,7 +57,7 @@ document.getElementById('tabel').addEventListener('click', e => {
 document.getElementById('btnBatal').addEventListener('click', () => modal.classList.remove('show'));
 formTolak.addEventListener('submit', e => {
     e.preventDefault();
-    updatePengajuan(tolakId, { status: 'Ditolak', alasanTolak: document.getElementById('alasan').value.trim() });
+    updatePengajuan(tolakId, { status: 'Ditolak', ditolakPada: waktuLokal(), ditolakOleh: user.nama, alasanTolak: document.getElementById('alasan').value.trim() });
     modal.classList.remove('show');
     tampilkan();
 });
