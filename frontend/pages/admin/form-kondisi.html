@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/layout.css">
     <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/foto-bukti.css">
 </head>
 
 <body>
@@ -37,6 +38,12 @@
                         </thead>
                         <tbody id="tabel"></tbody>
                     </table>
+                    <div class="foto-bukti">
+                        <h3>Foto Bukti Pengembalian</h3>
+                        <p class="form-hint">Wajib diunggah jika kondisi barang Rusak atau Hilang (maks. 3 foto, format JPG/PNG).</p>
+                        <div class="foto-grid" id="fotoGrid"></div>
+                        <input type="file" id="fotoInput" accept="image/jpeg,image/png" hidden>
+                    </div>
                     <p class="form-hint">Barang berstatus Rusak atau Hilang tidak akan dihitung tersedia sampai admin memperbarui kondisinya di halaman Barang.</p>
                     <div class="actions">
                         <a href="pengembalian.html" class="btn btn-gray">Batal</a>
