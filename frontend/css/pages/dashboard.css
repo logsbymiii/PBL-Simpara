@@ -7,3 +7,31 @@
 .recent small {
     font-weight: 500;
 }
+
+/* P4: status per barang di kartu Pengajuan Terbaru */
+.recent .status-barang {
+    flex: 1;
+    margin: 0 24px;
+}
+
+.recent .status-judul {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: var(--muted);
+}
+
+.recent .status-baris {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 6px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.recent .status-baris .badge {
+    min-width: 0;
+    padding: 2px 8px;
+    font-size: 10px;
+}
