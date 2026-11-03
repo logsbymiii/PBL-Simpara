@@ -50,4 +50,35 @@ if (!b) {
     } else if (tersedia > 0) {
         aksi.innerHTML = `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama)}" class="btn btn-yellow btn-sm">Ajukan Pinjam</a>`;
     }
+
+    // A3: Riwayat Peminjam (hanya tampil di halaman admin)
+    const riwayatBox = document.getElementById('riwayat');
+    if (b && admin && riwayatBox) {
+        // Warna badge kondisi mengikuti Figma: Baik hijau, Rusak oranye, Hilang merah
+        const badgeKondisi = k => {
+            const warna = { Baik: 'green', Rusak: 'orange', Hilang: 'red' }[k];
+            return warna ? `<span class="badge ${warna}">${k}</span>` : '-';
+        };
+
+        const riwayat = getAllPengajuan()
+            .filter(p => p.status === 'Dipinjam' || p.status === 'Dikembalikan')
+            .flatMap(p => p.items.filter(it => it.barangId === b.id).map(it => ({ p, it })))
+            .sort((x, y) => y.p.tglPinjam.localeCompare(x.p.tglPinjam));
+
+        riwayatBox.innerHTML = '<h3>Riwayat Peminjam</h3>' + (riwayat.length ? `
+        <table>
+            <thead><tr>
+            <th>Peminjam</th><th>OKI</th><th>Tgl Pinjam</th><th>Tgl Kembali</th><th>Kondisi Kembali</th>
+            </tr></thead>
+            <tbody>${riwayat.map(({ p, it }) => `
+            <tr>
+                <td>${p.peminjam}</td>
+                <td>${p.oki || '-'}</td>
+                <td>${formatTanggal(p.tglPinjam)}</td>
+                <td>${formatTanggal(p.tglKembali)}</td>
+                <td>${badgeKondisi(it.kondisi)}</td>
+            </tr>`).join('')}
+            </tbody>
+        </table>` : '<p class="empty">Belum pernah dipinjam.</p>');
+    }
 }

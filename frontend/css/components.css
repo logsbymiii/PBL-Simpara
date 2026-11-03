@@ -578,6 +578,11 @@ tr.alert td {
     margin-top: 16px;
 }
 
+/* A3: kartu Riwayat Peminjam (detail barang admin) */
+#riwayat {
+    margin-top: 18px;
+}
+
 .form-kondisi .actions {
     text-align: right;
 }
