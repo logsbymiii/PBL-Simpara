@@ -49,7 +49,11 @@ document.getElementById('tabel').addEventListener('click', e => {
 
 document.getElementById('btnBatal').addEventListener('click', () => modal.classList.remove('show'));
 document.getElementById('btnSerahkan').addEventListener('click', () => {
-    updatePengajuan(pilihId, { status: 'Dipinjam', diserahkanPada: waktuLokal() });
+    updatePengajuan(pilihId, { 
+        status: 'Dipinjam', 
+        diserahkanPada: waktuLokal(),
+        diserahkanOleh: user.nama 
+    });
     modal.classList.remove('show');
     tampilkan();
 });
