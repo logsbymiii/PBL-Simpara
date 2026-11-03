@@ -69,3 +69,27 @@
 .foto-tambah .bi {
     font-size: 16px;
 }
+
+/* A5: halaman detail pengembalian (thumbnail bisa diklik + modal foto besar) */
+.foto-lihat {
+    border: 0;
+    cursor: pointer;
+}
+
+.foto-perbesar {
+    display: block;
+    margin-top: 2px;
+    color: var(--blue);
+    font-size: 11px;
+}
+
+#modalFoto .modal-box {
+    max-width: 600px;
+}
+
+#fotoBesar {
+    display: block;
+    width: 100%;
+    border-radius: 8px;
+    margin-bottom: 14px;
+}

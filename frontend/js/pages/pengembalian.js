@@ -10,11 +10,13 @@ function tampilkan() {
     const semua = getAllPengajuan();
     const siap = semua.filter(p => p.status === 'Disetujui');
     const pinjam = semua.filter(p => p.status === 'Dipinjam');
+    const kembali = semua.filter(p => p.status === 'Dikembalikan');
+    document.getElementById('jmlKembali').textContent = kembali.length;
     document.getElementById('jmlSiap').textContent = siap.length;
     document.getElementById('jmlPinjam').textContent = pinjam.length;
     document.getElementById('kolomTanggal').textContent = tab === 'Disetujui' ? 'Pinjam' : 'Kembali';
 
-    const daftar = tab === 'Disetujui' ? siap : pinjam;
+    const daftar = tab === 'Disetujui' ? siap : tab === 'Dipinjam' ? pinjam : kembali;
     document.getElementById('tabel').innerHTML = daftar.length ? daftar.map((p, i) => `
     <tr class="${terlambat(p) ? 'alert' : ''}">
       <td>${i + 1}.</td>
@@ -24,9 +26,12 @@ function tampilkan() {
       <td>${badge(p.status)}${terlambat(p) ? '<span class="telat">Terlambat</span>' : ''}</td>
       <td>${tab === 'Disetujui'
             ? `<button class="btn btn-yellow btn-sm" data-id="${p.id}">Serahkan</button>`
-            : `<a href="form-kondisi.html?id=${p.id}" class="btn btn-yellow btn-sm">Terima Kembali</a>`}</td>
+            : tab === 'Dipinjam'
+                ? `<a href="form-kondisi.html?id=${p.id}" class="btn btn-yellow btn-sm">Terima Kembali</a>`
+                : `<a href="detail-pengembalian.html?id=${p.id}" class="btn btn-yellow btn-sm">Lihat Detail</a>`}</td>
     </tr>`).join('') : `<tr><td colspan="6" class="empty">${tab === 'Disetujui'
-        ? 'Tidak ada barang yang menunggu diambil.' : 'Tidak ada barang yang sedang dipinjam.'}</td></tr>`;
+        ? 'Tidak ada barang yang menunggu diambil.' 
+        : tab === 'Dipinjam' ? 'Tidak ada barang yang sedang dipinjam.' : 'Belum ada barang yang dikembalikan.'}</td></tr>`;
 }
 
 document.querySelectorAll('.seg-tabs button').forEach(btn => {

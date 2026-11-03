@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detail Pengembalian | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/foto-bukti.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <p class="sub"><a href="pengembalian.html"><i class="bi bi-chevron-left"></i> Kembali ke Serah Terima &amp; Pengembalian</a></p>
+                <div class="title-row">
+                    <h1>Detail Pengembalian</h1>
+                    <span id="statusBadge"></span>
+                </div>
+
+                <div class="card form-kondisi" id="detailKembali">
+                    <div class="info-row" id="infoPinjam"></div>
+                    <table class="kondisi-table">
+                        <thead>
+                            <tr>
+                                <th>Barang</th>
+                                <th>Jumlah</th>
+                                <th>Kondisi Kembali</th>
+                                <th>Catatan</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabel"></tbody>
+                    </table>
+                    <div class="foto-bukti">
+                        <h3>Foto Bukti Pengembalian</h3>
+                        <p class="form-hint">Foto yang diunggah admin saat menerima pengembalian. Klik foto untuk memperbesar.</p>
+                        <div class="foto-grid" id="fotoGrid"></div>
+                    </div>
+                    <p class="form-hint">Barang berstatus Rusak atau Hilang tidak akan dihitung tersedia sampai admin memperbarui kondisinya di halaman Barang.</p>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal" id="modalFoto">
+        <div class="modal-box">
+            <img id="fotoBesar" alt="">
+            <div class="actions">
+                <button type="button" class="btn btn-gray" id="btnTutupFoto">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/badge.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/detail-pengembalian.js"></script>
+</body>
+
+</html>
