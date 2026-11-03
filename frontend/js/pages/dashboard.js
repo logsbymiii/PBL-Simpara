@@ -18,6 +18,14 @@ document.getElementById('pengajuanTerbaru').innerHTML = terbaru ? `
   <div><b>${terbaru.barang}</b><br>
     <small>${formatTanggal(terbaru.tglPinjam)} – ${formatTanggal(terbaru.tglKembali)}</small><br>
     ${badge(terbaru.status)}</div>
+  <div class="status-barang">
+    <small class="status-judul">Status per barang</small>
+    ${terbaru.items.map(it => `
+      <div class="status-baris">
+        <span>${it.nama} ×${it.jumlah}</span>
+        ${badge(it.status || terbaru.status)}
+      </div>`).join('')}
+  </div>
   <a href="detail-peminjaman.html" class="btn btn-yellow">Detail</a>`
   : '<p>Belum ada pengajuan.</p>';
 
