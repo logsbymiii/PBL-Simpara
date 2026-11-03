@@ -67,6 +67,17 @@
     filter: brightness(.95);
 }
 
+/* P3: ukuran & jarak button di halaman Daftar Barang peminjam */
+.content #daftar .item .btn {
+    min-width: 96px;
+    box-sizing: border-box;
+    padding: 4px 8px;
+    font-size: 11px;
+    line-height: 1.5;
+    border-radius: 4px;
+    margin: 6px 2px 0;
+}
+
 .badge {
     padding: 4px 8px;
     border-radius: 4px;
