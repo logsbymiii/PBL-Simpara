@@ -3,13 +3,29 @@ renderSidebar('admin', 'Laporan');
 renderTopbar(user);
 
 let hasil = [];
+// A2: status laporan = status pengajuan, tapi Dipinjam yang lewat tanggal kembali jadi "Terlambat"
+const statusLaporan = p => terlambat(p) ? 'Terlambat' : p.status;
+
+const badgeLaporan = p => {
+    const s = statusLaporan(p);
+    return s === 'Terlambat' ? '<span class="badge terlambat">Terlambat</span>' : badge(s);
+};
+
+// A2: kondisi barang saat dikembalikan, diambil yang terburuk jika ada beberapa barang
+const kondisiLaporan = p => {
+    if (p.status !== 'Dikembalikan') return '—';
+    const daftar = p.items.map(it => it.kondisi).filter(Boolean);
+    if (daftar.includes('Hilang')) return 'Hilang';
+    if (daftar.includes('Rusak')) return 'Rusak';
+    return daftar.length ? 'Baik' : '—';
+};
 
 function tampilkan() {
     const bulan = document.getElementById('bulan').value;   // format "2026-10"
     const status = document.getElementById('filter').value;
 
     hasil = getAllPengajuan().filter(p =>
-        (!bulan || p.tglPinjam.startsWith(bulan)) && (!status || p.status === status)
+        (!bulan || p.tglPinjam.startsWith(bulan)) && (!status || statusLaporan(p) === status)
     );
 
     document.getElementById('tabel').innerHTML = hasil.length ? hasil.map((p, i) => `
@@ -19,8 +35,9 @@ function tampilkan() {
       <td>${p.barang}</td>
       <td>${formatTanggal(p.tglPinjam)}</td>
       <td>${formatTanggal(p.tglKembali)}</td>
-      <td>${badge(p.status)}</td>
-    </tr>`).join('') : '<tr><td colspan="6" class="empty">Tidak ada data untuk filter ini.</td></tr>';
+      <td>${badgeLaporan(p)}</td>
+      <td class="${kondisiLaporan(p) === 'Hilang' ? 'kondisi-hilang' : ''}">${kondisiLaporan(p)}</td>
+    </tr>`).join('') : '<tr><td colspan="7" class="empty">Tidak ada data untuk filter ini.</td></tr>';
 }
 
 function unduhCSV() {

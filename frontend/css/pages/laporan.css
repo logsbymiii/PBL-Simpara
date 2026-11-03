@@ -23,3 +23,13 @@
         padding: 0;
     }
 }
+
+/* A2: badge Terlambat & teks kondisi Hilang di laporan */
+.badge.terlambat {
+    background: rgba(255, 115, 60, 0.35);
+}
+
+.kondisi-hilang {
+    color: var(--danger);
+    font-weight: 600;
+}
