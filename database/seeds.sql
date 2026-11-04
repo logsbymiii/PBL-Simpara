@@ -40,7 +40,7 @@ SELECT v.kode, v.nama, k.id_kategori, v.stok, v.kondisi
 
 -- 5. Agenda HMTI
 INSERT INTO agenda_hmti
-    (nama_agenda, tanggal_mulai, tanggal_selesai, keterangan, id_admin)
+    (nama_acara, tgl_mulai, tgl_selesai, keterangan, id_admin)
 SELECT v.nama,
        (now_wib()::DATE + v.hari_mulai),
        (now_wib()::DATE + v.hari_selesai),
@@ -59,8 +59,8 @@ SELECT v.nama,
 -- Identitas peminjam disimpan langsung di pengajuan sesuai ERD (tanpa tabel peminjam).
 INSERT INTO pengajuan (
     id_pengajuan, id_oki, nama_peminjam, nim_peminjam, no_hp_peminjam,
-    nama_kegiatan, keperluan, tanggal_pinjam, tanggal_kembali,
-    status, tanggal_diajukan, alasan_penolakan
+    nama_kegiatan, keperluan, tgl_pinjam, tgl_kembali,
+    status, tgl_diajukan, alasan_penolakan
 )
 OVERRIDING SYSTEM VALUE
 SELECT v.id,
@@ -95,7 +95,7 @@ SELECT v.id,
   JOIN oki o ON o.nama_oki = v.nama_oki;
 
 -- 7. Detail pengajuan
-INSERT INTO detail_pengajuan (id_detail, id_pengajuan, id_barang, jumlah)
+INSERT INTO detail_pengajuan (id_detail_pengajuan, id_pengajuan, id_barang, jumlah)
 OVERRIDING SYSTEM VALUE
 SELECT v.id, v.id_pengajuan, b.id_barang, v.jumlah
   FROM (VALUES
@@ -114,13 +114,13 @@ SELECT v.id, v.id_pengajuan, b.id_barang, v.jumlah
 
 -- 8. Pengembalian untuk pengajuan 1-3
 INSERT INTO pengembalian (
-    id_pengembalian, id_pengajuan, id_admin, tanggal_kembali_aktual, catatan
+    id_pengembalian, id_pengajuan, id_admin, tgl_kembali_aktual, catatan
 )
 OVERRIDING SYSTEM VALUE
 SELECT v.id,
        v.id_pengajuan,
        a.id_admin,
-       p.tanggal_kembali - v.selisih,
+       p.tgl_kembali - v.selisih,
        v.catatan
   FROM (VALUES
     (1, 1, INTERVAL '30 minutes', 'Dikembalikan tepat waktu'),
@@ -134,7 +134,7 @@ SELECT v.id,
 
 -- 9. Detail pengembalian (termasuk jumlah barang yang diperiksa)
 INSERT INTO detail_pengembalian (
-    id_pengembalian, id_detail, kondisi, catatan, foto_bukti, jumlah
+    id_pengembalian, id_detail_pengajuan, kondisi_brg_kembali, catatan, foto_bukti, jumlah
 ) VALUES
     (1, 1, 'Baik', NULL, NULL, 1),
     (1, 2, 'Baik', NULL, NULL, 1),
@@ -146,18 +146,16 @@ INSERT INTO detail_pengembalian (
 -- 10. Riwayat status pengajuan
 -- Satu catatan awal dan satu catatan perubahan status untuk tiap pengajuan.
 INSERT INTO riwayat_status (
-    id_pengajuan, id_admin, status_lama, status_baru, waktu, alasan
+    id_pengajuan, id_oki, id_admin, status_lama, status_baru, waktu, alasan
 )
 SELECT p.id_pengajuan,
-       a.id_admin,
+       p.id_oki,
+       NULL,
        NULL,
        'Menunggu',
-       p.tanggal_diajukan,
+       p.tgl_diajukan,
        'Pengajuan dibuat'
-  FROM pengajuan p
- CROSS JOIN (
-    SELECT id_admin FROM admin WHERE username = 'inventaris_hmti'
- ) a;
+  FROM pengajuan p;
 
 INSERT INTO riwayat_status (
     id_pengajuan, id_admin, status_lama, status_baru, waktu, alasan
@@ -166,7 +164,7 @@ SELECT p.id_pengajuan,
        a.id_admin,
        'Menunggu',
        p.status,
-       p.tanggal_diajukan + INTERVAL '2 hours',
+       p.tgl_diajukan + INTERVAL '2 hours',
        COALESCE(p.alasan_penolakan, 'Status pengajuan diperbarui')
   FROM pengajuan p
  CROSS JOIN (
@@ -176,6 +174,5 @@ SELECT p.id_pengajuan,
 
 -- Atur sequence setelah seed menggunakan ID eksplisit.
 SELECT setval(pg_get_serial_sequence('pengajuan', 'id_pengajuan'), (SELECT MAX(id_pengajuan) FROM pengajuan));
-SELECT setval(pg_get_serial_sequence('detail_pengajuan', 'id_detail'), (SELECT MAX(id_detail) FROM detail_pengajuan));
+SELECT setval(pg_get_serial_sequence('detail_pengajuan', 'id_detail_pengajuan'), (SELECT MAX(id_detail_pengajuan) FROM detail_pengajuan));
 SELECT setval(pg_get_serial_sequence('pengembalian', 'id_pengembalian'), (SELECT MAX(id_pengembalian) FROM pengembalian));
-

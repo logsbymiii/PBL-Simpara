@@ -56,16 +56,16 @@ CREATE TABLE barang (
 -- 5. Agenda HMTI
 CREATE TABLE agenda_hmti (
     id_agenda       INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-    nama_agenda     VARCHAR(150) NOT NULL,
-    tanggal_mulai   DATE NOT NULL,
-    tanggal_selesai DATE NOT NULL,
+    nama_acara     VARCHAR(150) NOT NULL,
+    tgl_mulai   DATE NOT NULL,
+    tgl_selesai DATE NOT NULL,
     keterangan      VARCHAR(255),
     id_admin        INT NOT NULL REFERENCES admin(id_admin),
-    CONSTRAINT chk_rentang_agenda CHECK (tanggal_selesai >= tanggal_mulai)
+    CONSTRAINT chk_rentang_agenda CHECK (tgl_selesai >= tgl_mulai)
 );
 
 CREATE INDEX idx_agenda_tanggal
-    ON agenda_hmti (tanggal_mulai, tanggal_selesai);
+    ON agenda_hmti (tgl_mulai, tgl_selesai);
 
 -- 6. Pengajuan
 -- Data peminjam disimpan langsung pada pengajuan sesuai ERD;
@@ -78,9 +78,9 @@ CREATE TABLE pengajuan (
     no_hp_peminjam   VARCHAR(20),
     nama_kegiatan    VARCHAR(100) NOT NULL,
     keperluan        TEXT,
-    tanggal_pinjam   TIMESTAMP NOT NULL,
-    tanggal_kembali  TIMESTAMP NOT NULL,
-    tanggal_diajukan TIMESTAMP NOT NULL DEFAULT now_wib(),
+    tgl_pinjam   TIMESTAMP NOT NULL,
+    tgl_kembali  TIMESTAMP NOT NULL,
+    tgl_diajukan TIMESTAMP NOT NULL DEFAULT now_wib(),
     status           VARCHAR(20) NOT NULL DEFAULT 'Menunggu'
                      CHECK (status IN (
                          'Menunggu', 'Disetujui', 'Dipinjam',
@@ -88,7 +88,7 @@ CREATE TABLE pengajuan (
                      )),
     alasan_penolakan VARCHAR(255),
     CONSTRAINT chk_rentang_pengajuan
-        CHECK (tanggal_kembali >= tanggal_pinjam),
+        CHECK (tgl_kembali >= tgl_pinjam),
     CONSTRAINT chk_alasan_penolakan
         CHECK (status <> 'Ditolak' OR alasan_penolakan IS NOT NULL)
 );
@@ -96,13 +96,13 @@ CREATE TABLE pengajuan (
 CREATE INDEX idx_pengajuan_oki
     ON pengajuan (id_oki);
 CREATE INDEX idx_pengajuan_status_waktu
-    ON pengajuan (status, tanggal_pinjam, tanggal_kembali);
+    ON pengajuan (status, tgl_pinjam, tgl_kembali);
 CREATE INDEX idx_pengajuan_nim
     ON pengajuan (nim_peminjam);
 
 -- 7. Detail pengajuan
 CREATE TABLE detail_pengajuan (
-    id_detail    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_detail_pengajuan    INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_pengajuan INT NOT NULL REFERENCES pengajuan(id_pengajuan) ON DELETE CASCADE,
     id_barang    INT NOT NULL REFERENCES barang(id_barang),
     jumlah       INT NOT NULL CHECK (jumlah > 0),
@@ -118,7 +118,7 @@ CREATE TABLE pengembalian (
     id_pengajuan           INT NOT NULL UNIQUE
                            REFERENCES pengajuan(id_pengajuan),
     id_admin               INT NOT NULL REFERENCES admin(id_admin),
-    tanggal_kembali_aktual TIMESTAMP NOT NULL DEFAULT now_wib(),
+    tgl_kembali_aktual TIMESTAMP NOT NULL DEFAULT now_wib(),
     catatan                VARCHAR(255)
 );
 
@@ -127,21 +127,22 @@ CREATE TABLE detail_pengembalian (
     id_detail_pengembalian INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_pengembalian        INT NOT NULL
                            REFERENCES pengembalian(id_pengembalian) ON DELETE CASCADE,
-    id_detail              INT NOT NULL
-                           REFERENCES detail_pengajuan(id_detail),
-    kondisi                VARCHAR(20) NOT NULL
-                           CHECK (kondisi IN ('Baik', 'Rusak', 'Hilang')),
+    id_detail_pengajuan              INT NOT NULL
+                           REFERENCES detail_pengajuan(id_detail_pengajuan),
+    kondisi_brg_kembali    VARCHAR(20) NOT NULL
+                           CHECK (kondisi_brg_kembali IN ('Baik', 'Rusak', 'Hilang')),
     catatan                VARCHAR(255),
     foto_bukti             VARCHAR(255),
     jumlah                 INT NOT NULL CHECK (jumlah > 0),
-    CONSTRAINT uq_detail_pengembalian UNIQUE (id_pengembalian, id_detail)
+    CONSTRAINT uq_detail_pengembalian UNIQUE (id_pengembalian, id_detail_pengajuan)
 );
 
 -- 10. Riwayat status
 CREATE TABLE riwayat_status (
-    id_riwayat   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    id_riwayat_status   INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     id_pengajuan INT NOT NULL REFERENCES pengajuan(id_pengajuan) ON DELETE CASCADE,
-    id_admin     INT NOT NULL REFERENCES admin(id_admin),
+    id_admin     INT REFERENCES admin(id_admin),
+    id_oki       INT REFERENCES oki(id_oki),
     status_lama  VARCHAR(20),
     status_baru  VARCHAR(20) NOT NULL
                  CHECK (status_baru IN (
@@ -149,9 +150,15 @@ CREATE TABLE riwayat_status (
                      'Dikembalikan', 'Ditolak', 'Dibatalkan'
                  )),
     waktu        TIMESTAMP NOT NULL DEFAULT now_wib(),
-    alasan       VARCHAR(255)
+    alasan       VARCHAR(255),
+    CONSTRAINT chk_riwayat_pelaku
+        CHECK (id_admin IS NOT NULL OR id_oki IS NOT NULL)
 );
 
+CREATE INDEX idx_riwayat_oki
+    ON riwayat_status (id_oki);
+CREATE INDEX idx_riwayat_admin
+    ON riwayat_status (id_admin);
 CREATE INDEX idx_riwayat_pengajuan
     ON riwayat_status (id_pengajuan, waktu);
 
@@ -185,8 +192,8 @@ BEGIN
       JOIN pengajuan p ON p.id_pengajuan = d.id_pengajuan
      WHERE d.id_barang = p_id_barang
        AND p.status IN ('Disetujui', 'Dipinjam')
-       AND p.tanggal_pinjam <= p_selesai
-       AND p.tanggal_kembali >= p_mulai;
+       AND p.tgl_pinjam <= p_selesai
+       AND p.tgl_kembali >= p_mulai;
 
     RETURN GREATEST(COALESCE(v_total, 0) - v_terpakai, 0);
 END;
@@ -203,8 +210,8 @@ STABLE
 AS $$
     SELECT COUNT(*)::INT
       FROM agenda_hmti
-     WHERE tanggal_mulai <= p_selesai::DATE
-       AND tanggal_selesai >= p_mulai::DATE;
+     WHERE tgl_mulai <= p_selesai::DATE
+       AND tgl_selesai >= p_mulai::DATE;
 $$;
 
 -- View status stok barang hari ini.
@@ -236,17 +243,17 @@ CREATE OR REPLACE VIEW v_pengajuan_status AS
 SELECT p.*,
        CASE
            WHEN p.status = 'Menunggu' THEN 'Menunggu Verifikasi'
-           WHEN p.status = 'Dipinjam' AND now_wib() > p.tanggal_kembali
+           WHEN p.status = 'Dipinjam' AND now_wib() > p.tgl_kembali
                THEN 'Terlambat'
            ELSE p.status
        END AS status_tampil,
        CASE
            WHEN p.status = 'Menunggu'
-               THEN FLOOR(EXTRACT(EPOCH FROM (now_wib() - p.tanggal_diajukan)) / 3600)::INT
+               THEN FLOOR(EXTRACT(EPOCH FROM (now_wib() - p.tgl_diajukan)) / 3600)::INT
        END AS jam_menunggu,
        CASE
            WHEN p.status = 'Menunggu'
-            AND now_wib() - p.tanggal_diajukan > INTERVAL '5 hours'
+            AND now_wib() - p.tgl_diajukan > INTERVAL '5 hours'
                THEN 1
            ELSE 0
        END AS peringatan_5_jam
@@ -257,8 +264,8 @@ CREATE OR REPLACE VIEW v_kalender AS
 SELECT 'Peminjaman'::TEXT AS jenis,
        p.id_pengajuan AS id_ref,
        p.nama_peminjam || ' - ' || p.nama_kegiatan AS judul,
-       p.tanggal_pinjam AS tanggal_mulai,
-       p.tanggal_kembali AS tanggal_selesai,
+       p.tgl_pinjam AS tgl_mulai,
+       p.tgl_kembali AS tgl_selesai,
        v.status_tampil
   FROM v_pengajuan_status v
   JOIN pengajuan p ON p.id_pengajuan = v.id_pengajuan
@@ -266,9 +273,9 @@ SELECT 'Peminjaman'::TEXT AS jenis,
 UNION ALL
 SELECT 'Agenda HMTI'::TEXT,
        a.id_agenda,
-       a.nama_agenda::TEXT,
-       a.tanggal_mulai + TIME '00:00:00',
-       a.tanggal_selesai + TIME '23:59:59',
+       a.nama_acara::TEXT,
+       a.tgl_mulai + TIME '00:00:00',
+       a.tgl_selesai + TIME '23:59:59',
        'Agenda'::TEXT
   FROM agenda_hmti a;
 
@@ -285,7 +292,7 @@ DECLARE
     v_selesai TIMESTAMP;
     r RECORD;
 BEGIN
-    SELECT status, tanggal_pinjam, tanggal_kembali
+    SELECT status, tgl_pinjam, tgl_kembali
       INTO v_status, v_mulai, v_selesai
       FROM pengajuan
      WHERE id_pengajuan = p_id_pengajuan
@@ -337,5 +344,3 @@ BEGIN
     );
 END;
 $$;
-
-
