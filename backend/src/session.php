@@ -32,6 +32,17 @@ function requireLogin(): array
     if ($user === null) {
         json_error('Silakan login terlebih dahulu', 401);
     }
+
+    // Akun yang dinonaktifkan admin langsung kehilangan akses, tanpa menunggu logout
+    $tabel = $user['role'] === 'admin' ? 'admin' : 'oki';
+    $kolom = $user['role'] === 'admin' ? 'id_admin' : 'id_oki';
+    $stmt  = db()->prepare("SELECT status_akun FROM {$tabel} WHERE {$kolom} = :id");
+    $stmt->execute(['id' => $user['id']]);
+    if ($stmt->fetchColumn() !== 'Aktif') {
+        $_SESSION = [];
+        session_destroy();
+        json_error('Akun tidak aktif. Silakan login kembali atau hubungi admin.', 401);
+    }
     return $user;
 }
 

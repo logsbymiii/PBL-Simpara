@@ -20,24 +20,24 @@ class LaporanController
 
         // Ambil yang rentang pinjamnya beririsan dengan dari-sampai
         if ($dari !== null) {
-            $where[]      = 'p.tanggal_kembali >= CAST(:dari AS TIMESTAMP)';
+            $where[]      = 'p.tgl_kembali >= CAST(:dari AS TIMESTAMP)';
             $bind['dari'] = $dari . ' 00:00:00';
         }
         if ($sampai !== null) {
-            $where[]        = 'p.tanggal_pinjam <= CAST(:sampai AS TIMESTAMP)';
+            $where[]        = 'p.tgl_pinjam <= CAST(:sampai AS TIMESTAMP)';
             $bind['sampai'] = $sampai . ' 23:59:59';
         }
 
-        $sql = 'SELECT p.id_pengajuan, m.nim, m.nama_peminjam, o.nama_oki, b.nama_barang,
-                       d.jumlah, p.tanggal_pinjam, p.tanggal_kembali, v.status_tampil
+        $sql = 'SELECT p.id_pengajuan, p.nim_peminjam AS nim, p.nama_peminjam, o.nama_oki, b.nama_barang,
+                       d.jumlah, p.tgl_pinjam AS tanggal_pinjam, p.tgl_kembali AS tanggal_kembali,
+                       v.status_tampil
                 FROM pengajuan p
                 JOIN v_pengajuan_status v ON v.id_pengajuan = p.id_pengajuan
-                JOIN peminjam m           ON m.id_peminjam  = p.id_peminjam
-                LEFT JOIN oki o           ON o.id_oki       = m.id_oki
+                JOIN oki o                ON o.id_oki       = p.id_oki
                 JOIN detail_pengajuan d   ON d.id_pengajuan = p.id_pengajuan
                 JOIN barang b             ON b.id_barang    = d.id_barang'
              . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-             . ' ORDER BY p.tanggal_pinjam, p.id_pengajuan, b.nama_barang';
+             . ' ORDER BY p.tgl_pinjam, p.id_pengajuan, b.nama_barang';
 
         $stmt = db()->prepare($sql);
         $stmt->execute($bind);
@@ -51,28 +51,28 @@ class LaporanController
         requireAdmin();
 
         $peminjaman = self::ambil(
-            "SELECT date_trunc('week', p.tanggal_pinjam)::DATE          AS awal_minggu,
-                    date_trunc('week', p.tanggal_pinjam)::DATE + 6      AS akhir_minggu,
+            "SELECT date_trunc('week', p.tgl_pinjam)::DATE          AS awal_minggu,
+                    date_trunc('week', p.tgl_pinjam)::DATE + 6      AS akhir_minggu,
                     COUNT(DISTINCT p.id_pengajuan)                      AS jumlah_peminjaman,
                     SUM(d.jumlah)                                       AS total_unit,
                     COUNT(DISTINCT p.id_pengajuan)
-                          FILTER (WHERE p.status = 'Selesai')           AS sudah_dikembalikan
+                          FILTER (WHERE p.status = 'Dikembalikan')           AS sudah_dikembalikan
              FROM pengajuan p
              JOIN detail_pengajuan d ON d.id_pengajuan = p.id_pengajuan
-             WHERE p.status IN ('Disetujui', 'Selesai')
+             WHERE p.status IN ('Disetujui', 'Dipinjam', 'Dikembalikan')
              GROUP BY 1, 2
              ORDER BY 1"
         );
 
         // Jumlah pengembalian & terlambat dihitung per pengajuan, kondisi per BARANG
         $pengembalian = self::ambil(
-            "SELECT date_trunc('week', r.tanggal_kembali_aktual)::DATE  AS awal_minggu,
+            "SELECT date_trunc('week', r.tgl_kembali_aktual)::DATE  AS awal_minggu,
                     COUNT(DISTINCT r.id_pengembalian)                   AS jumlah_pengembalian,
                     COUNT(DISTINCT r.id_pengembalian)
-                          FILTER (WHERE r.tanggal_kembali_aktual > p.tanggal_kembali) AS terlambat,
-                    COUNT(*) FILTER (WHERE dk.kondisi_kembali = 'Baik')   AS barang_baik,
-                    COUNT(*) FILTER (WHERE dk.kondisi_kembali = 'Rusak')  AS barang_rusak,
-                    COUNT(*) FILTER (WHERE dk.kondisi_kembali = 'Hilang') AS barang_hilang
+                          FILTER (WHERE r.tgl_kembali_aktual > p.tgl_kembali) AS terlambat,
+                    COUNT(*) FILTER (WHERE dk.kondisi_brg_kembali = 'Baik')   AS barang_baik,
+                    COUNT(*) FILTER (WHERE dk.kondisi_brg_kembali = 'Rusak')  AS barang_rusak,
+                    COUNT(*) FILTER (WHERE dk.kondisi_brg_kembali = 'Hilang') AS barang_hilang
              FROM pengembalian r
              JOIN pengajuan p            ON p.id_pengajuan = r.id_pengajuan
              JOIN detail_pengembalian dk ON dk.id_pengembalian = r.id_pengembalian
@@ -97,20 +97,21 @@ class LaporanController
         $akhir   = $minggu->format('Y-m-d');
 
         $stmt = db()->prepare(
-            'SELECT p.id_pengajuan, m.nama_peminjam, b.nama_barang, d.jumlah,
-                    p.tanggal_pinjam, p.tanggal_kembali, v.status_tampil,
-                    r.tanggal_kembali_aktual, dk.kondisi_kembali
+            'SELECT p.id_pengajuan, p.nama_peminjam, o.nama_oki, b.nama_barang, d.jumlah,
+                    p.tgl_pinjam AS tanggal_pinjam, p.tgl_kembali AS tanggal_kembali, v.status_tampil,
+                    r.tgl_kembali_aktual AS tanggal_kembali_aktual,
+                    dk.kondisi_brg_kembali AS kondisi_kembali
              FROM pengajuan p
              JOIN v_pengajuan_status v        ON v.id_pengajuan = p.id_pengajuan
-             JOIN peminjam m                  ON m.id_peminjam  = p.id_peminjam
+             JOIN oki o                       ON o.id_oki       = p.id_oki
              JOIN detail_pengajuan d          ON d.id_pengajuan = p.id_pengajuan
              JOIN barang b                    ON b.id_barang    = d.id_barang
              LEFT JOIN pengembalian r         ON r.id_pengajuan = p.id_pengajuan
-             LEFT JOIN detail_pengembalian dk ON dk.id_detail   = d.id_detail
-             WHERE p.status IN (\'Disetujui\', \'Selesai\')
-               AND p.tanggal_pinjam  <= CAST(:akhir AS TIMESTAMP)
-               AND p.tanggal_kembali >= CAST(:awal AS TIMESTAMP)
-             ORDER BY p.tanggal_pinjam, p.id_pengajuan, b.nama_barang'
+             LEFT JOIN detail_pengembalian dk ON dk.id_detail_pengajuan = d.id_detail_pengajuan
+             WHERE p.status IN (\'Disetujui\', \'Dipinjam\', \'Dikembalikan\')
+               AND p.tgl_pinjam  <= CAST(:akhir AS TIMESTAMP)
+               AND p.tgl_kembali >= CAST(:awal AS TIMESTAMP)
+             ORDER BY p.tgl_pinjam, p.id_pengajuan, b.nama_barang'
         );
         $stmt->execute(['awal' => $awal . ' 00:00:00', 'akhir' => $akhir . ' 23:59:59']);
 
@@ -128,11 +129,11 @@ class LaporanController
 
         json_success([
             'per_bulan' => self::ambil(
-                "SELECT EXTRACT(YEAR FROM tanggal_pinjam)::INT  AS tahun,
-                        EXTRACT(MONTH FROM tanggal_pinjam)::INT AS bulan,
+                "SELECT EXTRACT(YEAR FROM tgl_pinjam)::INT  AS tahun,
+                        EXTRACT(MONTH FROM tgl_pinjam)::INT AS bulan,
                         COUNT(*) AS jumlah_peminjaman
                  FROM pengajuan
-                 WHERE status IN ('Disetujui', 'Selesai')
+                 WHERE status IN ('Disetujui', 'Dipinjam', 'Dikembalikan')
                  GROUP BY 1, 2
                  ORDER BY 1, 2"
             ),
@@ -141,32 +142,30 @@ class LaporanController
                  FROM pengajuan p
                  JOIN detail_pengajuan d ON d.id_pengajuan = p.id_pengajuan
                  JOIN barang b           ON b.id_barang = d.id_barang
-                 WHERE p.status IN ('Disetujui', 'Selesai')
+                 WHERE p.status IN ('Disetujui', 'Dipinjam', 'Dikembalikan')
                  GROUP BY b.id_barang, b.nama_barang
                  ORDER BY kali_dipinjam DESC, total_unit DESC, b.nama_barang"
             ),
             'per_oki' => self::ambil(
                 "SELECT o.nama_oki, COUNT(*) AS jumlah_pengajuan
                  FROM pengajuan p
-                 JOIN peminjam m ON m.id_peminjam = p.id_peminjam
-                 JOIN oki o      ON o.id_oki = m.id_oki
+                 JOIN oki o ON o.id_oki = p.id_oki
                  GROUP BY o.id_oki, o.nama_oki
                  ORDER BY jumlah_pengajuan DESC, o.nama_oki"
             ),
             'peminjam_aktif' => self::ambil(
-                "SELECT m.nama_peminjam, COUNT(*) AS jumlah_pengajuan
+                "SELECT p.nama_peminjam, p.nim_peminjam AS nim, COUNT(*) AS jumlah_pengajuan
                  FROM pengajuan p
-                 JOIN peminjam m ON m.id_peminjam = p.id_peminjam
-                 GROUP BY m.id_peminjam, m.nama_peminjam
-                 ORDER BY jumlah_pengajuan DESC, m.nama_peminjam
+                 GROUP BY p.nim_peminjam, p.nama_peminjam
+                 ORDER BY jumlah_pengajuan DESC, p.nama_peminjam
                  LIMIT 5"
             ),
-            'peminjam_belum_pernah' => self::ambil(
-                "SELECT m.nim, m.nama_peminjam
-                 FROM peminjam m
-                 LEFT JOIN pengajuan p ON p.id_peminjam = m.id_peminjam
+            'oki_belum_pernah' => self::ambil(
+                "SELECT o.id_oki, o.nama_oki
+                 FROM oki o
+                 LEFT JOIN pengajuan p ON p.id_oki = o.id_oki
                  WHERE p.id_pengajuan IS NULL
-                 ORDER BY m.nama_peminjam"
+                 ORDER BY o.nama_oki"
             ),
             'rekap_status' => self::ambil(
                 "SELECT status_tampil, COUNT(*) AS jumlah

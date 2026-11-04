@@ -32,6 +32,7 @@ $router->get('/api/ping', function (): void {
 });
 
 // Autentikasi
+$router->get('/api/oki',            [AuthController::class, 'daftarOki']);
 $router->post('/api/auth/register', [AuthController::class, 'register']);
 $router->post('/api/auth/login',    [AuthController::class, 'login']);
 $router->post('/api/auth/logout',   [AuthController::class, 'logout']);
@@ -60,6 +61,7 @@ $router->get('/api/pengajuan/{id}', [PengajuanController::class, 'show']);
 // Verifikasi pengajuan
 $router->post('/api/pengajuan/{id}/setujui', [PengajuanController::class, 'setujui']);
 $router->post('/api/pengajuan/{id}/tolak',   [PengajuanController::class, 'tolak']);
+$router->post('/api/pengajuan/{id}/serah-terima', [PengajuanController::class, 'serahTerima']);
 $router->post('/api/pengajuan/{id}/batal',   [PengajuanController::class, 'batal']);
 
 // Pengembalian
@@ -67,7 +69,7 @@ $router->get('/api/pengembalian/dipinjam',        [PengembalianController::class
 $router->get('/api/pengajuan/{id}/pengembalian',  [PengembalianController::class, 'show']);
 $router->post('/api/pengajuan/{id}/pengembalian', [PengembalianController::class, 'store']);
 
-// Kelola pengguna (admin)
+// Kelola akun OKI (admin)
 $router->get('/api/pengguna',                   [PenggunaController::class, 'index']);
 $router->get('/api/pengguna/{id}',              [PenggunaController::class, 'show']);
 $router->post('/api/pengguna/{id}/nonaktifkan', [PenggunaController::class, 'nonaktifkan']);

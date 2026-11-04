@@ -10,10 +10,11 @@ class AgendaController
     public static function index(array $params = []): void
     {
         $stmt = db()->query(
-            'SELECT id_agenda, nama_agenda, tanggal_mulai, tanggal_selesai, keterangan
+            'SELECT id_agenda, nama_acara AS nama_agenda, tgl_mulai AS tanggal_mulai,
+                    tgl_selesai AS tanggal_selesai, keterangan
              FROM agenda_hmti
-             WHERE tanggal_selesai >= CURRENT_DATE
-             ORDER BY tanggal_mulai, id_agenda'
+             WHERE tgl_selesai >= now_wib()::DATE
+             ORDER BY tgl_mulai, id_agenda'
         );
         json_success($stmt->fetchAll());
     }

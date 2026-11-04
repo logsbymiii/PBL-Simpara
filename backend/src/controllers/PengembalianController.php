@@ -10,19 +10,18 @@ class PengembalianController
         requireAdmin();
 
         $stmt = db()->query(
-            "SELECT p.id_pengajuan, m.nama_peminjam,
+            "SELECT v.id_pengajuan, v.nama_peminjam, v.nim_peminjam AS nim, o.nama_oki,
                     STRING_AGG(CONCAT(b.nama_barang, ' x', d.jumlah), ', ' ORDER BY b.nama_barang) AS barang,
-                    p.tanggal_pinjam, p.tanggal_kembali, v.status_tampil,
-                    GREATEST(CURRENT_DATE - p.tanggal_kembali::DATE, 0) AS hari_terlambat
-             FROM pengajuan p
-             JOIN v_pengajuan_status v ON v.id_pengajuan = p.id_pengajuan
-             JOIN peminjam m           ON m.id_peminjam  = p.id_peminjam
-             JOIN detail_pengajuan d   ON d.id_pengajuan = p.id_pengajuan
-             JOIN barang b             ON b.id_barang    = d.id_barang
+                    v.tgl_pinjam AS tanggal_pinjam, v.tgl_kembali AS tanggal_kembali, v.status_tampil,
+                    GREATEST(now_wib()::DATE - v.tgl_kembali::DATE, 0) AS hari_terlambat
+             FROM v_pengajuan_status v
+             JOIN oki o              ON o.id_oki       = v.id_oki
+             JOIN detail_pengajuan d ON d.id_pengajuan = v.id_pengajuan
+             JOIN barang b           ON b.id_barang    = d.id_barang
              WHERE v.status_tampil IN ('Dipinjam', 'Terlambat')
-             GROUP BY p.id_pengajuan, m.nama_peminjam, p.tanggal_pinjam,
-                      p.tanggal_kembali, v.status_tampil
-             ORDER BY p.tanggal_kembali"
+             GROUP BY v.id_pengajuan, v.nama_peminjam, v.nim_peminjam, o.nama_oki,
+                      v.tgl_pinjam, v.tgl_kembali, v.status_tampil
+             ORDER BY v.tgl_kembali"
         );
         json_success($stmt->fetchAll());
     }
@@ -37,7 +36,7 @@ class PengembalianController
 
         // Peminjam hanya boleh melihat pengajuan miliknya
         if ($data === null
-            || ($user['role'] === 'peminjam' && (int)$data['id_peminjam'] !== (int)$user['id'])) {
+            || ($user['role'] === 'peminjam' && (int)$data['id_oki'] !== (int)$user['id'])) {
             json_error('Pengajuan tidak ditemukan', 404);
         }
 
@@ -47,7 +46,8 @@ class PengembalianController
     // POST /api/pengajuan/{id}/pengembalian  (admin)
     // Body JSON: { "tanggal_kembali_aktual": "2026-11-04 16:00",   <- boleh dikosongkan (pakai waktu sekarang)
     //              "catatan": "...",                                <- boleh dikosongkan
-    //              "barang": [ { "id_barang": 1, "kondisi": "Baik", "catatan": null }, ... ] }
+    //              "barang": [ { "id_barang": 1, "kondisi": "Baik", "catatan": null, "jumlah": 1 }, ... ] }
+    //   "jumlah" boleh dikosongkan (dianggap semua unit yang dipinjam)
     public static function store(array $params): void
     {
         $admin = requireAdmin();
@@ -62,7 +62,7 @@ class PengembalianController
 
         try {
             // Prosedur ini mengecek status, kelengkapan kondisi tiap barang, menyimpan,
-            // dan mengubah status pengajuan jadi Selesai. Kalau gagal, tidak ada yang berubah.
+            // dan mengubah status pengajuan jadi Dikembalikan. Kalau gagal, tidak ada yang berubah.
             $stmt = db()->prepare(
                 'CALL sp_catat_pengembalian(
                      CAST(:id AS INT), CAST(:admin AS INT), CAST(:waktu AS TIMESTAMP),
@@ -92,11 +92,10 @@ class PengembalianController
     private static function ambilPengembalian(int $id): ?array
     {
         $stmt = db()->prepare(
-            'SELECT p.id_pengajuan, p.id_peminjam, v.status, v.status_tampil,
-                    p.tanggal_pinjam, p.tanggal_kembali
-             FROM pengajuan p
-             JOIN v_pengajuan_status v ON v.id_pengajuan = p.id_pengajuan
-             WHERE p.id_pengajuan = :id'
+            'SELECT v.id_pengajuan, v.id_oki, v.nama_peminjam, v.status, v.status_tampil,
+                    v.tgl_pinjam AS tanggal_pinjam, v.tgl_kembali AS tanggal_kembali
+             FROM v_pengajuan_status v
+             WHERE v.id_pengajuan = :id'
         );
         $stmt->execute(['id' => $id]);
         $pengajuan = $stmt->fetch();
@@ -107,10 +106,10 @@ class PengembalianController
         // Barang + kondisi per barang (kondisi_kembali masih NULL sebelum dicatat)
         $stmt = db()->prepare(
             'SELECT b.id_barang, b.kode_barang, b.nama_barang, d.jumlah,
-                    dk.kondisi_kembali, dk.catatan
+                    dk.kondisi_brg_kembali AS kondisi_kembali, dk.jumlah AS jumlah_dikembalikan, dk.catatan
              FROM detail_pengajuan d
              JOIN barang b                    ON b.id_barang = d.id_barang
-             LEFT JOIN detail_pengembalian dk ON dk.id_detail = d.id_detail
+             LEFT JOIN detail_pengembalian dk ON dk.id_detail_pengajuan = d.id_detail_pengajuan
              WHERE d.id_pengajuan = :id
              ORDER BY b.nama_barang'
         );
@@ -119,8 +118,8 @@ class PengembalianController
 
         // Catatan pengembalian (null kalau belum dikembalikan)
         $stmt = db()->prepare(
-            'SELECT r.tanggal_kembali_aktual, r.catatan, a.nama_admin AS dicatat_oleh,
-                    GREATEST(r.tanggal_kembali_aktual::DATE - p.tanggal_kembali::DATE, 0) AS hari_terlambat
+            'SELECT r.tgl_kembali_aktual AS tanggal_kembali_aktual, r.catatan, a.nama_admin AS dicatat_oleh,
+                    GREATEST(r.tgl_kembali_aktual::DATE - p.tgl_kembali::DATE, 0) AS hari_terlambat
              FROM pengembalian r
              JOIN pengajuan p   ON p.id_pengajuan = r.id_pengajuan
              LEFT JOIN admin a  ON a.id_admin = r.id_admin
@@ -198,9 +197,16 @@ class PengembalianController
                     : false;
                 $kondisi = is_array($item) ? (string)($item['kondisi'] ?? '') : '';
                 $catBrg  = is_array($item) ? trim((string)($item['catatan'] ?? '')) : '';
+                $jumlah  = is_array($item) && isset($item['jumlah'])
+                    ? filter_var($item['jumlah'], FILTER_VALIDATE_INT, ['options' => ['min_range' => 1]])
+                    : null;
 
                 if ($idBarang === false || !in_array($kondisi, ['Baik', 'Rusak', 'Hilang'], true)) {
                     $errors['barang'] = 'Setiap barang harus punya id_barang dan kondisi (Baik, Rusak, atau Hilang)';
+                    break;
+                }
+                if ($jumlah === false) {
+                    $errors['barang'] = 'Jumlah dikembalikan harus angka minimal 1';
                     break;
                 }
                 if (mb_strlen($catBrg) > 255) {
@@ -216,6 +222,7 @@ class PengembalianController
                     'id_barang' => $idBarang,
                     'kondisi'   => $kondisi,
                     'catatan'   => $catBrg !== '' ? $catBrg : null,
+                    'jumlah'    => $jumlah,
                 ];
             }
         }
