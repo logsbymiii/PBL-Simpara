@@ -9,11 +9,13 @@ function start_session(): void
     }
 
     session_name('simpara_session');
+     $produksi = env('APP_ENV') === 'production';
     session_set_cookie_params([
         'lifetime' => 0,        // hilang saat browser ditutup
         'path'     => '/',
         'httponly' => true,     // cookie tidak bisa dibaca JavaScript (lebih aman)
-        'samesite' => 'Lax',
+        'secure'   => $produksi,
+        'samesite' => $produksi ? 'None' : 'Lax',
     ]);
     session_start();
 }

@@ -14,6 +14,11 @@ function db(): PDO
         env('DB_PORT', '5432'),
         env('DB_NAME', '')
     );
+    
+    $ssl = env('DB_SSLMODE', '');
+    if ($ssl !== '') {
+        $dsn .= ';sslmode=' . $ssl;
+    }
 
     $pdo = new PDO($dsn, env('DB_USER', ''), env('DB_PASS', ''), [
         PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,   // error SQL jadi exception
