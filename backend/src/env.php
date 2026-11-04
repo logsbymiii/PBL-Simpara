@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 
-// Baca file .env lalu simpan ke $_ENV
 function load_env(string $path): void
 {
     if (!is_file($path)) {
@@ -12,7 +11,6 @@ function load_env(string $path): void
     foreach ($lines as $line) {
         $line = trim($line);
 
-        // lewati komentar dan baris tanpa tanda "="
         if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) {
             continue;
         }
@@ -22,8 +20,11 @@ function load_env(string $path): void
     }
 }
 
-// Ambil satu nilai dari .env, atau $default kalau tidak ada
 function env(string $key, ?string $default = null): ?string
 {
-    return $_ENV[$key] ?? $default;
+    if (isset($_ENV[$key])) {
+        return $_ENV[$key];
+    }
+    $nilai = getenv($key);
+    return $nilai !== false ? $nilai : $default;
 }
