@@ -1,84 +1,69 @@
 <?php
 declare(strict_types=1);
 
+// Akun peminjam adalah akun OKI (organisasi). Siapa orang yang meminjam diisi
+// di form pengajuan (nama, NIM, no HP), bukan lewat akun.
 class AuthController
 {
+    // GET /api/oki  (publik)
+    // Daftar OKI aktif untuk dropdown login. Password tidak pernah ikut.
+    public static function daftarOki(array $params = []): void
+    {
+        $stmt = db()->query(
+            "SELECT id_oki, nama_oki FROM oki WHERE status_akun = 'Aktif' ORDER BY nama_oki"
+        );
+        json_success($stmt->fetchAll());
+    }
+
     // POST /api/auth/register
-    // Body JSON: { "nama", "nim", "email", "oki", "password" }
+    // Body JSON: { "oki": "UKM Catur", "password": "minimal6" }
+    // Membuat akun OKI baru. Nama OKI tidak boleh sama (huruf besar/kecil tidak dibedakan).
     public static function register(array $params = []): void
     {
         $body     = get_json_body();
-        $nama     = trim((string)($body['nama'] ?? ''));
-        $nim      = trim((string)($body['nim'] ?? ''));
-        $email    = strtolower(trim((string)($body['email'] ?? '')));
-        $oki      = trim((string)($body['oki'] ?? ''));
+        $nama     = trim((string)($body['oki'] ?? $body['nama_oki'] ?? ''));
         $password = (string)($body['password'] ?? '');
 
-        // 1. Validasi input (aturan password sama dengan front-end: min. 6 karakter)
         $errors = [];
-        if ($nama === '')                                $errors['nama']     = 'Nama wajib diisi';
-        if ($nim === '')                                 $errors['nim']      = 'NIM wajib diisi';
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL))  $errors['email']    = 'Email tidak valid';
-        if ($oki === '')                                 $errors['oki']      = 'OKI wajib diisi';
-        if (strlen($password) < 6)                       $errors['password'] = 'Password minimal 6 karakter';
-
+        if ($nama === '') {
+            $errors['oki'] = 'Nama OKI wajib diisi';
+        } elseif (mb_strlen($nama) > 100) {
+            $errors['oki'] = 'Nama OKI maksimal 100 karakter';
+        }
+        if (mb_strlen($password) < 6) {
+            $errors['password'] = 'Password minimal 6 karakter';
+        }
         if ($errors) {
             json_error('Data tidak valid', 422, $errors);
         }
 
-        $pdo = db();
-
-        // 2. Cari id_oki dari nama OKI (huruf besar/kecil tidak dibedakan)
-        $stmt = $pdo->prepare('SELECT id_oki FROM oki WHERE LOWER(nama_oki) = LOWER(:nama)');
-        $stmt->execute(['nama' => $oki]);
-        $idOki = $stmt->fetchColumn();
-
-        if ($idOki === false) {
-            json_error('Data tidak valid', 422, ['oki' => 'OKI tidak ditemukan']);
-        }
-
-        // 3. Cek NIM / email belum dipakai
-        $stmt = $pdo->prepare(
-            'SELECT 1 FROM peminjam WHERE nim = :nim OR LOWER(email) = LOWER(:email) LIMIT 1'
-        );
-        $stmt->execute(['nim' => $nim, 'email' => $email]);
+        $pdo  = db();
+        $stmt = $pdo->prepare('SELECT 1 FROM oki WHERE LOWER(nama_oki) = LOWER(:nama)');
+        $stmt->execute(['nama' => $nama]);
         if ($stmt->fetchColumn() !== false) {
-            json_error('NIM atau email sudah terdaftar', 409);
+            json_error('OKI sudah terdaftar', 409);
         }
 
-        // 4. Simpan. Password di-hash, TIDAK PERNAH disimpan apa adanya
         try {
+            // Password di-hash, TIDAK PERNAH disimpan apa adanya
             $stmt = $pdo->prepare(
-                'INSERT INTO peminjam (nim, nama_peminjam, email, id_oki, password, tanggal_daftar)
-                 VALUES (:nim, :nama, :email, :id_oki, :password, CURRENT_DATE)
-                 RETURNING id_peminjam'
+                'INSERT INTO oki (nama_oki, password) VALUES (:nama, :password) RETURNING id_oki'
             );
-            $stmt->execute([
-                'nim'      => $nim,
-                'nama'     => $nama,
-                'email'    => $email,
-                'id_oki'   => $idOki,
-                'password' => password_hash($password, PASSWORD_DEFAULT),
-            ]);
+            $stmt->execute(['nama' => $nama, 'password' => password_hash($password, PASSWORD_DEFAULT)]);
             $id = (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
-            // 23505 = pelanggaran UNIQUE (kalau dua orang daftar bersamaan)
-            if ($e->getCode() === '23505') {
-                json_error('NIM atau email sudah terdaftar', 409);
+            if ($e->getCode() === '23505') { // dua orang mendaftar bersamaan
+                json_error('OKI sudah terdaftar', 409);
             }
             throw $e;
         }
 
-        json_success(
-            ['id' => $id, 'nim' => $nim, 'nama' => $nama, 'email' => $email],
-            'Pendaftaran berhasil',
-            201
-        );
+        json_success(['id' => $id, 'nama_oki' => $nama], 'Pendaftaran berhasil', 201);
     }
 
     // POST /api/auth/login
-    // Peminjam: { "role": "peminjam", "nim", "email", "password" }
-    // Admin:    { "role": "admin", "username", "password" }
+    // Peminjam (OKI): { "role": "peminjam", "id_oki": 1, "password" }   atau "oki": "HMTI" sebagai ganti id_oki
+    // Admin:          { "role": "admin", "username", "password" }
     public static function login(array $params = []): void
     {
         $body = get_json_body();
@@ -87,46 +72,46 @@ class AuthController
         if ($role === 'admin') {
             self::loginAdmin($body);
         } elseif ($role === 'peminjam') {
-            self::loginPeminjam($body);
+            self::loginOki($body);
         } else {
             json_error('Role tidak dikenal', 422);
         }
     }
 
-    private static function loginPeminjam(array $body): void
+    private static function loginOki(array $body): void
     {
-        $nim      = trim((string)($body['nim'] ?? ''));
-        $email    = trim((string)($body['email'] ?? ''));
+        $idOki    = filter_var($body['id_oki'] ?? null, FILTER_VALIDATE_INT);
+        $nama     = trim((string)($body['oki'] ?? ''));
         $password = (string)($body['password'] ?? '');
 
-        if ($nim === '' || $email === '' || $password === '') {
-            json_error('NIM, email, dan password wajib diisi', 422);
+        if (($idOki === false && $nama === '') || $password === '') {
+            json_error('OKI dan password wajib diisi', 422);
         }
 
-        $stmt = db()->prepare(
-            'SELECT id_peminjam, nim, nama_peminjam, email, password, status_akun
-             FROM peminjam
-             WHERE nim = :nim AND LOWER(email) = LOWER(:email)'
-        );
-        $stmt->execute(['nim' => $nim, 'email' => $email]);
+        if ($idOki !== false) {
+            $stmt = db()->prepare('SELECT id_oki, nama_oki, password, status_akun FROM oki WHERE id_oki = :id');
+            $stmt->execute(['id' => $idOki]);
+        } else {
+            $stmt = db()->prepare(
+                'SELECT id_oki, nama_oki, password, status_akun FROM oki WHERE LOWER(nama_oki) = LOWER(:nama)'
+            );
+            $stmt->execute(['nama' => $nama]);
+        }
         $row = $stmt->fetch();
 
         // Pesan sengaja disamakan: jangan beri tahu mana yang salah
         if ($row === false || !password_verify($password, $row['password'])) {
-            json_error('NIM, email, atau password salah', 401);
+            json_error('OKI atau password salah', 401);
         }
-
-        // Password benar, tapi akun dinonaktifkan admin
         if ($row['status_akun'] !== 'Aktif') {
-            json_error('Akun Anda dinonaktifkan. Hubungi admin.', 403);
+            json_error('Akun OKI Anda dinonaktifkan. Hubungi admin.', 403);
         }
 
         $user = [
-            'id'    => (int)$row['id_peminjam'],
-            'role'  => 'peminjam',
-            'nim'   => $row['nim'],
-            'nama'  => $row['nama_peminjam'],
-            'email' => $row['email'],
+            'id'       => (int)$row['id_oki'],
+            'role'     => 'peminjam',
+            'nama'     => $row['nama_oki'],
+            'nama_oki' => $row['nama_oki'],
         ];
         self::startLoginSession($user);
         json_success($user, 'Login berhasil');
@@ -142,7 +127,7 @@ class AuthController
         }
 
         $stmt = db()->prepare(
-            'SELECT id_admin, username, password, nama_admin, jabatan
+            'SELECT id_admin, username, password, nama_admin, jabatan, role, status_akun
              FROM admin
              WHERE username = :username'
         );
@@ -152,10 +137,15 @@ class AuthController
         if ($row === false || !password_verify($password, $row['password'])) {
             json_error('Username atau password salah', 401);
         }
+        if ($row['status_akun'] !== 'Aktif') {
+            json_error('Akun admin dinonaktifkan.', 403);
+        }
 
+        // role tetap 'admin' supaya pengecekan lama jalan; 'level' membedakan admin / super_admin
         $user = [
             'id'       => (int)$row['id_admin'],
             'role'     => 'admin',
+            'level'    => $row['role'],
             'username' => $row['username'],
             'nama'     => $row['nama_admin'],
             'jabatan'  => $row['jabatan'],

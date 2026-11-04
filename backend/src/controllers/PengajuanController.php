@@ -10,8 +10,11 @@ class PengajuanController
     ];
 
     // POST /api/pengajuan  (peminjam)
-    // Body JSON: { "tanggal_pinjam": "2026-11-20 08:00", "tanggal_kembali": "2026-11-21 17:00",
-    //              "keperluan": "...", "barang": [ { "id_barang": 1, "jumlah": 1 }, ... ] }
+    // Akun yang login adalah OKI; orang yang meminjam diisi di body.
+    // Body JSON: { "nama_peminjam": "Luna", "nim_peminjam": "2310003", "no_hp_peminjam": "0812...",
+    //              "nama_kegiatan": "Gladi bersih", "keperluan": "...",
+    //              "tanggal_pinjam": "2026-11-20 08:00", "tanggal_kembali": "2026-11-21 17:00",
+    //              "barang": [ { "id_barang": 1, "jumlah": 1 }, ... ] }
     public static function store(array $params = []): void
     {
         $user = requireLogin();
@@ -40,15 +43,21 @@ class PengajuanController
 
             // 1. Simpan header pengajuan (status 'Menunggu' dan jam diajukan diisi otomatis oleh database)
             $stmt = $pdo->prepare(
-                'INSERT INTO pengajuan (id_peminjam, tanggal_pinjam, tanggal_kembali, keperluan)
-                 VALUES (:peminjam, CAST(:mulai AS TIMESTAMP), CAST(:selesai AS TIMESTAMP), :keperluan)
+                'INSERT INTO pengajuan (id_oki, nama_peminjam, nim_peminjam, no_hp_peminjam,
+                                        nama_kegiatan, keperluan, tgl_pinjam, tgl_kembali)
+                 VALUES (:oki, :nama, :nim, :hp, :kegiatan, :keperluan,
+                         CAST(:mulai AS TIMESTAMP), CAST(:selesai AS TIMESTAMP))
                  RETURNING id_pengajuan'
             );
             $stmt->execute([
-                'peminjam'  => $user['id'],
+                'oki'       => $user['id'],
+                'nama'      => $data['nama_peminjam'],
+                'nim'       => $data['nim_peminjam'],
+                'hp'        => $data['no_hp_peminjam'],
+                'kegiatan'  => $data['nama_kegiatan'],
+                'keperluan' => $data['keperluan'],
                 'mulai'     => $data['tanggal_pinjam'],
                 'selesai'   => $data['tanggal_kembali'],
-                'keperluan' => $data['keperluan'],
             ]);
             $id = (int)$stmt->fetchColumn();
 
@@ -93,8 +102,8 @@ class PengajuanController
         $bind  = [];
 
         if (!$admin) {
-            $where[]         = 'p.id_peminjam = :peminjam';
-            $bind['peminjam'] = $user['id'];
+            $where[]     = 'v.id_oki = :oki';
+            $bind['oki'] = $user['id'];
         }
 
         $status = trim((string)($_GET['status'] ?? ''));
@@ -106,30 +115,34 @@ class PengajuanController
             $bind['status'] = $status;
         }
 
-        // Cari nama peminjam (hanya untuk admin)
+        // Cari nama peminjam, NIM, atau nama OKI (hanya untuk admin)
         $q = trim((string)($_GET['q'] ?? ''));
         if ($admin && $q !== '') {
-            $where[]   = 'm.nama_peminjam ILIKE :q';
-            $bind['q'] = '%' . addcslashes($q, '%_\\') . '%';
+            $like           = '%' . addcslashes($q, '%_\\') . '%';
+            $where[]        = '(v.nama_peminjam ILIKE :q_nama OR v.nim_peminjam ILIKE :q_nim OR o.nama_oki ILIKE :q_oki)';
+            $bind['q_nama'] = $like;
+            $bind['q_nim']  = $like;
+            $bind['q_oki']  = $like;
         }
 
         $urutan = $admin
-            ? 'v.peringatan_5_jam DESC, p.tanggal_diajukan DESC'
-            : 'p.tanggal_pinjam DESC';
+            ? 'v.peringatan_5_jam DESC, v.tgl_diajukan DESC'
+            : 'v.tgl_pinjam DESC';
 
-        $sql = 'SELECT p.id_pengajuan, p.id_peminjam, m.nim, m.nama_peminjam,
+        $sql = 'SELECT v.id_pengajuan, v.id_oki, o.nama_oki,
+                       v.nim_peminjam AS nim, v.nama_peminjam, v.no_hp_peminjam, v.nama_kegiatan,
                        STRING_AGG(b.nama_barang, \', \' ORDER BY b.nama_barang) AS barang,
-                       p.tanggal_pinjam, p.tanggal_kembali, p.tanggal_diajukan,
+                       v.tgl_pinjam AS tanggal_pinjam, v.tgl_kembali AS tanggal_kembali,
+                       v.tgl_diajukan AS tanggal_diajukan,
                        v.status, v.status_tampil, v.jam_menunggu, v.peringatan_5_jam
-                FROM pengajuan p
-                JOIN v_pengajuan_status v ON v.id_pengajuan = p.id_pengajuan
-                JOIN peminjam m           ON m.id_peminjam  = p.id_peminjam
-                JOIN detail_pengajuan d   ON d.id_pengajuan = p.id_pengajuan
-                JOIN barang b             ON b.id_barang    = d.id_barang'
+                FROM v_pengajuan_status v
+                JOIN oki o              ON o.id_oki       = v.id_oki
+                JOIN detail_pengajuan d ON d.id_pengajuan = v.id_pengajuan
+                JOIN barang b           ON b.id_barang    = d.id_barang'
              . ($where ? ' WHERE ' . implode(' AND ', $where) : '')
-             . ' GROUP BY p.id_pengajuan, p.id_peminjam, m.nim, m.nama_peminjam,
-                          p.tanggal_pinjam, p.tanggal_kembali, p.tanggal_diajukan,
-                          v.status, v.status_tampil, v.jam_menunggu, v.peringatan_5_jam
+             . ' GROUP BY v.id_pengajuan, v.id_oki, o.nama_oki, v.nim_peminjam, v.nama_peminjam,
+                          v.no_hp_peminjam, v.nama_kegiatan, v.tgl_pinjam, v.tgl_kembali,
+                          v.tgl_diajukan, v.status, v.status_tampil, v.jam_menunggu, v.peringatan_5_jam
                  ORDER BY ' . $urutan;
 
         $stmt = db()->prepare($sql);
@@ -146,7 +159,7 @@ class PengajuanController
 
         // Peminjam yang membuka pengajuan orang lain dianggap "tidak ditemukan"
         if ($detail === null
-            || ($user['role'] === 'peminjam' && (int)$detail['id_peminjam'] !== (int)$user['id'])) {
+            || ($user['role'] === 'peminjam' && (int)$detail['id_oki'] !== (int)$user['id'])) {
             json_error('Pengajuan tidak ditemukan', 404);
         }
 
@@ -211,8 +224,30 @@ class PengajuanController
         json_success(self::ambilDetail($id), 'Pengajuan ditolak');
     }
 
+    // POST /api/pengajuan/{id}/serah-terima  (admin)
+    // Barang diserahkan di tempat: Disetujui -> Dipinjam
+    public static function serahTerima(array $params): void
+    {
+        $admin = requireAdmin();
+        $id    = self::parseId($params['id'] ?? '');
+        self::pastikanAda($id);
+
+        try {
+            $stmt = db()->prepare('CALL sp_serah_terima_pengajuan(CAST(:id AS INT), CAST(:admin AS INT))');
+            $stmt->execute(['id' => $id, 'admin' => $admin['id']]);
+        } catch (PDOException $e) {
+            $pesan = self::pesanRaise($e);
+            if ($pesan !== null) {
+                json_error($pesan, 409);
+            }
+            throw $e;
+        }
+
+        json_success(self::ambilDetail($id), 'Serah terima dicatat');
+    }
+
     // POST /api/pengajuan/{id}/batal  (peminjam)
-    // Hanya pengajuan milik sendiri yang masih Menunggu.
+    // Hanya pengajuan milik OKI sendiri yang masih Menunggu.
     public static function batal(array $params): void
     {
         $user = requireLogin();
@@ -221,24 +256,17 @@ class PengajuanController
         }
         $id = self::parseId($params['id'] ?? '');
 
-        // Satu perintah UPDATE yang memeriksa pemilik DAN status sekaligus
-        $stmt = db()->prepare(
-            "UPDATE pengajuan SET status = 'Dibatalkan'
-             WHERE id_pengajuan = :id AND id_peminjam = :peminjam AND status = 'Menunggu'"
-        );
-        $stmt->execute(['id' => $id, 'peminjam' => $user['id']]);
-
-        if ($stmt->rowCount() === 0) {
-            // Tidak ada yang berubah: pengajuan bukan miliknya / tidak ada (404),
-            // atau miliknya tapi sudah diproses (409)
-            $cek = db()->prepare(
-                'SELECT 1 FROM pengajuan WHERE id_pengajuan = :id AND id_peminjam = :peminjam'
-            );
-            $cek->execute(['id' => $id, 'peminjam' => $user['id']]);
-            if ($cek->fetchColumn() === false) {
-                json_error('Pengajuan tidak ditemukan', 404);
+        // Prosedur memeriksa pemilik (OKI yang sama) dan status, lalu mencatat riwayat
+        try {
+            $stmt = db()->prepare('CALL sp_batal_pengajuan(CAST(:id AS INT), CAST(:oki AS INT))');
+            $stmt->execute(['id' => $id, 'oki' => $user['id']]);
+        } catch (PDOException $e) {
+            $pesan = self::pesanRaise($e);
+            if ($pesan !== null) {
+                // pengajuan bukan milik OKI ini / tidak ada -> 404; sudah diproses -> 409
+                json_error($pesan, str_contains($pesan, 'tidak ditemukan') ? 404 : 409);
             }
-            json_error('Pengajuan sudah diproses dan tidak dapat dibatalkan', 409);
+            throw $e;
         }
 
         json_success(self::ambilDetail($id), 'Pengajuan dibatalkan');
@@ -259,17 +287,31 @@ class PengajuanController
     // Header pengajuan + daftar barangnya (null kalau tidak ada)
     private static function ambilDetail(int $id): ?array
     {
+        // Siapa yang memverifikasi dan menyerahkan barang dibaca dari riwayat_status
         $stmt = db()->prepare(
-            'SELECT p.id_pengajuan, p.id_peminjam, m.nim, m.nama_peminjam, o.nama_oki,
-                    p.tanggal_pinjam, p.tanggal_kembali, p.tanggal_diajukan, p.keperluan,
+            'SELECT v.id_pengajuan, v.id_oki, o.nama_oki,
+                    v.nim_peminjam AS nim, v.nama_peminjam, v.no_hp_peminjam, v.nama_kegiatan,
+                    v.tgl_pinjam AS tanggal_pinjam, v.tgl_kembali AS tanggal_kembali,
+                    v.tgl_diajukan AS tanggal_diajukan, v.keperluan,
                     v.status, v.status_tampil, v.jam_menunggu, v.peringatan_5_jam,
-                    p.tanggal_verifikasi, a.nama_admin AS diverifikasi_oleh, p.alasan_penolakan
-             FROM pengajuan p
-             JOIN v_pengajuan_status v ON v.id_pengajuan = p.id_pengajuan
-             JOIN peminjam m           ON m.id_peminjam  = p.id_peminjam
-             LEFT JOIN oki o           ON o.id_oki       = m.id_oki
-             LEFT JOIN admin a         ON a.id_admin     = p.id_admin
-             WHERE p.id_pengajuan = :id'
+                    ver.waktu AS tanggal_verifikasi, ver.nama_admin AS diverifikasi_oleh,
+                    v.alasan_penolakan,
+                    srh.waktu AS tanggal_serah_terima, srh.nama_admin AS diserahkan_oleh
+             FROM v_pengajuan_status v
+             JOIN oki o ON o.id_oki = v.id_oki
+             LEFT JOIN LATERAL (
+                 SELECT r.waktu, a.nama_admin
+                   FROM riwayat_status r JOIN admin a ON a.id_admin = r.id_admin
+                  WHERE r.id_pengajuan = v.id_pengajuan AND r.status_baru IN (\'Disetujui\', \'Ditolak\')
+                  ORDER BY r.waktu DESC, r.id_riwayat_status DESC LIMIT 1
+             ) ver ON TRUE
+             LEFT JOIN LATERAL (
+                 SELECT r.waktu, a.nama_admin
+                   FROM riwayat_status r JOIN admin a ON a.id_admin = r.id_admin
+                  WHERE r.id_pengajuan = v.id_pengajuan AND r.status_baru = \'Dipinjam\'
+                  ORDER BY r.waktu DESC, r.id_riwayat_status DESC LIMIT 1
+             ) srh ON TRUE
+             WHERE v.id_pengajuan = :id'
         );
         $stmt->execute(['id' => $id]);
         $header = $stmt->fetch();
@@ -331,13 +373,38 @@ class PengajuanController
         $selesai   = self::parseWaktu($body['tanggal_kembali'] ?? '');
         $keperluan = trim((string)($body['keperluan'] ?? ''));
         $mentah    = $body['barang'] ?? null;
+        $nama      = trim((string)($body['nama_peminjam'] ?? ''));
+        $nim       = trim((string)($body['nim_peminjam'] ?? $body['nim'] ?? ''));
+        $hp        = trim((string)($body['no_hp_peminjam'] ?? ''));
+        $kegiatan  = trim((string)($body['nama_kegiatan'] ?? ''));
 
         $errors = [];
+        if ($nama === '') {
+            $errors['nama_peminjam'] = 'Nama peminjam wajib diisi';
+        } elseif (mb_strlen($nama) > 100) {
+            $errors['nama_peminjam'] = 'Nama peminjam maksimal 100 karakter';
+        }
+        if ($nim === '') {
+            $errors['nim_peminjam'] = 'NIM peminjam wajib diisi';
+        } elseif (mb_strlen($nim) > 20) {
+            $errors['nim_peminjam'] = 'NIM maksimal 20 karakter';
+        }
+        if (mb_strlen($hp) > 20) {
+            $errors['no_hp_peminjam'] = 'No HP maksimal 20 karakter';
+        }
+        if ($kegiatan === '') {
+            $errors['nama_kegiatan'] = 'Nama kegiatan wajib diisi';
+        } elseif (mb_strlen($kegiatan) > 100) {
+            $errors['nama_kegiatan'] = 'Nama kegiatan maksimal 100 karakter';
+        }
         if ($mulai === null) {
             $errors['tanggal_pinjam'] = 'Tanggal dan jam pinjam wajib diisi, format YYYY-MM-DD HH:MM';
         }
         if ($selesai === null) {
             $errors['tanggal_kembali'] = 'Tanggal dan jam kembali wajib diisi, format YYYY-MM-DD HH:MM';
+        }
+        if ($mulai !== null && substr($mulai, 0, 10) < date('Y-m-d')) {
+            $errors['tanggal_pinjam'] = 'Tanggal pinjam tidak boleh di masa lalu';
         }
         if ($mulai !== null && $selesai !== null && $selesai < $mulai) {
             $errors['tanggal_kembali'] = 'Waktu kembali tidak boleh sebelum waktu pinjam';
@@ -380,6 +447,10 @@ class PengajuanController
         }
 
         return [
+            'nama_peminjam'   => $nama,
+            'nim_peminjam'    => $nim,
+            'no_hp_peminjam'  => $hp === '' ? null : $hp,
+            'nama_kegiatan'   => $kegiatan,
             'tanggal_pinjam'  => $mulai,
             'tanggal_kembali' => $selesai,
             'keperluan'       => $keperluan,
