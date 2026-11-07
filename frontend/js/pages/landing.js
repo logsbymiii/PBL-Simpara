@@ -1,6 +1,9 @@
 // Halaman depan publik (mode tamu): tidak memanggil requireLogin().
+// Data agenda dan barang diambil dari API (GET /api/agenda dan GET /api/barang).
+// Keduanya endpoint publik, jadi tamu yang belum login tetap bisa melihatnya.
 
 // Kalau sudah login, tombol Masuk/Daftar diganti jadi tombol ke dashboard.
+// (Sesi login masih dari localStorage; diganti ke API di kelompok B.)
 const sesi = getCurrentUser();
 if (sesi) {
     const tujuan = sesi.role === 'admin' ? 'pages/admin/dashboard.html' : 'pages/peminjam/dashboard.html';
@@ -10,14 +13,14 @@ if (sesi) {
 
 const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 function tanggalIndo(iso) {
-    const [y, m, d] = iso.split('-').map(Number);
+    const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
     return `${d} ${bulan[m - 1]} ${y}`;
 }
 
 // Semua barang dari server disimpan di sini. Pencarian dan filter status
 // dilakukan di browser, jadi mengetik di kotak cari tidak memanggil API terus-menerus.
 let semuaBarang = [];
- 
+
 async function muatAgenda() {
     const box = document.getElementById('daftarAgenda');
     box.innerHTML = '<p>Memuat agenda...</p>';
@@ -45,15 +48,15 @@ function tampilkanBarang() {
     const q = document.getElementById('cari').value.toLowerCase();
     const status = document.getElementById('filter').value;
 
-    const hasil = DUMMY_BARANG.filter(b =>
-        b.nama.toLowerCase().includes(q) && (!status || b.status === status)
+    const hasil = semuaBarang.filter(b =>
+        b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
     document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
     <div class="item">
-      <div class="img">${ikonBarang(b.icon)}</div>
-      <b>${b.nama}</b><br>
-      <small>${b.kategori || ''}</small><br>
+      <div class="img">${ikonBarang(null)}</div>
+      <b>${esc(b.nama_barang)}</b><br>
+      <small>${esc(b.nama_kategori || '')}</small><br>
       ${badge(b.status, 'barang')}<br><br>
       <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
@@ -72,5 +75,5 @@ async function muatBarang() {
 
 document.getElementById('cari').addEventListener('input', tampilkanBarang);
 document.getElementById('filter').addEventListener('change', tampilkanBarang);
-tampilkanAgenda();
-tampilkanBarang();
+muatAgenda();
+muatBarang();
