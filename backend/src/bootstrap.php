@@ -22,7 +22,12 @@ set_exception_handler(function (Throwable $e): void {
 });
 
 // CORS: izinkan front-end memanggil API ini
-header('Access-Control-Allow-Origin: ' . env('CORS_ORIGIN', 'http://127.0.0.1:5500'));
+$diizinkan = array_map('trim', explode(',', env('CORS_ORIGIN', 'http://127.0.0.1:5500')));
+$asal = $_SERVER['HTTP_ORIGIN'] ?? '';
+if ($asal !== '' && in_array($asal, $diizinkan, true)) {
+    header('Access-Control-Allow-Origin: ' . $asal);
+    header('Vary: Origin');
+}
 header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Headers: Content-Type');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
