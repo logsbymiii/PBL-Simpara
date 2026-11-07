@@ -296,7 +296,8 @@ class PengajuanController
                     v.status, v.status_tampil, v.jam_menunggu, v.peringatan_5_jam,
                     ver.waktu AS tanggal_verifikasi, ver.nama_admin AS diverifikasi_oleh,
                     v.alasan_penolakan,
-                    srh.waktu AS tanggal_serah_terima, srh.nama_admin AS diserahkan_oleh
+                    srh.waktu AS tanggal_serah_terima, srh.nama_admin AS diserahkan_oleh,
+                    kmb.tgl_kembali_aktual AS tanggal_kembali_aktual, adm_kmb.nama_admin AS diterima_oleh
              FROM v_pengajuan_status v
              JOIN oki o ON o.id_oki = v.id_oki
              LEFT JOIN LATERAL (
@@ -311,6 +312,8 @@ class PengajuanController
                   WHERE r.id_pengajuan = v.id_pengajuan AND r.status_baru = \'Dipinjam\'
                   ORDER BY r.waktu DESC, r.id_riwayat_status DESC LIMIT 1
              ) srh ON TRUE
+             LEFT JOIN pengembalian kmb ON kmb.id_pengajuan = v.id_pengajuan
+             LEFT JOIN admin adm_kmb ON adm_kmb.id_admin = kmb.id_admin
              WHERE v.id_pengajuan = :id'
         );
         $stmt->execute(['id' => $id]);
