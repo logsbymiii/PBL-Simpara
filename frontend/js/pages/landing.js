@@ -1,12 +1,9 @@
 // Halaman depan publik (mode tamu): tidak memanggil requireLogin().
-// Data masih dummy; nanti diganti GET /api/barang dan GET /api/agenda (Fase 8).
-
-const DUMMY_AGENDA = [
-    { nama: 'Seminar Nasional HMTI', mulai: '2026-11-11', selesai: '2026-11-12', keterangan: 'Seluruh inventaris dipakai panitia internal' },
-    { nama: 'Dies Natalis HMTI', mulai: '2026-11-22', selesai: '2026-11-23', keterangan: 'Acara puncak tahunan' },
-];
+// Data agenda dan barang diambil dari API (GET /api/agenda dan GET /api/barang).
+// Keduanya endpoint publik, jadi tamu yang belum login tetap bisa melihatnya.
 
 // Kalau sudah login, tombol Masuk/Daftar diganti jadi tombol ke dashboard.
+// (Sesi login masih dari localStorage; diganti ke API di kelompok B.)
 const sesi = getCurrentUser();
 if (sesi) {
     const tujuan = sesi.role === 'admin' ? 'pages/admin/dashboard.html' : 'pages/peminjam/dashboard.html';
@@ -16,47 +13,67 @@ if (sesi) {
 
 const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
 function tanggalIndo(iso) {
-    const [y, m, d] = iso.split('-').map(Number);
+    const [y, m, d] = iso.slice(0, 10).split('-').map(Number);
     return `${d} ${bulan[m - 1]} ${y}`;
 }
 
-function tampilkanAgenda() {
-    const hariIni = new Date().toISOString().slice(0, 10);
-    const akanDatang = DUMMY_AGENDA.filter(a => a.selesai >= hariIni);
+// Semua barang dari server disimpan di sini. Pencarian dan filter status
+// dilakukan di browser, jadi mengetik di kotak cari tidak memanggil API terus-menerus.
+let semuaBarang = [];
 
-    document.getElementById('daftarAgenda').innerHTML = akanDatang.length
-        ? akanDatang.map(a => `
+async function muatAgenda() {
+    const box = document.getElementById('daftarAgenda');
+    box.innerHTML = '<p>Memuat agenda...</p>';
+    try {
+        // Server sudah hanya mengirim agenda yang akan datang atau sedang berlangsung
+        const agenda = await apiGet('/api/agenda');
+        box.innerHTML = agenda.length
+            ? agenda.map(a => `
         <div class="agenda-item">
           <div class="agenda-tgl">
-            <b>${tanggalIndo(a.mulai)}</b>${a.selesai !== a.mulai ? `<br><small>s/d ${tanggalIndo(a.selesai)}</small>` : ''}
+            <b>${tanggalIndo(a.tanggal_mulai)}</b>${a.tanggal_selesai !== a.tanggal_mulai ? `<br><small>s/d ${tanggalIndo(a.tanggal_selesai)}</small>` : ''}
           </div>
           <div>
-            <b>${a.nama}</b><br>
-            <small>${a.keterangan || ''}</small>
+            <b>${esc(a.nama_agenda)}</b><br>
+            <small>${esc(a.keterangan || '')}</small>
           </div>
         </div>`).join('')
-        : '<p>Belum ada agenda HMTI yang akan datang.</p>';
+            : '<p>Belum ada agenda HMTI yang akan datang.</p>';
+    } catch (e) {
+        box.innerHTML = `<p>${esc(e.message)}</p>`;
+    }
 }
 
 function tampilkanBarang() {
     const q = document.getElementById('cari').value.toLowerCase();
     const status = document.getElementById('filter').value;
 
-    const hasil = DUMMY_BARANG.filter(b =>
-        b.nama.toLowerCase().includes(q) && (!status || b.status === status)
+    const hasil = semuaBarang.filter(b =>
+        b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
     document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
     <div class="item">
-      <div class="img">${ikonBarang(b.icon)}</div>
-      <b>${b.nama}</b><br>
-      <small>${b.kategori || ''}</small><br>
+      <div class="img">${ikonBarang(null)}</div>
+      <b>${esc(b.nama_barang)}</b><br>
+      <small>${esc(b.nama_kategori || '')}</small><br>
       ${badge(b.status, 'barang')}<br><br>
       <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
 }
 
+async function muatBarang() {
+    const box = document.getElementById('daftar');
+    box.innerHTML = '<p>Memuat barang...</p>';
+    try {
+        semuaBarang = await apiGet('/api/barang');
+        tampilkanBarang();
+    } catch (e) {
+        box.innerHTML = `<p>${esc(e.message)}</p>`;
+    }
+}
+
 document.getElementById('cari').addEventListener('input', tampilkanBarang);
 document.getElementById('filter').addEventListener('change', tampilkanBarang);
-tampilkanAgenda();
-tampilkanBarang();
+muatAgenda();
+muatBarang();

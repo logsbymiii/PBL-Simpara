@@ -5,7 +5,7 @@ function badge(status, jenis) {
     Menunggu: 'orange',
     Dipinjam: 'blue',
     Dikembalikan: 'gray', Nonaktif: 'gray',
-    Ditolak: 'red', Habis: 'red', Rusak: 'red', Hilang: 'red',
+    Ditolak: 'red', Habis: 'red', Rusak: 'red', Hilang: 'red', 'Tidak Tersedia': 'red',
   };
   if (jenis === 'barang') {
     const ikon = status === 'Tersedia' ? '<i class="bi bi-check-circle"></i>' : '';

@@ -15,3 +15,10 @@ function ringkasBarang(p) {
   if (!items.length) return p.barang || '-';
   return items.length > 1 ? `${items[0].nama} +${items.length - 1} lainnya` : items[0].nama;
 }
+
+// Mengubah karakter HTML jadi teks biasa sebelum dimasukkan lewat innerHTML
+function esc(teks) {
+  return String(teks ?? '').replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  ));
+}
