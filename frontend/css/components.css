@@ -886,3 +886,56 @@ tr.alert td {
     #surat .surat-ttd { display: flex; justify-content: space-between; margin-top: 28px; text-align: center; }
     #surat .surat-ttd > div { min-width: 200px; }
 }
+/* Sembunyikan tombol "lihat password" bawaan Edge; kita sudah punya tombol mata sendiri */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
+/* ===== Dropdown modern =====
+   Chrome/Edge 135+ : daftar opsi bisa didesain. Browser lain tetap pakai dropdown bawaan. */
+@supports (appearance: base-select) {
+    select,
+    select::picker(select) {
+        appearance: base-select;
+    }
+    select {
+        font-family: inherit;
+        cursor: pointer;
+    }
+    select::picker-icon {
+        color: var(--blue);
+        transition: transform .2s;
+    }
+    select:open::picker-icon {
+        transform: rotate(180deg);
+    }
+    select::picker(select) {
+        background: #fff;
+        border: 0;
+        border-radius: 12px;
+        padding: 6px;
+        margin-top: 6px;
+        box-shadow: 0 12px 32px rgba(24, 19, 137, .18);
+        max-height: 280px;
+    }
+    select option {
+        padding: 10px 12px;
+        border-radius: 8px;
+        font-family: inherit;
+        font-size: 13px;
+        color: var(--text);
+        cursor: pointer;
+    }
+    select option:hover,
+    select option:focus-visible {
+        background: var(--input);
+    }
+    select option:checked {
+        background: var(--blue);
+        color: #fff;
+    }
+    select option::checkmark {
+        display: none;
+    }
+}
