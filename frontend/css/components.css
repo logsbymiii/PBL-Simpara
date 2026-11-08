@@ -751,3 +751,31 @@ tr.alert td {
 /* Modal konfirmasi */
 .konfirmasi-isi { color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
 .modal-box .actions .btn + .btn { margin-left: 8px; }
+/* ===== Mobile: komponen ===== */
+@media (max-width: 768px) {
+    .card { padding: 14px; overflow-x: auto; }   /* tabel bisa digeser ke samping */
+    table { min-width: 560px; }
+
+    .stats { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .stat .num { font-size: 22px; }
+    .grid-items { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+    input, select, textarea { font-size: 16px; }   /* cegah iOS zoom otomatis saat mengetik */
+    .toolbar input, .toolbar select { flex: 1 1 100%; min-height: 42px; }
+    .btn { min-height: 40px; }
+    .btn-sm { min-height: 34px; }
+
+    .seg-tabs { flex-wrap: nowrap; overflow-x: auto; }
+    .seg-tabs button { white-space: nowrap; }
+    .aksi-bawah, .title-row { flex-wrap: wrap; gap: 8px; }
+
+    .modal { align-items: flex-end; padding: 0; }
+    .modal-box {
+        max-width: none;
+        border-radius: 16px 16px 0 0;
+        padding-bottom: calc(22px + env(safe-area-inset-bottom));
+    }
+
+    #toastWadah { left: 16px; right: 16px; top: 12px; }
+    .toast { max-width: none; }
+}
