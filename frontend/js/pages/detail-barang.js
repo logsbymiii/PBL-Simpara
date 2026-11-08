@@ -44,10 +44,7 @@ function tampilkan(b) {
         aksi.innerHTML = `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow btn-sm">Ajukan Pinjam</a>`;
     }
 
-    // TODO: riwayat peminjam per barang menunggu endpoint dari backend (dikerjakan Helmi)
-    if (admin && riwayatBox) {
-        riwayatBox.innerHTML = '<h3>Riwayat Peminjam</h3><p class="empty">Riwayat peminjam per barang belum tersedia (menunggu backend).</p>';
-    }
+    if (admin && riwayatBox) muatRiwayat(b.id_barang);
 }
 
 async function hapus(idBarang, tombol) {
@@ -60,7 +57,33 @@ async function hapus(idBarang, tombol) {
         tombol.disabled = false;
     }
 }
-
+async function muatRiwayat(idBarang) {
+    riwayatBox.innerHTML = '<h3>Riwayat Peminjam</h3><p class="empty">Memuat riwayat...</p>';
+    try {
+        const data = await apiGet(`/api/barang/${idBarang}/riwayat`);
+        if (!data.length) {
+            riwayatBox.innerHTML = '<h3>Riwayat Peminjam</h3><p class="empty">Barang ini belum pernah dipinjam.</p>';
+            return;
+        }
+        const baris = data.map(r => `
+            <tr>
+              <td>${esc(r.nama_peminjam)}</td>
+              <td>${esc(r.nama_kegiatan)}</td>
+              <td>${formatTanggalJam(r.tgl_pinjam)}</td>
+              <td>${formatTanggalJam(r.tgl_kembali)}</td>
+              <td>${r.jumlah} unit</td>
+              <td>${badge(r.status_tampil)}</td>
+            </tr>`).join('');
+        riwayatBox.innerHTML = `
+            <h3>Riwayat Peminjam</h3>
+            <table>
+              <thead><tr><th>Peminjam</th><th>Kegiatan</th><th>Pinjam</th><th>Kembali</th><th>Jumlah</th><th>Status</th></tr></thead>
+              <tbody>${baris}</tbody>
+            </table>`;
+    } catch (e) {
+        riwayatBox.innerHTML = `<h3>Riwayat Peminjam</h3><p class="empty">${esc(e.message)}</p>`;
+    }
+}
 async function muat() {
     if (!id) {
         box.innerHTML = '<p>Barang tidak ditemukan.</p>';
