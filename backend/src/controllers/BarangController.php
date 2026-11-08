@@ -104,6 +104,31 @@ class BarangController
         json_success($barang);
     }
 
+        // GET /api/barang/{id}/riwayat  (admin)
+    // Riwayat peminjaman satu barang, terbaru di atas
+    public static function riwayat(array $params): void
+    {
+        requireAdmin();
+
+        $id = self::parseId($params['id'] ?? '');
+        if (self::cariBarang($id) === false) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+
+        $stmt = db()->prepare(
+            'SELECT p.id_pengajuan, p.nama_peminjam, p.nama_kegiatan,
+                    p.tgl_pinjam, p.tgl_kembali, p.status_tampil,
+                    d.jumlah
+             FROM detail_pengajuan d
+             JOIN v_pengajuan_status p ON p.id_pengajuan = d.id_pengajuan
+             WHERE d.id_barang = :id
+             ORDER BY p.tgl_pinjam DESC
+             LIMIT 50'
+        );
+        $stmt->execute(['id' => $id]);
+        json_success($stmt->fetchAll());
+    }
+
     // GET /api/kategori  -> isi dropdown kategori di form admin
     public static function kategori(array $params = []): void
     {
