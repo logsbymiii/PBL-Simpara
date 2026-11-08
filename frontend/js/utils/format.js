@@ -23,3 +23,12 @@ function esc(teks) {
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
 }
+// Kotak kerangka sebagai pengganti tulisan "Memuat..." (n kartu)
+function skeletonKartu(n = 8) {
+    return Array.from({ length: n }, () => `
+    <div class="item skeleton">
+      <div class="img"></div>
+      <div class="sk-baris"></div>
+      <div class="sk-baris pendek"></div>
+    </div>`).join('');
+}
