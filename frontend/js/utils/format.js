@@ -32,3 +32,30 @@ function skeletonKartu(n = 8) {
       <div class="sk-baris pendek"></div>
     </div>`).join('');
 }
+// Angka di kartu statistik menghitung naik dari 0 saat nilainya terisi dari API
+(function () {
+    const hitungNaik = (el, target) => {
+        if (target < 1 || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        const mulai = performance.now();
+        const durasi = 700;
+        el.dataset.anim = '1';
+        const langkah = (t) => {
+            const p = Math.min((t - mulai) / durasi, 1);
+            el.textContent = Math.round(target * (1 - Math.pow(1 - p, 3)));
+            if (p < 1) {
+                requestAnimationFrame(langkah);
+            } else {
+                setTimeout(() => { delete el.dataset.anim; }, 0);
+            }
+        };
+        requestAnimationFrame(langkah);
+    };
+
+    document.querySelectorAll('.stat .num').forEach(el => {
+        new MutationObserver(() => {
+            if (el.dataset.anim) return;
+            const n = Number(el.textContent);
+            if (Number.isInteger(n)) hitungNaik(el, n);
+        }).observe(el, { childList: true, characterData: true, subtree: true });
+    });
+})();

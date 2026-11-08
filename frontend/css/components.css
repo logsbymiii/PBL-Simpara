@@ -939,3 +939,108 @@ input[type="password"]::-ms-clear {
         display: none;
     }
 }
+/* ===== Animasi lanjutan ===== */
+@keyframes munculSkala {
+    from { opacity: 0; transform: scale(.94) translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes denyut {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(250, 153, 41, .45); }
+    50%      { box-shadow: 0 0 0 6px rgba(250, 153, 41, 0); }
+}
+@keyframes denyutCincin {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(24, 19, 137, .35); }
+    50%      { box-shadow: 0 0 0 7px rgba(24, 19, 137, 0); }
+}
+@keyframes lompat {
+    0%, 100% { transform: translateY(0); }
+    40%      { transform: translateY(-3px); }
+}
+
+/* Isi halaman masuk bertahap */
+.content > * {
+    animation: naikMuncul .4s ease both;
+}
+.content > *:nth-child(1) { animation-delay: .02s; }
+.content > *:nth-child(2) { animation-delay: .07s; }
+.content > *:nth-child(3) { animation-delay: .12s; }
+.content > *:nth-child(4) { animation-delay: .17s; }
+.content > *:nth-child(n+5) { animation-delay: .22s; }
+
+/* Kartu statistik: muncul berurutan + hover */
+.stats .stat {
+    animation: munculSkala .4s ease both;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.stats .stat:nth-child(1) { animation-delay: .05s; }
+.stats .stat:nth-child(2) { animation-delay: .12s; }
+.stats .stat:nth-child(3) { animation-delay: .19s; }
+.stats .stat:nth-child(4) { animation-delay: .26s; }
+.stats .stat:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(20, 20, 90, .14);
+}
+
+/* Baris tabel muncul berurutan */
+tbody tr {
+    animation: naikMuncul .3s ease both;
+}
+tbody tr:nth-child(1) { animation-delay: .03s; }
+tbody tr:nth-child(2) { animation-delay: .06s; }
+tbody tr:nth-child(3) { animation-delay: .09s; }
+tbody tr:nth-child(4) { animation-delay: .12s; }
+tbody tr:nth-child(5) { animation-delay: .15s; }
+tbody tr:nth-child(n+6) { animation-delay: .18s; }
+tbody tr { transition: background .15s; }
+tbody tr:hover { background: var(--input); }
+
+/* Sidebar: menu bergeser, ikon melompat */
+.menu a:hover { transform: translateX(4px); }
+.menu a:hover .bi { animation: lompat .4s ease; }
+
+/* Badge menunggu berdenyut halus */
+.badge.orange:not(.stok) {
+    animation: denyut 2.2s ease-in-out infinite;
+}
+
+/* Timeline: item muncul berurutan, tahap aktif berdenyut */
+.timeline-item {
+    animation: naikMuncul .35s ease both;
+}
+.timeline-item:nth-child(1) { animation-delay: .05s; }
+.timeline-item:nth-child(2) { animation-delay: .15s; }
+.timeline-item:nth-child(3) { animation-delay: .25s; }
+.timeline-item:nth-child(4) { animation-delay: .35s; }
+.timeline-item.current .timeline-marker {
+    animation: denyutCincin 1.8s ease-in-out infinite;
+}
+
+/* Fokus input lebih hidup */
+.form-group input,
+.form-group select,
+.form-group textarea {
+    transition: box-shadow .2s ease, background .2s ease;
+}
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    box-shadow: 0 0 0 3px rgba(24, 19, 137, .18);
+}
+
+/* Tombol kuning terangkat saat hover */
+.btn-yellow, .btn-blue { transition: filter .15s, transform .15s, box-shadow .15s; }
+.btn-yellow:hover, .btn-blue:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(24, 19, 137, .2);
+}
+
+/* Kartu login dan agenda landing */
+.auth-card { animation: munculSkala .5s ease both; }
+.agenda-item { animation: naikMuncul .35s ease both; }
+
+/* Transisi halus saat pindah halaman (Chrome/Edge modern) */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: .15s ease both fade-out-halaman; }
+::view-transition-new(root) { animation: .25s ease both fade-in-halaman; }
+@keyframes fade-out-halaman { to { opacity: 0; } }
+@keyframes fade-in-halaman { from { opacity: 0; } }
