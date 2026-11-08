@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://simpara.76.13.21.60.sslip.io/api/:path*"
+    }
+  ]
+}

@@ -1,5 +1,8 @@
-const API_BASE_URL = 'https://simpara.76.13.21.60.sslip.io';
- 
+// Di Vercel: lewat alamat sendiri (rewrite), supaya cookie sesi satu situs.
+// Di localhost: langsung ke backend.
+const API_BASE_URL = location.hostname.endsWith('vercel.app')
+    ? ''
+    : 'https://simpara.76.13.21.60.sslip.io';
 // Error khusus supaya halaman bisa membaca status dan detail validasi dari server
 class ApiError extends Error {
     constructor(message, status, errors) {
