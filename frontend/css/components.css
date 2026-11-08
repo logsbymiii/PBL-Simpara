@@ -1044,3 +1044,16 @@ tbody tr:hover { background: var(--input); }
 ::view-transition-new(root) { animation: .25s ease both fade-in-halaman; }
 @keyframes fade-out-halaman { to { opacity: 0; } }
 @keyframes fade-in-halaman { from { opacity: 0; } }
+/* Sidebar/bottom nav dan topbar tetap di tempat saat pindah halaman (tidak ikut fade) */
+.sidebar { view-transition-name: sidebar; }
+.topbar { view-transition-name: topbar; }
+::view-transition-group(sidebar),
+::view-transition-group(topbar) {
+    animation-duration: 0s;
+}
+
+/* Efek hover menu hanya untuk mouse di layar besar, bukan sentuhan di HP */
+@media (hover: none), (max-width: 768px) {
+    .menu a:hover { transform: none; }
+    .menu a:hover .bi { animation: none; }
+}
