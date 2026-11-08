@@ -176,3 +176,6 @@
 .menu-toggle:hover {
     filter: brightness(.95);
 }
+.topbar-title { font-weight: 600; font-size: 16px; }
+.user-info { display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
+.user-info small { opacity: .7; }
