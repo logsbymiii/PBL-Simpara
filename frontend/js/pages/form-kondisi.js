@@ -10,7 +10,6 @@ const tgl = s => formatTanggal(String(s).replace(' ', 'T'));
 const info = (label, isi) => `<div class="info"><small class="info-label">${label}</small><b>${isi}</b></div>`;
 
 async function mulai() {
-    form.innerHTML = '<p>Memuat...</p>';
     let p;
     try {
         if (!id) throw new Error('ID pengajuan tidak ada');
