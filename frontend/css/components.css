@@ -847,3 +847,42 @@ tr.alert td {
         transition: none !important;
     }
 }
+
+/* ===== Surat peminjaman (hanya tampil saat dicetak) ===== */
+#surat { display: none; }
+
+@media print {
+    @page { size: A4; margin: 20mm; }
+
+    .layout, .modal, #toastWadah { display: none !important; }
+    body { background: #fff; }
+
+    #surat {
+        display: block;
+        font-family: 'Times New Roman', Times, serif;
+        font-size: 12pt;
+        line-height: 1.5;
+        color: #000;
+    }
+    #surat .surat-kop {
+        text-align: center;
+        padding-bottom: 8px;
+        border-bottom: 3px double #000;
+        margin-bottom: 18px;
+    }
+    #surat .surat-judul { text-align: center; text-decoration: underline; font-size: 14pt; margin: 0; }
+    #surat .surat-nomor { text-align: center; margin-bottom: 16px; }
+    #surat p, #surat ol { margin: 8px 0; }
+    #surat ol { padding-left: 20px; }
+
+    #surat .surat-data { margin: 10px 0 14px; border-collapse: collapse; }
+    #surat .surat-data td { padding: 2px 6px 2px 0; vertical-align: top; }
+    #surat .s-label { width: 150px; }
+
+    #surat .surat-barang { width: 100%; border-collapse: collapse; margin: 8px 0 14px; }
+    #surat .surat-barang th,
+    #surat .surat-barang td { border: 1px solid #000; padding: 4px 8px; text-align: left; }
+
+    #surat .surat-ttd { display: flex; justify-content: space-between; margin-top: 28px; text-align: center; }
+    #surat .surat-ttd > div { min-width: 200px; }
+}

@@ -23,9 +23,9 @@ const buatTimeline = (p) => {
     const ditolak = p.status_tampil === 'Ditolak';
     const dibatalkan = p.status_tampil === 'Dibatalkan';
     const berhenti = ditolak || dibatalkan;   // alur berhenti di tahap kedua
- 
+
     const diajukan = { judul: 'Diajukan', tanggal: p.tanggal_diajukan, petugas: p.nama_peminjam, label: 'Diajukan oleh' };
- 
+
     const tahapan = ditolak
         ? [
             diajukan,
@@ -46,7 +46,7 @@ const buatTimeline = (p) => {
             { judul: 'Dipinjam', tanggal: p.tanggal_serah_terima, petugas: p.diserahkan_oleh, label: 'Diserahkan oleh' },
             { judul: 'Dikembalikan', tanggal: p.tanggal_kembali_aktual, petugas: p.diterima_oleh, label: 'Diterima oleh' }
         ];
- 
+
     const statusIndex = {
         'Menunggu Verifikasi': 0,
         'Disetujui': 1,
@@ -54,15 +54,15 @@ const buatTimeline = (p) => {
         'Terlambat': 2,
         'Dikembalikan': 4      // semua tahap selesai
     };
- 
+
     const tahapAktif = statusIndex[p.status_tampil] ?? 0;
- 
+
     return `
         <div class="timeline">
             ${tahapan.map((t, i) => {
                 let kelas = 'pending';
                 let ikon = '<i class="bi bi-circle"></i>';
- 
+
                 if (berhenti && i === 0) {
                     kelas = 'completed';
                     ikon = '<i class="bi bi-check-lg"></i>';
@@ -76,9 +76,9 @@ const buatTimeline = (p) => {
                     kelas = 'current';
                     ikon = '<i class="bi bi-clock"></i>';
                 }
- 
+
                 const sudahDilakukan = kelas !== 'pending';
- 
+
                 return `
                     <div class="timeline-item ${kelas}">
                         <div class="timeline-marker">${ikon}</div>
@@ -100,10 +100,67 @@ const buatTimeline = (p) => {
         ` : ''}
     `;
 };
- 
+
+// Isi surat peminjaman. Hanya tampil saat dicetak (lihat CSS @media print).
+function suratHtml(p) {
+    const tglSurat = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+    const tahun = new Date(String(p.tanggal_diajukan).replace(' ', 'T')).getFullYear();
+    const nomor = `SIMPARA/${String(p.id_pengajuan).padStart(3, '0')}/${tahun}`;
+    const baris = (label, isi) => `<tr><td class="s-label">${label}</td><td>:</td><td>${isi}</td></tr>`;
+
+    return `
+    <div class="surat-kop">
+      <b>HIMPUNAN MAHASISWA TEKNOLOGI INFORMASI (HMTI)</b><br>
+      Politeknik Negeri Malang
+    </div>
+
+    <h2 class="surat-judul">SURAT PEMINJAMAN BARANG</h2>
+    <p class="surat-nomor">Nomor: ${nomor}</p>
+
+    <p>Yang bertanda tangan di bawah ini menerangkan bahwa peminjam berikut telah mengajukan dan
+    mendapat persetujuan untuk meminjam inventaris HMTI:</p>
+
+    <table class="surat-data">
+      ${baris('Nama', esc(p.nama_peminjam))}
+      ${baris('NIM', esc(p.nim || '-'))}
+      ${baris('No. HP', esc(p.no_hp_peminjam || '-'))}
+      ${baris('Organisasi (OKI)', esc(p.nama_oki || '-'))}
+      ${baris('Nama Kegiatan', esc(p.nama_kegiatan || '-'))}
+      ${baris('Keperluan', esc(p.keperluan || '-'))}
+      ${baris('Tanggal Pinjam', formatTanggalJam(p.tanggal_pinjam))}
+      ${baris('Tanggal Kembali', formatTanggalJam(p.tanggal_kembali))}
+    </table>
+
+    <table class="surat-barang">
+      <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Jumlah</th></tr></thead>
+      <tbody>
+        ${p.barang.map((b, i) => `
+        <tr><td>${i + 1}</td><td>${esc(b.kode_barang || '-')}</td><td>${esc(b.nama_barang)}</td><td>${b.jumlah} unit</td></tr>`).join('')}
+      </tbody>
+    </table>
+
+    <p><b>Ketentuan:</b></p>
+    <ol>
+      <li>Peminjam membawa surat ini dan KTM saat serah terima barang.</li>
+      <li>Barang dikembalikan sesuai tanggal yang tertera dalam keadaan baik.</li>
+      <li>Kerusakan atau kehilangan barang menjadi tanggung jawab peminjam.</li>
+    </ol>
+
+    <div class="surat-ttd">
+      <div>
+        <br>Peminjam,<br><br><br><br>
+        <b>${esc(p.nama_peminjam)}</b><br>NIM ${esc(p.nim || '-')}
+      </div>
+      <div>
+        Malang, ${tglSurat}<br>Admin Inventaris HMTI,<br><br><br><br>
+        <b>${esc(p.diverifikasi_oleh || '(................................)')}</b>
+      </div>
+    </div>`;
+}
+
 function tampilkanDetail(p, kondisiBarang) {
     document.getElementById('statusBadge').innerHTML = badge(p.status_tampil);
- 
+
     // Kondisi & catatan per barang hanya ada setelah barang dikembalikan
     const daftarItem = p.barang.map(it => {
         const k = kondisiBarang[it.id_barang] || {};
@@ -114,7 +171,7 @@ function tampilkanDetail(p, kondisiBarang) {
         ${k.catatan ? `<small>${esc(k.catatan)}</small>` : ''}
       </li>`;
     }).join('');
- 
+
     box.innerHTML = `
     <div class="detail-card">
       <div class="img">${ikonBarang(null)}</div>
@@ -131,20 +188,33 @@ function tampilkanDetail(p, kondisiBarang) {
         ${info('Keperluan', esc(p.keperluan || '-'), true)}
       </div>
     </div>`;
- 
+
     tracking.innerHTML = `
         <h3>Tracking Proses</h3>
         ${buatTimeline(p)}
     `;
- 
-    // Tombol batalkan hanya muncul selama pengajuan masih menunggu verifikasi
-    aksi.innerHTML = p.status_tampil === 'Menunggu Verifikasi'
-        ? '<button type="button" class="btn btn-gray" id="btnBatal">Batalkan Pengajuan</button>'
-        : '';
+
+    // Batalkan hanya selama pengajuan masih menunggu verifikasi.
+    // Cetak surat hanya untuk pengajuan yang sudah disetujui.
+    const bisaCetak = ['Disetujui', 'Dipinjam', 'Terlambat', 'Dikembalikan'].includes(p.status_tampil);
+    aksi.innerHTML =
+        (p.status_tampil === 'Menunggu Verifikasi'
+            ? '<button type="button" class="btn btn-gray" id="btnBatal">Batalkan Pengajuan</button>'
+            : '') +
+        (bisaCetak
+            ? '<button type="button" class="btn btn-yellow" id="btnCetak"><i class="bi bi-printer"></i> Cetak Surat</button>'
+            : '');
+
     const btnBatal = document.getElementById('btnBatal');
     if (btnBatal) btnBatal.addEventListener('click', () => batalkan(p.id_pengajuan, btnBatal));
+
+    const btnCetak = document.getElementById('btnCetak');
+    if (btnCetak) btnCetak.addEventListener('click', () => {
+        document.getElementById('surat').innerHTML = suratHtml(p);
+        window.print();
+    });
 }
- 
+
 async function batalkan(id, tombol) {
     if (!await konfirmasi('Batalkan pengajuan ini? Tindakan ini tidak bisa dibatalkan.', { judul: 'Batalkan Pengajuan', ya: 'Batalkan', bahaya: true })) return;
     tombol.disabled = true;
@@ -156,10 +226,10 @@ async function batalkan(id, tombol) {
         tombol.disabled = false;
     }
 }
- 
+
 async function muat(id) {
     const p = await apiGet(`/api/pengajuan/${id}`);
- 
+
     // Kondisi tiap barang ada di endpoint pengembalian; gagal di sini tidak boleh merusak halaman
     const kondisiBarang = {};
     if (p.status_tampil === 'Dikembalikan') {
@@ -168,10 +238,10 @@ async function muat(id) {
             kembali.barang.forEach(b => { kondisiBarang[b.id_barang] = b; });
         } catch (e) { /* tampilkan detail tanpa kondisi */ }
     }
- 
+
     tampilkanDetail(p, kondisiBarang);
 }
- 
+
 async function mulai() {
     box.innerHTML = '<p>Memuat detail...</p>';
     try {
@@ -187,5 +257,5 @@ async function mulai() {
         box.innerHTML = `<p>${esc(e.status === 404 ? 'Data tidak ditemukan.' : e.message)}</p>`;
     }
 }
- 
+
 mulai();
