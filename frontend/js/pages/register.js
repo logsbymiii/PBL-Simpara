@@ -1,26 +1,34 @@
-document.getElementById('formDaftar').addEventListener('submit', e => {
+const err = document.getElementById('error');
+
+function tampilError(pesan) {
+  err.textContent = pesan;
+  err.style.display = 'block';
+}
+
+document.getElementById('formDaftar').addEventListener('submit', async e => {
   e.preventDefault();
-  const nama = document.getElementById('nama').value.trim();
-  const nim = document.getElementById('nim').value.trim();
-  const email = document.getElementById('email').value.trim();
+  err.style.display = 'none';
+
   const oki = document.getElementById('oki').value.trim();
   const password = document.getElementById('password').value;
-  const err = document.getElementById('error');
 
   if (password.length < 6) {
-    err.textContent = 'Password minimal 6 karakter';
-    err.style.display = 'block';
-    return;
-  }
-  if (getAllUsers().some(u => u.email === email)) {
-    err.textContent = 'Email sudah terdaftar';
-    err.style.display = 'block';
+    tampilError('Password minimal 6 karakter');
     return;
   }
 
-  registerUser({ nama, nim, email, password, oki });
-  alert('Pendaftaran berhasil! Silakan masuk.');
-  location.href = 'login.html';
+  const tombol = e.target.querySelector('button[type="submit"]');
+  if (tombol) tombol.disabled = true;
+  try {
+    await apiPost('/api/auth/register', { oki, password });
+    alert('Pendaftaran berhasil! Silakan masuk.');
+    location.href = 'login.html';
+  } catch (ex) {
+    const detail = ex.errors ? Object.values(ex.errors)[0] : null;
+    tampilError(detail || ex.message || 'Pendaftaran gagal');
+  } finally {
+    if (tombol) tombol.disabled = false;
+  }
 });
 
 // Ikon mata: lihat / sembunyikan password
