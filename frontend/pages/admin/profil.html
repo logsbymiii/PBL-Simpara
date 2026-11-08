@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profil | SIMPARA</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
     <link rel="stylesheet" href="../../css/variable.css">
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/layout.css">
@@ -20,37 +21,45 @@
             <main class="content">
                 <h1>Profil Saya</h1>
                 <p class="sub">Kelola informasi akun admin.</p>
+                <p class="sub" id="infoProfil"></p>
 
                 <div class="card">
                     <div class="profile-grid">
                         <div class="profile-photo"><i class="bi bi-person-circle"></i></div>
                         <div>
                             <div class="form-group"><label>Nama</label><input type="text" id="nama" readonly></div>
-                            <div class="form-group"><label>Username</label><input type="text" id="nim" readonly></div>
-                            <div class="form-group"><label>Email</label><input type="text" id="email" readonly></div>
+                            <div class="form-group"><label>Username</label><input type="text" id="username" readonly>
+                            </div>
+                            <div class="form-group"><label>Jabatan</label><input type="text" id="jabatan" readonly>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="card">
                     <h3>Ubah Password</h3>
+                    <p class="sub">Fitur ubah password belum tersedia.</p>
                     <form id="formPassword">
-                        <div class="row-2">
-                            <div class="form-group"><label>Password Lama</label><input type="password" id="lama"
-                                    required></div>
-                            <div class="form-group"><label>Password Baru</label><input type="password" id="baru"
-                                    required></div>
-                        </div>
-                        <div class="form-group"><label>Konfirmasi Password Baru</label><input type="password"
-                                id="konfirmasi" required></div>
-                        <button type="submit" class="btn btn-yellow">Simpan</button>
+                        <fieldset disabled style="border:0;padding:0;margin:0;">
+                            <div class="row-2">
+                                <div class="form-group"><label>Password Lama</label><input type="password" id="lama">
+                                </div>
+                                <div class="form-group"><label>Password Baru</label><input type="password" id="baru">
+                                </div>
+                            </div>
+                            <div class="form-group"><label>Konfirmasi Password Baru</label><input type="password"
+                                    id="konfirmasi"></div>
+                            <button type="submit" class="btn btn-yellow">Simpan</button>
+                        </fieldset>
                     </form>
                 </div>
             </main>
         </div>
     </div>
 
+    <script src="../../js/services/api.js"></script>
     <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
     <script src="../../js/utils/auth.js"></script>
     <script src="../../js/components/sidebar.js"></script>
     <script src="../../js/components/topbar.js"></script>
