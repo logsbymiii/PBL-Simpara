@@ -20,7 +20,7 @@ function tampilkan(b) {
 
     box.innerHTML = `
     <div class="detail-card">
-      <div class="img">${ikonBarang(null)}</div>
+      <div class="img">${ikonBarang(b)}</div>
       <div class="detail-info">
         ${info('Nama Barang', esc(b.nama_barang))}
         ${info('Kode Barang', esc(b.kode_barang))}

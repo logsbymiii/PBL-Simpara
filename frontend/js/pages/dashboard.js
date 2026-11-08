@@ -37,7 +37,7 @@ async function muatBarang() {
         const semua = await apiGet('/api/barang');
         box.innerHTML = semua.slice(0, 4).map(b => `
   <div class="item">
-    <div class="img">${ikonBarang()}</div>
+    <div class="img">${ikonBarang(b)}</div>
     <b>${esc(b.nama_barang)}</b><br>${badge(b.status, 'barang')}<br><br>
     ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow">Ajukan</a>`
