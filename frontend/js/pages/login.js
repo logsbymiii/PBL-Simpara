@@ -1,6 +1,7 @@
 const err = document.getElementById('error');
 const formPeminjam = document.getElementById('formPeminjam');
 const formAdmin = document.getElementById('formAdmin');
+const selectOki = document.getElementById('oki');
 
 function tampilError(pesan) {
     err.textContent = pesan;
@@ -28,29 +29,50 @@ document.querySelectorAll('.eye').forEach(btn => {
     });
 });
 
-// Login peminjam
+// Isi pilihan OKI dari server (GET /api/oki, endpoint publik)
+async function muatOki() {
+    try {
+        const daftar = await apiGet('/api/oki');
+        selectOki.innerHTML = '';
+        selectOki.add(new Option('Pilih OKI', ''));
+        daftar.forEach(o => selectOki.add(new Option(o.nama_oki, o.id_oki)));  // Option memakai textContent, aman dari HTML
+    } catch (e) {
+        tampilError(e.message);
+    }
+}
+ 
+// Kirim form: matikan tombol saat menunggu, tampilkan pesan dari server kalau gagal
+async function kirim(form, aksi, tujuan) {
+    const tombol = form.querySelector('button[type="submit"]');
+    tombol.disabled = true;
+    err.style.display = 'none';
+    try {
+        await aksi();
+        location.href = tujuan;
+    } catch (e) {
+        tampilError(e.message);
+        tombol.disabled = false;
+    }
+}
+ 
+// Login peminjam (akun OKI)
 formPeminjam.addEventListener('submit', e => {
     e.preventDefault();
-    const user = loginPeminjam(
-        document.getElementById('nim').value.trim(),
-        document.getElementById('email').value.trim(),
-        document.getElementById('pwPeminjam').value
+    kirim(
+        formPeminjam,
+        () => loginPeminjam(selectOki.value, document.getElementById('pwPeminjam').value),
+        '../peminjam/dashboard.html'
     );
-    if (!user) return tampilError('NIM, email, atau password salah');
-    if (!akunAktif(user)) {
-        localStorage.removeItem('currentUser');
-        return tampilError('Akun kamu dinonaktifkan admin. Hubungi pengurus HMTI.');
-    }
-    location.href = '../peminjam/dashboard.html';
 });
-
+ 
 // Login admin
 formAdmin.addEventListener('submit', e => {
     e.preventDefault();
-    const user = loginAdmin(
-        document.getElementById('username').value.trim(),
-        document.getElementById('pwAdmin').value
+    kirim(
+        formAdmin,
+        () => loginAdmin(document.getElementById('username').value.trim(), document.getElementById('pwAdmin').value),
+        '../admin/dashboard.html'
     );
-    if (!user) return tampilError('Username atau password salah');
-    location.href = '../admin/dashboard.html';
 });
+ 
+muatOki();

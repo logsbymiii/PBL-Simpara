@@ -14,17 +14,14 @@ function simpanSesi(user) {
     return user || null;
 }
 
-function loginPeminjam(nim, email, password) {
-    const user = getAllUsers().find(u =>
-        u.role === 'peminjam' && u.nim === nim && u.email === email && u.password === password
-    );
+// Login lewat API. Server membuat sesi (cookie), salinan user disimpan untuk halaman lain.
+async function loginPeminjam(idOki, password) {
+    const user = await apiPost('/api/auth/login', { role: 'peminjam', id_oki: Number(idOki), password });
     return simpanSesi(user);
 }
 
-function loginAdmin(username, password) {
-    const user = getAllUsers().find(u =>
-        u.role === 'admin' && u.username === username && u.password === password
-    );
+async function loginAdmin(username, password) {
+    const user = await apiPost('/api/auth/login', { role: 'admin', username, password });
     return simpanSesi(user);
 }
 
@@ -39,7 +36,11 @@ function requireLogin(role) {
     return user;
 }
 
-function logout() {
+async function logout() {
+    // api.js baru ada di halaman yang sudah disambungkan; di halaman lain cukup hapus salinan lokal
+    if (typeof apiPost === 'function') {
+        try { await apiPost('/api/auth/logout'); } catch (e) { /* tetap keluar */ }
+    }
     localStorage.removeItem('currentUser');
     location.href = '../auth/login.html';
 }
