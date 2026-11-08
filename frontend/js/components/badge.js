@@ -2,9 +2,9 @@
 function badge(status, jenis) {
   const warna = {
     Tersedia: 'green', Aktif: 'green', Disetujui: 'green-tua',
-    Menunggu: 'orange',
+    Menunggu: 'orange', 'Menunggu Verifikasi': 'orange',
     Dipinjam: 'blue',
-    Dikembalikan: 'gray', Nonaktif: 'gray',
+    Dikembalikan: 'gray', Nonaktif: 'gray', Dibatalkan: 'gray',
     Ditolak: 'red', Habis: 'red', Rusak: 'red', Hilang: 'red', 'Tidak Tersedia': 'red',
   };
   if (jenis === 'barang') {

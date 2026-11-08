@@ -5,6 +5,7 @@ function formatTanggal(str) {
 // '2026-09-21T10:15' -> '21 Sep 2026, 10:15' (tanpa jam kalau datanya hanya tanggal)
 function formatTanggalJam(str) {
   if (!str) return '-';
+  str = String(str).replace(' ', 'T');
   if (!str.includes('T')) return formatTanggal(str);
   return `${formatTanggal(str)}, ${str.slice(11, 16)}`;
 }
