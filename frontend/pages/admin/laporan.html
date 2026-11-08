@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Laporan | SIMPARA</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
     <link rel="stylesheet" href="../../css/variable.css">
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/layout.css">
@@ -27,12 +28,13 @@
                         <input type="month" id="bulan">
                         <select id="filter">
                             <option value="">Semua status</option>
-                            <option>Menunggu</option>
+                            <option value="Menunggu Verifikasi">Menunggu</option>
                             <option>Disetujui</option>
                             <option>Dipinjam</option>
                             <option>Terlambat</option>
                             <option>Dikembalikan</option>
                             <option>Ditolak</option>
+                            <option>Dibatalkan</option>
                         </select>
                         <button class="btn btn-gray" id="btnReset">Reset</button>
                         <button class="btn btn-blue" id="btnCsv">Unduh CSV</button>
@@ -47,7 +49,6 @@
                                 <th>Tanggal Pinjam</th>
                                 <th>Tanggal Kembali</th>
                                 <th>Status</th>
-                                <th>Kondisi</th>
                             </tr>
                         </thead>
                         <tbody id="tabel"></tbody>
@@ -57,6 +58,7 @@
         </div>
     </div>
 
+    <script src="../../js/services/api.js"></script>
     <script src="../../js/data/dummy.js"></script>
     <script src="../../js/utils/format.js"></script>
     <script src="../../js/utils/auth.js"></script>
