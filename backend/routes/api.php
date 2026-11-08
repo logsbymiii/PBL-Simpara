@@ -46,6 +46,7 @@ $router->get('/api/barang/statistik', [BarangController::class, 'statistik']);
 $router->get('/api/barang/tersedia',  [BarangController::class, 'tersedia']);
 $router->get('/api/barang',           [BarangController::class, 'index']);
 $router->post('/api/barang',          [BarangController::class, 'store']);
+$router->get('/api/barang/{id}/riwayat', [BarangController::class, 'riwayat']);
 $router->get('/api/barang/{id}',      [BarangController::class, 'show']);
 $router->put('/api/barang/{id}',      [BarangController::class, 'update']);
 $router->delete('/api/barang/{id}',   [BarangController::class, 'destroy']);
