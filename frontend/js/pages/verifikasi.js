@@ -47,12 +47,12 @@ tabel.addEventListener('click', async e => {
     const id = Number(btn.dataset.id);
 
     if (btn.dataset.aksi === 'setuju') {
-        if (!confirm('Setujui pengajuan ini?')) return;
+        if (!await konfirmasi('Setujui pengajuan ini?', { judul: 'Setujui Pengajuan', ya: 'Setujui' })) return;
         btn.disabled = true;
         try {
             await apiPost(`/api/pengajuan/${id}/setujui`);
         } catch (err) {
-            alert(err.message);          // mis. stok kurang / bentrok agenda HMTI / sudah diproses
+           toast(err.message, 'error');;          // mis. stok kurang / bentrok agenda HMTI / sudah diproses
         }
         muat();                          // barang lalu diserahkan di halaman Pengembalian
         return;
@@ -77,7 +77,7 @@ formTolak.addEventListener('submit', async e => {
         });
         modal.classList.remove('show');
     } catch (err) {
-        alert(err.message);
+        toast(err.message, 'error');;
     }
     tombol.disabled = false;
     muat();

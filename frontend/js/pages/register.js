@@ -21,7 +21,7 @@ document.getElementById('formDaftar').addEventListener('submit', async e => {
   if (tombol) tombol.disabled = true;
   try {
     await apiPost('/api/auth/register', { oki, password });
-    alert('Pendaftaran berhasil! Silakan masuk.');
+    toastNanti('Pendaftaran berhasil! Silakan masuk.');
     location.href = 'login.html';
   } catch (ex) {
     const detail = ex.errors ? Object.values(ex.errors)[0] : null;

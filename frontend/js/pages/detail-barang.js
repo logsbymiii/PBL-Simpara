@@ -51,13 +51,12 @@ function tampilkan(b) {
 }
 
 async function hapus(idBarang, tombol) {
-    if (!confirm('Yakin ingin menghapus barang ini?')) return;
-    tombol.disabled = true;
+    if (!await konfirmasi('Yakin ingin menghapus barang ini?', { judul: 'Hapus Barang', ya: 'Hapus', bahaya: true })) return;
     try {
         await apiDelete(`/api/barang/${idBarang}`);
         location.href = 'data-barang.html';
     } catch (e) {
-        alert(e.message);   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"
+        toast(e.message, 'error');   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"
         tombol.disabled = false;
     }
 }

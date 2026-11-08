@@ -185,7 +185,7 @@ form.addEventListener('submit', async e => {
             tanggal_kembali: tglKembali,
             barang,
         });
-        alert('Pengajuan berhasil dikirim!');
+        toastNanti('Pengajuan berhasil dikirim!');
         location.href = 'riwayat.html';
     } catch (err) {
         // 422: errors per kolom, 409: stok kurang / bentrok agenda HMTI

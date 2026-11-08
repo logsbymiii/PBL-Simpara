@@ -90,13 +90,12 @@ tabel.addEventListener('click', async e => {
         return;
     }
  
-    if (!confirm('Yakin ingin menghapus barang ini?')) return;
-    btn.disabled = true;
+    if (!await konfirmasi('Yakin ingin menghapus barang ini?', { judul: 'Hapus Barang', ya: 'Hapus', bahaya: true })) return;
     try {
         await apiDelete(`/api/barang/${id}`);
         await muatBarang();
     } catch (err) {
-        alert(err.message);   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"
+        toast(err.message, 'error');   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"
         btn.disabled = false;
     }
 });
