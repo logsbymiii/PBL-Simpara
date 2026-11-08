@@ -74,7 +74,7 @@ document.getElementById('btnSerahkan').addEventListener('click', async () => {
         await apiPost(`/api/pengajuan/${pilihId}/serah-terima`);
         modal.classList.remove('show');
     } catch (err) {
-        alert(err.message);
+       toast(err.message, 'error');
     }
     tombol.disabled = false;
     muat();

@@ -146,13 +146,13 @@ function tampilkanDetail(p, kondisiBarang) {
 }
  
 async function batalkan(id, tombol) {
-    if (!confirm('Batalkan pengajuan ini? Tindakan ini tidak bisa dibatalkan.')) return;
+    if (!await konfirmasi('Batalkan pengajuan ini? Tindakan ini tidak bisa dibatalkan.', { judul: 'Batalkan Pengajuan', ya: 'Batalkan', bahaya: true })) return;
     tombol.disabled = true;
     try {
         await apiPost(`/api/pengajuan/${id}/batal`);
         await muat(id);   // ambil data terbaru supaya status dan timeline ikut berubah
     } catch (e) {
-        alert(e.message);   // mis. "pengajuan sudah diproses admin"
+        toast(e.message, 'error');   // mis. "pengajuan sudah diproses admin"
         tombol.disabled = false;
     }
 }

@@ -53,7 +53,7 @@ async function mulai() {
             await apiPost(`/api/pengajuan/${id}/pengembalian`, { barang });
             location.href = 'pengembalian.html';
         } catch (err) {
-            alert(err.message);
+            toast(err.message, 'error');
             tombol.disabled = false;
         }
     });

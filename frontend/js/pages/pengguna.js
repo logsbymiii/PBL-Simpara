@@ -43,14 +43,14 @@ tabel.addEventListener('click', async e => {
     if (!btn) return;
 
     if (btn.dataset.aksi === 'nonaktifkan' &&
-        !confirm('Nonaktifkan akun ini? Akun tidak bisa masuk sampai diaktifkan lagi.')) return;
+    !(await konfirmasi('Nonaktifkan akun ini? Akun tidak bisa masuk sampai diaktifkan lagi.', { judul: 'Nonaktifkan Akun', ya: 'Nonaktifkan', bahaya: true }))) return;
 
     btn.disabled = true;
     try {
         await apiPost(`/api/pengguna/${btn.dataset.id}/${btn.dataset.aksi}`);
         await muat();
     } catch (err) {
-        alert(err.message);
+        toast(err.message, 'error');
         btn.disabled = false;
     }
 });
