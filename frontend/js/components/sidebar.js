@@ -20,10 +20,19 @@ const MENU = {
 };
 
 function renderSidebar(role, active) {
-    if (localStorage.getItem('sidebarKecil') === '1') {
-        document.querySelector('.layout').classList.add('collapsed');
+    const layout = document.querySelector('.layout');
+    layout.classList.add(`role-${role}`);
+
+    // Mode sidebar kecil hanya untuk desktop; di mobile sidebar jadi drawer / bottom nav
+    const mobile = window.matchMedia('(max-width: 768px)').matches;
+    if (!mobile && localStorage.getItem('sidebarKecil') === '1') {
+        layout.classList.add('collapsed');
     }
-    
+
+    // Latar gelap di belakang drawer (mobile), klik untuk menutup
+    layout.insertAdjacentHTML('beforeend', '<div class="drawer-backdrop" id="drawerBackdrop"></div>');
+    document.getElementById('drawerBackdrop').addEventListener('click', () => layout.classList.remove('drawer-open'));
+
     const links = MENU[role].map(m => `
     <a href="${m.href}" class="${m.label === active ? 'active' : ''}" title="${m.label}">
       <i class="bi ${m.icon}"></i><span class="text">${m.label}</span>

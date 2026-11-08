@@ -121,15 +121,7 @@
     font-weight: 600;
 }
 
-@media (max-width: 800px) {
-    .sidebar {
-        width: 70px;
-    }
 
-    .sidebar .text {
-        display: none;
-    }
-}
 
 /* ===== Sidebar bisa dikecilkan ===== */
 .sidebar {
@@ -179,3 +171,92 @@
 .topbar-title { font-weight: 600; font-size: 16px; }
 .user-info { display: flex; flex-direction: column; line-height: 1.2; text-align: right; }
 .user-info small { opacity: .7; }
+
+/* ===== Mobile ===== */
+.drawer-backdrop,
+.btn-logout-mobile { display: none; }
+
+.btn-logout-mobile {
+    border: 0;
+    background: var(--input);
+    width: 34px;
+    height: 34px;
+    border-radius: 8px;
+    color: var(--danger);
+    font-size: 16px;
+    cursor: pointer;
+    place-items: center;
+}
+
+@media (max-width: 768px) {
+    .topbar { padding: 10px 14px; position: sticky; top: 0; z-index: 30; }
+    .topbar-left { min-width: 0; }
+    .topbar-title { font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 46vw; }
+    .content { padding: 16px; }
+
+    /* Drawer (admin): sidebar digeser dari kiri */
+    .sidebar,
+    .layout.collapsed .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        z-index: 60;
+        width: 260px;
+        height: 100vh;
+        transform: translateX(-100%);
+        transition: transform .25s ease;
+    }
+    .sidebar .text,
+    .layout.collapsed .sidebar .text { display: inline; }
+    .layout.collapsed .brand { justify-content: flex-start; padding-left: 6px; }
+    .layout.collapsed .menu a,
+    .layout.collapsed .logout { justify-content: flex-start; padding: 10px 12px; }
+
+    .layout.drawer-open .sidebar { transform: none; box-shadow: 0 0 40px rgba(0, 0, 0, .35); }
+    .layout.drawer-open .drawer-backdrop {
+        display: block;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, .45);
+        z-index: 55;
+    }
+
+    /* Bottom navigation (peminjam) */
+    .layout.role-peminjam .sidebar,
+    .layout.role-peminjam.collapsed .sidebar {
+        top: auto;
+        bottom: 0;
+        width: 100%;
+        height: auto;
+        transform: none;
+        flex-direction: row;
+        padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+        z-index: 40;
+        box-shadow: 0 -2px 12px rgba(0, 0, 0, .18);
+    }
+    .layout.role-peminjam .sidebar > div { width: 100%; }
+    .layout.role-peminjam .brand,
+    .layout.role-peminjam .logout { display: none; }
+    .layout.role-peminjam .menu { display: flex; justify-content: space-around; }
+    .layout.role-peminjam .menu a,
+    .layout.role-peminjam.collapsed .menu a {
+        flex: 1;
+        flex-direction: column;
+        justify-content: center;
+        gap: 3px;
+        margin: 0;
+        padding: 6px 2px;
+        font-size: 10px;
+        text-align: center;
+    }
+    .layout.role-peminjam .menu a .bi { font-size: 20px; }
+    .layout.role-peminjam .sidebar .text { display: block; }
+    .layout.role-peminjam .main { padding-bottom: 76px; }
+    .layout.role-peminjam .menu-toggle { display: none; }
+    .layout.role-peminjam .btn-logout-mobile { display: grid; }
+    .layout.role-peminjam .drawer-backdrop { display: none !important; }
+}
+
+@media (max-width: 480px) {
+    .user-info { display: none; }
+}
