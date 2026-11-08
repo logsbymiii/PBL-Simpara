@@ -19,8 +19,8 @@ function tampilkan() {
         b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
-    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
-    <div class="item">
+    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map((b, i) => `
+    <div class="item" style="--i:${i}">
       <div class="img">${ikonBarang(b)}</div>
       <b>${esc(b.nama_barang)}</b><br>
       ${badge(b.status, 'barang')}<br>
@@ -33,7 +33,7 @@ function tampilkan() {
 
 async function muat() {
     const daftar = document.getElementById('daftar');
-    daftar.innerHTML = '<p>Memuat...</p>';
+    daftar.innerHTML = skeletonKartu();
     try {
         semuaBarang = await apiGet('/api/barang');
         tampilkanStatistik();

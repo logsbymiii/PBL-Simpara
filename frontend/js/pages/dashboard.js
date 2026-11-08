@@ -33,10 +33,11 @@ async function muatPengajuan() {
 
 async function muatBarang() {
     const box = document.getElementById('barangTerbaru');
+    box.innerHTML = skeletonKartu(4);
     try {
         const semua = await apiGet('/api/barang');
-        box.innerHTML = semua.slice(0, 4).map(b => `
-  <div class="item">
+        box.innerHTML = semua.slice(0, 4).map((b, i) => `
+  <div class="item" style="--i:${i}">
     <div class="img">${ikonBarang(b)}</div>
     <b>${esc(b.nama_barang)}</b><br>${badge(b.status, 'barang')}<br><br>
     ${b.status === 'Tersedia'

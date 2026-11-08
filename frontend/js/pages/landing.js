@@ -52,8 +52,8 @@ function tampilkanBarang() {
         b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
-    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
-    <div class="item">
+    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map((b, i) => `
+    <div class="item" style="--i:${i}">
       <div class="img">${ikonBarang(b)}</div>
       <b>${esc(b.nama_barang)}</b><br>
       <small>${esc(b.nama_kategori || '')}</small><br>
@@ -64,7 +64,7 @@ function tampilkanBarang() {
 
 async function muatBarang() {
     const box = document.getElementById('daftar');
-    box.innerHTML = '<p>Memuat barang...</p>';
+    box.innerHTML = skeletonKartu();
     try {
         semuaBarang = await apiGet('/api/barang');
         tampilkanBarang();

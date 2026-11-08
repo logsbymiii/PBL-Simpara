@@ -779,3 +779,71 @@ tr.alert td {
     #toastWadah { left: 16px; right: 16px; top: 12px; }
     .toast { max-width: none; }
 }
+/* ===== Animasi ===== */
+@keyframes naikMuncul {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes kilau {
+    to { background-position: -200% 0; }
+}
+@keyframes modalMasuk {
+    from { opacity: 0; transform: translateY(12px) scale(.97); }
+    to   { opacity: 1; transform: none; }
+}
+@keyframes sheetNaik {
+    from { transform: translateY(100%); }
+    to   { transform: none; }
+}
+@keyframes latarMasuk {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+/* 1. Kartu barang muncul bertahap + hover */
+.item {
+    animation: naikMuncul .35s ease both;
+    animation-delay: calc(min(var(--i, 0), 10) * 40ms);
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+.item:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 24px rgba(20, 20, 90, .15);
+}
+.item .img .bi {
+    transition: transform .25s ease;
+}
+.item:hover .img .bi {
+    transform: scale(1.15) rotate(-4deg);
+}
+
+/* 2. Skeleton loading */
+.skeleton .img,
+.skeleton .sk-baris {
+    background: linear-gradient(90deg, #e6e8f5 25%, #f4f5fb 50%, #e6e8f5 75%);
+    background-size: 200% 100%;
+    animation: kilau 1.3s linear infinite;
+    border-radius: 8px;
+}
+.skeleton .img { height: 70px; }
+.sk-baris { height: 12px; margin: 10px auto 0; width: 80%; }
+.sk-baris.pendek { width: 50%; }
+.item.skeleton:hover { transform: none; box-shadow: none; }
+
+/* 4. Modal & tombol lebih halus */
+.modal.show { animation: latarMasuk .2s ease; }
+.modal.show .modal-box { animation: modalMasuk .22s ease; }
+.btn { transition: filter .15s, transform .1s; }
+.btn:active { transform: scale(.96); }
+
+@media (max-width: 768px) {
+    .modal.show .modal-box { animation: sheetNaik .25s ease; }
+}
+
+/* Hormati pengguna yang mematikan animasi */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation: none !important;
+        transition: none !important;
+    }
+}
