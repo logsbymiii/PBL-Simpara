@@ -25,6 +25,11 @@ function db(): PDO
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,         // hasil berupa array asosiatif
         PDO::ATTR_EMULATE_PREPARES   => false,                    // prepared statement asli
     ]);
+        // Hanya untuk libpq lama (tanpa SNI), mis. PHP di Laragon. Kosongkan kalau tidak perlu.
+    $endpoint = env('DB_ENDPOINT', '');
+    if ($endpoint !== '') {
+        $dsn .= ";options='endpoint=" . $endpoint . "'";
+    }
 
     return $pdo;
 }
