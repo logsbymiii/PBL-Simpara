@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kalender | SIMPARA</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
     <link rel="stylesheet" href="../../css/variable.css">
     <link rel="stylesheet" href="../../css/base.css">
     <link rel="stylesheet" href="../../css/layout.css">
@@ -24,9 +25,10 @@
 
                 <div class="cal-bar">
                     <div class="cal-nav">
-                        <button id="prev" aria-label="Bulan sebelumnya"><</button>
-                        <h2 id="judul"></h2>
-                        <button id="next" aria-label="Bulan berikutnya">></button>
+                        <button id="prev" aria-label="Bulan sebelumnya">
+                            << /button>
+                                <h2 id="judul"></h2>
+                                <button id="next" aria-label="Bulan berikutnya">></button>
                     </div>
                     <div class="legend">
                         <span class="disetujui">Disetujui</span>
@@ -36,6 +38,8 @@
                     </div>
                 </div>
 
+                <p class="sub" id="infoKalender"></p>
+
                 <div class="cal-card">
                     <div class="cal-grid" id="kalender"></div>
                 </div>
@@ -43,6 +47,7 @@
         </div>
     </div>
 
+    <script src="../../js/services/api.js"></script>
     <script src="../../js/data/dummy.js"></script>
     <script src="../../js/utils/format.js"></script>
     <script src="../../js/utils/auth.js"></script>
