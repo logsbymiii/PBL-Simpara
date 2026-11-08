@@ -22,7 +22,7 @@ function tampilkan() {
     tabel.innerHTML = hasil.length ? hasil.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang"><span class="ico">${ikonBarang(null)}</span>${esc(b.nama_barang)}</a></td>
+      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang"><span class="ico">${ikonBarang(b)}</span>${esc(b.nama_barang)}</a></td>
       <td>${b.stok_tersedia} / ${b.stok_total}</td>
       <td>${badge(b.kondisi)}</td>
       <td>${badge(b.status, 'barang')}</td>

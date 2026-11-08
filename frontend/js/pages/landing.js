@@ -54,7 +54,7 @@ function tampilkanBarang() {
 
     document.getElementById('daftar').innerHTML = hasil.length ? hasil.map(b => `
     <div class="item">
-      <div class="img">${ikonBarang(null)}</div>
+      <div class="img">${ikonBarang(b)}</div>
       <b>${esc(b.nama_barang)}</b><br>
       <small>${esc(b.nama_kategori || '')}</small><br>
       ${badge(b.status, 'barang')}<br><br>
