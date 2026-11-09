@@ -101,62 +101,6 @@ const buatTimeline = (p) => {
     `;
 };
 
-// Isi surat peminjaman. Hanya tampil saat dicetak (lihat CSS @media print).
-function suratHtml(p) {
-    const tglSurat = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-    const tahun = new Date(String(p.tanggal_diajukan).replace(' ', 'T')).getFullYear();
-    const nomor = `SIMPARA/${String(p.id_pengajuan).padStart(3, '0')}/${tahun}`;
-    const baris = (label, isi) => `<tr><td class="s-label">${label}</td><td>:</td><td>${isi}</td></tr>`;
-
-    return `
-    <div class="surat-kop">
-      <b>HIMPUNAN MAHASISWA TEKNOLOGI INFORMASI (HMTI)</b><br>
-      Politeknik Negeri Malang
-    </div>
-
-    <h2 class="surat-judul">SURAT PEMINJAMAN BARANG</h2>
-    <p class="surat-nomor">Nomor: ${nomor}</p>
-
-    <p>Yang bertanda tangan di bawah ini menerangkan bahwa peminjam berikut telah mengajukan dan
-    mendapat persetujuan untuk meminjam inventaris HMTI:</p>
-
-    <table class="surat-data">
-      ${baris('Nama', esc(p.nama_peminjam))}
-      ${baris('NIM', esc(p.nim || '-'))}
-      ${baris('No. HP', esc(p.no_hp_peminjam || '-'))}
-      ${baris('Organisasi (OKI)', esc(p.nama_oki || '-'))}
-      ${baris('Nama Kegiatan', esc(p.nama_kegiatan || '-'))}
-      ${baris('Keperluan', esc(p.keperluan || '-'))}
-      ${baris('Tanggal Pinjam', formatTanggalJam(p.tanggal_pinjam))}
-      ${baris('Tanggal Kembali', formatTanggalJam(p.tanggal_kembali))}
-    </table>
-
-    <table class="surat-barang">
-      <thead><tr><th>No</th><th>Kode</th><th>Nama Barang</th><th>Jumlah</th></tr></thead>
-      <tbody>
-        ${p.barang.map((b, i) => `
-        <tr><td>${i + 1}</td><td>${esc(b.kode_barang || '-')}</td><td>${esc(b.nama_barang)}</td><td>${b.jumlah} unit</td></tr>`).join('')}
-      </tbody>
-    </table>
-
-    <p><b>Ketentuan:</b></p>
-    <ol>
-      <li>Peminjam membawa surat ini dan KTM saat serah terima barang.</li>
-      <li>Barang dikembalikan sesuai tanggal yang tertera dalam keadaan baik.</li>
-      <li>Kerusakan atau kehilangan barang menjadi tanggung jawab peminjam.</li>
-    </ol>
-
-    <div class="surat-ttd">
-      <div>
-        <br>Peminjam,<br><br><br><br>
-        <b>${esc(p.nama_peminjam)}</b><br>NIM ${esc(p.nim || '-')}
-      </div>
-      <div>
-        Malang, ${tglSurat}<br>Admin Inventaris HMTI,<br><br><br><br>
-        <b>${esc(p.diverifikasi_oleh || '(................................)')}</b>
-      </div>
-    </div>`;
-}
 
 function tampilkanDetail(p, kondisiBarang) {
     document.getElementById('statusBadge').innerHTML = badge(p.status_tampil);
@@ -194,26 +138,14 @@ function tampilkanDetail(p, kondisiBarang) {
         ${buatTimeline(p)}
     `;
 
-    // Batalkan hanya selama pengajuan masih menunggu verifikasi.
-    // Cetak surat hanya untuk pengajuan yang sudah disetujui.
-    const bisaCetak = ['Disetujui', 'Dipinjam', 'Terlambat', 'Dikembalikan'].includes(p.status_tampil);
-    aksi.innerHTML =
-        (p.status_tampil === 'Menunggu Verifikasi'
-            ? '<button type="button" class="btn btn-gray" id="btnBatal">Batalkan Pengajuan</button>'
-            : '') +
-        (bisaCetak
-            ? '<button type="button" class="btn btn-yellow" id="btnCetak"><i class="bi bi-printer"></i> Cetak Surat</button>'
-            : '');
-
+        // Tombol batalkan hanya muncul selama pengajuan masih menunggu verifikasi
+    aksi.innerHTML = p.status_tampil === 'Menunggu Verifikasi'
+        ? '<button type="button" class="btn btn-gray" id="btnBatal">Batalkan Pengajuan</button>'
+        : '';
     const btnBatal = document.getElementById('btnBatal');
     if (btnBatal) btnBatal.addEventListener('click', () => batalkan(p.id_pengajuan, btnBatal));
+    }
 
-    const btnCetak = document.getElementById('btnCetak');
-    if (btnCetak) btnCetak.addEventListener('click', () => {
-        document.getElementById('surat').innerHTML = suratHtml(p);
-        window.print();
-    });
-}
 
 async function batalkan(id, tombol) {
     if (!await konfirmasi('Batalkan pengajuan ini? Tindakan ini tidak bisa dibatalkan.', { judul: 'Batalkan Pengajuan', ya: 'Batalkan', bahaya: true })) return;
