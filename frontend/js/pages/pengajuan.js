@@ -16,9 +16,9 @@ let tersedia = [];
 let barangAwal = new URLSearchParams(location.search).get('barang') || '';
 // Nomor permintaan terakhir, supaya jawaban lama yang telat datang tidak menimpa yang baru
 let nomorPermintaan = 0;
- 
+
 const cariBarang = id => tersedia.find(b => String(b.id_barang) === String(id));
- 
+
 // Tampilkan pesan error dari server (pesan utama + detail per kolom kalau ada)
 function tampilError(pesan, errors) {
     const detail = errors && typeof errors === 'object'
@@ -28,17 +28,82 @@ function tampilError(pesan, errors) {
     errorBox.style.display = 'block';
     errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
- 
+
 function opsiBarang() {
     return '<option value="">Pilih barang</option>' +
         tersedia.map(b => `<option value="${b.id_barang}">${esc(b.nama_barang)} (stok ${b.stok_tersedia})</option>`).join('');
 }
- 
+
 // Batas jumlah mengikuti stok barang yang dipilih
 function aturMaks(row) {
     const b = cariBarang(row.querySelector('select').value);
     row.querySelector('.jumlah').max = b ? b.stok_tersedia : '';
 }
+
+// ===== Picker barang: tampilan sendiri, <select> asli tetap dipakai untuk nilai & validasi =====
+
+// Perbarui tulisan di tombol picker sesuai pilihan di <select>
+function segarkanPicker(row) {
+    const select = row.querySelector('select');
+    const label = row.querySelector('.picker-label');
+    const b = cariBarang(select.value);
+    label.innerHTML = b
+        ? `<span class="picker-ikon">${ikonBarang(b)}</span><span>${esc(b.nama_barang)} <small>(stok ${b.stok_tersedia})</small></span>`
+        : '<span class="picker-placeholder">Pilih barang</span>';
+}
+
+function tutupPicker() {
+    document.querySelectorAll('.picker.buka').forEach(p => p.classList.remove('buka'));
+}
+
+// Isi panel dari opsi <select> yang terbaru, lalu buka (klik lagi untuk menutup)
+function bukaPicker(row) {
+    const picker = row.querySelector('.picker');
+    const select = row.querySelector('select');
+    const sudahBuka = picker.classList.contains('buka');
+    tutupPicker();
+    if (sudahBuka) return;
+
+    const opsi = [...select.options].filter(o => o.value !== '');
+    picker.querySelector('.picker-panel').innerHTML = opsi.length
+        ? opsi.map(o => {
+            const b = cariBarang(o.value);
+            return `
+        <button type="button" class="picker-opsi${o.value === select.value ? ' dipilih' : ''}" data-nilai="${o.value}"${o.disabled ? ' disabled' : ''}>
+          <span class="picker-ikon">${ikonBarang(b)}</span>
+          <span class="picker-nama">${esc(b.nama_barang)}<small>${esc(b.nama_kategori || '')}</small></span>
+          <span class="picker-stok">${o.disabled ? 'Sudah dipilih' : `stok ${b.stok_tersedia}`}</span>
+        </button>`;
+        }).join('')
+        : '<div class="picker-kosong">Isi tanggal &amp; jam pinjam dan kembali dulu untuk melihat barang yang tersedia.</div>';
+    picker.classList.add('buka');
+}
+
+// Satu pendengar untuk semua baris (baris baru otomatis ikut)
+daftar.addEventListener('click', e => {
+    if (e.target.classList.contains('picker')) {   // klik latar gelap di HP
+        tutupPicker();
+        return;
+    }
+    const tombol = e.target.closest('.picker-btn');
+    if (tombol) {
+        bukaPicker(tombol.closest('.barang-row'));
+        return;
+    }
+    const opsi = e.target.closest('.picker-opsi');
+    if (opsi && !opsi.disabled) {
+        const select = opsi.closest('.barang-row').querySelector('select');
+        select.value = opsi.dataset.nilai;
+        select.dispatchEvent(new Event('change'));
+        tutupPicker();
+    }
+});
+document.addEventListener('click', e => {
+    if (!e.target.closest('.picker')) tutupPicker();
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') tutupPicker();
+});
 
 // Barang yang sudah dipilih di satu baris tidak bisa dipilih lagi di baris lain
 function sinkron() {
@@ -50,6 +115,7 @@ function sinkron() {
             o.disabled = o.value !== '' && o.value !== select.value && dipilih.includes(o.value);
         });
         r.querySelector('.btn-hapus').style.visibility = rows.length > 1 ? 'visible' : 'hidden';
+        segarkanPicker(r);
     });
     btnTambah.style.display = rows.length < tersedia.length ? '' : 'none';
 }
@@ -67,30 +133,22 @@ function isiUlangOpsi() {
     sinkron();
 }
 
-function tambahBaris(namaAwal = '') {
+function tambahBaris() {
     const row = document.createElement('div');
     row.className = 'barang-row';
     row.innerHTML = `
-    <select required>
-      <option value="">Pilih barang</option>
-      ${tersedia.map(b => `<option value="${b.id}">${b.nama} (stok ${b.stok})</option>`).join('')}
-    </select>
+    <div class="picker">
+      <select required tabindex="-1">${opsiBarang()}</select>
+      <button type="button" class="picker-btn" aria-haspopup="listbox">
+        <span class="picker-label"></span><i class="bi bi-chevron-down"></i>
+      </button>
+      <div class="picker-panel"></div>
+    </div>
     <input type="number" class="jumlah" min="1" value="1" required>
     <button type="button" class="btn-hapus" aria-label="Hapus barang">×</button>`;
 
-    const select = row.querySelector('select');
-    const jumlah = row.querySelector('.jumlah');
-    const aturMaks = () => {
-        const b = cariBarang(select.value);
-        jumlah.max = b ? b.stok : '';
-    };
-
-    select.addEventListener('change', () => { aturMaks(); sinkron(); });
+    row.querySelector('select').addEventListener('change', () => { aturMaks(row); sinkron(); });
     row.querySelector('.btn-hapus').addEventListener('click', () => { row.remove(); sinkron(); });
-
-    // Pilih otomatis kalau datang dari tombol "Ajukan" (?barang=Nama)
-    const awal = tersedia.find(b => b.nama === namaAwal);
-    if (awal) { select.value = awal.id; aturMaks(); }
 
     daftar.appendChild(row);
     sinkron();
@@ -101,16 +159,16 @@ async function muatBarang() {
     const mulai = inputPinjam.value;
     const selesai = inputKembali.value;
     if (!mulai || !selesai) return;
- 
+
     const nomor = ++nomorPermintaan;
- 
+
     if (selesai <= mulai) {
         tersedia = [];
         isiUlangOpsi();
         info.textContent = 'Tanggal & jam kembali harus setelah tanggal & jam pinjam.';
         return;
     }
- 
+
     info.textContent = 'Memuat barang yang tersedia...';
     try {
         // Format 'YYYY-MM-DDTHH:mm' dari datetime-local diterima server apa adanya
@@ -124,7 +182,7 @@ async function muatBarang() {
         info.textContent = e.message;
     }
     isiUlangOpsi();
- 
+
     // Pilih otomatis barang dari katalog (hanya sekali)
     if (barangAwal) {
         const awal = tersedia.find(b => b.nama_barang === barangAwal);
@@ -138,7 +196,7 @@ async function muatBarang() {
     }
 }
 
-btnTambah.addEventListener('click', tambahBaris);
+btnTambah.addEventListener('click', () => tambahBaris());
 tambahBaris();
 
 // Waktu pinjam tidak boleh sebelum sekarang, waktu kembali tidak boleh sebelum waktu pinjam
@@ -148,30 +206,30 @@ inputPinjam.addEventListener('change', () => {
     muatBarang();
 });
 inputKembali.addEventListener('change', muatBarang);
- 
+
 form.addEventListener('submit', async e => {
     e.preventDefault();
     errorBox.style.display = 'none';
- 
+
     const tglPinjam = inputPinjam.value;
     const tglKembali = inputKembali.value;
     if (tglKembali <= tglPinjam) {
         tampilError('Tanggal & jam kembali harus setelah tanggal & jam pinjam');
         return;
     }
- 
+
     const barang = [...daftar.querySelectorAll('.barang-row')].map(r => ({
         id_barang: Number(r.querySelector('select').value),
         jumlah: Number(r.querySelector('.jumlah').value),
     }));
- 
+
     const lebihStok = barang.find(it => it.jumlah < 1 || it.jumlah > cariBarang(it.id_barang).stok_tersedia);
     if (lebihStok) {
         const b = cariBarang(lebihStok.id_barang);
         tampilError(`Jumlah ${b.nama_barang} harus antara 1 dan ${b.stok_tersedia}`);
         return;
     }
- 
+
     const tombol = form.querySelector('button[type="submit"]');
     tombol.disabled = true;
     try {
