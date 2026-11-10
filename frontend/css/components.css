@@ -803,7 +803,7 @@ tr.alert td {
 
 /* 1. Kartu barang muncul bertahap + hover */
 .item {
-    animation: naikMuncul .35s ease both;
+    animation: naikMuncul .35s ease backwards;
     animation-delay: calc(min(var(--i, 0), 10) * 40ms);
     transition: transform .2s ease, box-shadow .2s ease;
 }
@@ -922,7 +922,7 @@ input[type="password"]::-ms-clear {
 
 /* Isi halaman masuk bertahap */
 .content > * {
-    animation: naikMuncul .4s ease both;
+    animation: naikMuncul .4s ease backwards;
 }
 .content > *:nth-child(1) { animation-delay: .02s; }
 .content > *:nth-child(2) { animation-delay: .07s; }
@@ -932,7 +932,7 @@ input[type="password"]::-ms-clear {
 
 /* Kartu statistik: muncul berurutan + hover */
 .stats .stat {
-    animation: munculSkala .4s ease both;
+    animation: munculSkala .4s ease backwards;
     transition: transform .2s ease, box-shadow .2s ease;
 }
 .stats .stat:nth-child(1) { animation-delay: .05s; }
@@ -946,7 +946,7 @@ input[type="password"]::-ms-clear {
 
 /* Baris tabel muncul berurutan */
 tbody tr {
-    animation: naikMuncul .3s ease both;
+    animation: naikMuncul .3s ease backwards;
 }
 tbody tr:nth-child(1) { animation-delay: .03s; }
 tbody tr:nth-child(2) { animation-delay: .06s; }
@@ -968,7 +968,7 @@ tbody tr:hover { background: var(--input); }
 
 /* Timeline: item muncul berurutan, tahap aktif berdenyut */
 .timeline-item {
-    animation: naikMuncul .35s ease both;
+    animation: naikMuncul .35s ease backwards;
 }
 .timeline-item:nth-child(1) { animation-delay: .05s; }
 .timeline-item:nth-child(2) { animation-delay: .15s; }
@@ -998,8 +998,8 @@ tbody tr:hover { background: var(--input); }
 }
 
 /* Kartu login dan agenda landing */
-.auth-card { animation: munculSkala .5s ease both; }
-.agenda-item { animation: naikMuncul .35s ease both; }
+.auth-card { animation: munculSkala .5s ease backwards; }
+.agenda-item { animation: naikMuncul .35s ease backwards; }
 
 /* Transisi halus saat pindah halaman (Chrome/Edge modern) */
 @view-transition { navigation: auto; }
@@ -1132,4 +1132,17 @@ tbody tr:hover { background: var(--input); }
     }
     .picker.buka .picker-panel { animation: sheetNaik .25s ease; }
     .picker-opsi { padding: 12px 8px; }
+}
+
+/* Efek hover (naik/bergeser) hanya untuk mouse. Di layar sentuh hover menempel setelah ditap. */
+@media (hover: none) {
+    .btn-yellow:hover,
+    .btn-blue:hover,
+    .item:hover,
+    .stats .stat:hover {
+        transform: none;
+        box-shadow: none;
+    }
+    .item:hover .img .bi { transform: none; }
+    .btn:active { transform: none; opacity: .85; }
 }
