@@ -1160,3 +1160,24 @@ tbody tr:hover { background: var(--input); }
 ::view-transition-group(topbar) {
     animation-duration: 0s;
 }
+
+/* Banner peringatan di dashboard admin (pengajuan menunggu > 5 jam) */
+.peringatan {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff0f0;
+    border: 1.5px solid var(--danger);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    font-size: 13px;
+    color: var(--danger);
+}
+.peringatan[hidden] { display: none; }
+.peringatan .bi-exclamation-triangle-fill { font-size: 18px; }
+.peringatan-link { margin-left: auto; font-weight: 700; white-space: nowrap; }
+@media (max-width: 768px) {
+    .peringatan { flex-wrap: wrap; }
+    .peringatan-link { margin-left: 0; }
+}

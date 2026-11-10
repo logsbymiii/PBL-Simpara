@@ -6,6 +6,9 @@ document.getElementById('welcome').textContent = `Selamat datang, ${user.nama}!`
 
 const tgl = s => formatTanggal(String(s).replace(' ', 'T'));
 
+// Pengajuan yang menunggu verifikasi lebih dari 5 jam (flag dari backend)
+const lewat5Jam = p => p.status_tampil === 'Menunggu Verifikasi' && Number(p.peringatan_5_jam) > 0;
+
 async function muat() {
     const tabel = document.getElementById('tabel');
     tabel.innerHTML = '<tr><td colspan="5" class="empty">Memuat...</td></tr>';
@@ -18,19 +21,34 @@ async function muat() {
         document.getElementById('statDikembalikan').textContent = hitung('Dikembalikan');
         document.getElementById('statDitolak').textContent = hitung('Ditolak');
 
+        // Banner peringatan: tampil hanya kalau ada yang menunggu > 5 jam
+        const jumlahLewat = semua.filter(lewat5Jam).length;
+        const banner = document.getElementById('peringatan');
+        if (jumlahLewat > 0) {
+            banner.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i>
+                <span><b>${jumlahLewat} pengajuan</b> menunggu verifikasi lebih dari 5 jam.</span>
+                <span class="peringatan-link">Verifikasi sekarang <i class="bi bi-arrow-right"></i></span>`;
+            banner.hidden = false;
+        } else {
+            banner.hidden = true;
+        }
+
         // 5 pengajuan terbaru berdasarkan waktu diajukan
         const terbaru = [...semua]
             .sort((a, b) => String(b.tanggal_diajukan).localeCompare(String(a.tanggal_diajukan)))
             .slice(0, 5);
 
-        tabel.innerHTML = terbaru.length ? terbaru.map((p, i) => `
-  <tr>
+        tabel.innerHTML = terbaru.length ? terbaru.map((p, i) => {
+            const telat = lewat5Jam(p);
+            return `
+  <tr class="${telat ? 'alert' : ''}">
     <td>${i + 1}</td>
     <td>${esc(p.nama_peminjam)}</td>
     <td>${esc(p.barang)}</td>
     <td>${tgl(p.tanggal_pinjam)}</td>
-    <td>${badge(p.status_tampil)}</td>
-  </tr>`).join('') : '<tr><td colspan="5" class="empty">Belum ada pengajuan.</td></tr>';
+    <td>${badge(p.status_tampil)}${telat ? '<span class="telat">&gt; 5 jam</span>' : ''}</td>
+  </tr>`;
+        }).join('') : '<tr><td colspan="5" class="empty">Belum ada pengajuan.</td></tr>';
     } catch (e) {
         tabel.innerHTML = `<tr><td colspan="5" class="empty">${esc(e.message)}</td></tr>`;
     }
