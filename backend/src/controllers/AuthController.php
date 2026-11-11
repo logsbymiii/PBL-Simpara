@@ -22,9 +22,17 @@ class AuthController
     {
         $body     = get_json_body();
         $nama     = trim((string)($body['oki'] ?? $body['nama_oki'] ?? ''));
+        $email    = trim((string)($body['email'] ?? ''));
         $password = (string)($body['password'] ?? '');
 
         $errors = [];
+        if ($email === '') {
+            $errors['email'] = 'Email wajib diisi';
+        } elseif (mb_strlen($email) > 100) {
+            $errors['email'] = 'Email maksimal 100 karakter';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $errors['email'] = 'Format email tidak valid';
+        }
         if ($nama === '') {
             $errors['oki'] = 'Nama OKI wajib diisi';
         } elseif (mb_strlen($nama) > 100) {
@@ -43,22 +51,34 @@ class AuthController
         if ($stmt->fetchColumn() !== false) {
             json_error('OKI sudah terdaftar', 409);
         }
+        $stmt = $pdo->prepare('SELECT 1 FROM oki WHERE LOWER(email) = LOWER(:email)');
+        $stmt->execute(['email' => $email]);
+        if ($stmt->fetchColumn() !== false) {
+            json_error('Email sudah terdaftar', 409);
+        }
 
         try {
             // Password di-hash, TIDAK PERNAH disimpan apa adanya
             $stmt = $pdo->prepare(
-                'INSERT INTO oki (nama_oki, password) VALUES (:nama, :password) RETURNING id_oki'
+                'INSERT INTO oki (nama_oki, email, password) VALUES (:nama, :email, :password) RETURNING id_oki'
             );
-            $stmt->execute(['nama' => $nama, 'password' => password_hash($password, PASSWORD_DEFAULT)]);
+            $stmt->execute([
+                'nama'     => $nama,
+                'email'    => $email,
+                'password' => password_hash($password, PASSWORD_DEFAULT),
+            ]);
             $id = (int)$stmt->fetchColumn();
         } catch (PDOException $e) {
             if ($e->getCode() === '23505') { // dua orang mendaftar bersamaan
-                json_error('OKI sudah terdaftar', 409);
+                json_error(
+                    str_contains($e->getMessage(), 'oki_email_unik') ? 'Email sudah terdaftar' : 'OKI sudah terdaftar',
+                    409
+                );
             }
             throw $e;
         }
 
-        json_success(['id' => $id, 'nama_oki' => $nama], 'Pendaftaran berhasil', 201);
+        json_success(['id' => $id, 'nama_oki' => $nama, 'email' => $email], 'Pendaftaran berhasil', 201);
     }
 
     // POST /api/auth/login
