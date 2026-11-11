@@ -51,6 +51,7 @@ async function hapus(idBarang, tombol) {
     if (!await konfirmasi('Yakin ingin menghapus barang ini?', { judul: 'Hapus Barang', ya: 'Hapus', bahaya: true })) return;
     try {
         await apiDelete(`/api/barang/${idBarang}`);
+        toastNanti('Barang berhasil dihapus');
         location.href = 'data-barang.html';
     } catch (e) {
         toast(e.message, 'error');   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"

@@ -51,6 +51,7 @@ tabel.addEventListener('click', async e => {
         btn.disabled = true;
         try {
             await apiPost(`/api/pengajuan/${id}/setujui`);
+            toast('Pengajuan berhasil disetujui', 'success');
         } catch (err) {
            toast(err.message, 'error');;          // mis. stok kurang / bentrok agenda HMTI / sudah diproses
         }
@@ -76,6 +77,7 @@ formTolak.addEventListener('submit', async e => {
             alasan: document.getElementById('alasan').value.trim(),
         });
         modal.classList.remove('show');
+        toast('Pengajuan berhasil ditolak', 'success');
     } catch (err) {
         toast(err.message, 'error');;
     }

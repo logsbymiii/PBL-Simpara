@@ -27,6 +27,7 @@ function tampilError(pesan, errors) {
     errorBox.innerHTML = [pesan, ...detail].map(esc).join('<br>');
     errorBox.style.display = 'block';
     errorBox.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    toast(pesan, 'error');
 }
 
 function opsiBarang() {

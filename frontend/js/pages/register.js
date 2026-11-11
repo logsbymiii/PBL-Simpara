@@ -3,6 +3,7 @@ const err = document.getElementById('error');
 function tampilError(pesan) {
   err.textContent = pesan;
   err.style.display = 'block';
+  toast(pesan, 'error');
 }
 
 document.getElementById('formDaftar').addEventListener('submit', async e => {

@@ -1001,20 +1001,6 @@ tbody tr:hover { background: var(--input); }
 .auth-card { animation: munculSkala .5s ease backwards; }
 .agenda-item { animation: naikMuncul .35s ease backwards; }
 
-/* Transisi halus saat pindah halaman (Chrome/Edge modern) */
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: .15s ease both fade-out-halaman; }
-::view-transition-new(root) { animation: .25s ease both fade-in-halaman; }
-@keyframes fade-out-halaman { to { opacity: 0; } }
-@keyframes fade-in-halaman { from { opacity: 0; } }
-/* Sidebar/bottom nav dan topbar tetap di tempat saat pindah halaman (tidak ikut fade) */
-.sidebar { view-transition-name: sidebar; }
-.topbar { view-transition-name: topbar; }
-::view-transition-group(sidebar),
-::view-transition-group(topbar) {
-    animation-duration: 0s;
-}
-
 /* Efek hover menu hanya untuk mouse di layar besar, bukan sentuhan di HP */
 @media (hover: none), (max-width: 768px) {
     .menu a:hover { transform: none; }
@@ -1147,20 +1133,6 @@ tbody tr:hover { background: var(--input); }
     .btn:active { transform: none; opacity: .85; }
 }
 
-/* Transisi halus saat pindah halaman (Chrome/Edge modern) */
-@view-transition { navigation: auto; }
-::view-transition-old(root) { animation: .15s ease both fade-out-halaman; }
-::view-transition-new(root) { animation: .25s ease both fade-in-halaman; }
-@keyframes fade-out-halaman { to { opacity: 0; } }
-@keyframes fade-in-halaman { from { opacity: 0; } }
-/* Sidebar/bottom nav dan topbar tetap di tempat saat pindah halaman (tidak ikut fade) */
-.sidebar { view-transition-name: sidebar; }
-.topbar { view-transition-name: topbar; }
-::view-transition-group(sidebar),
-::view-transition-group(topbar) {
-    animation-duration: 0s;
-}
-
 /* Banner peringatan di dashboard admin (pengajuan menunggu > 5 jam) */
 .peringatan {
     display: flex;
@@ -1180,4 +1152,29 @@ tbody tr:hover { background: var(--input); }
 @media (max-width: 768px) {
     .peringatan { flex-wrap: wrap; }
     .peringatan-link { margin-left: 0; }
+}
+
+/* Toast lebih besar di layar lebar (PC); di HP tetap ukuran lama */
+@media (min-width: 769px) {
+    #toastWadah {
+        top: 24px;
+        right: 24px;
+        gap: 12px;
+    }
+    .toast {
+        max-width: 460px;
+        min-width: 320px;
+        padding: 18px 22px;
+        gap: 14px;
+        font-size: 16px;
+        font-weight: 600;
+        line-height: 1.4;
+        border-left-width: 6px;
+        border-radius: 12px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, .22);
+    }
+    .toast .bi {
+        font-size: 24px;
+        flex-shrink: 0;
+    }
 }

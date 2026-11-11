@@ -6,6 +6,7 @@ const selectOki = document.getElementById('oki');
 function tampilError(pesan) {
     err.textContent = pesan;
     err.style.display = 'block';
+    toast(pesan, 'error');
 }
 
 // Ganti tab Peminjam / Admin
@@ -47,7 +48,9 @@ async function kirim(form, aksi, tujuan) {
     tombol.disabled = true;
     err.style.display = 'none';
     try {
-        await aksi();
+        const user = await aksi();
+        const nama = user && (user.nama || user.nama_oki);
+        toastNanti(nama ? `Berhasil masuk. Selamat datang, ${nama}!` : 'Berhasil masuk');
         location.href = tujuan;
     } catch (e) {
         tampilError(e.message);

@@ -51,6 +51,7 @@ async function mulai() {
         tombol.disabled = true;
         try {
             await apiPost(`/api/pengajuan/${id}/pengembalian`, { barang });
+            toastNanti('Pengembalian berhasil dicatat');
             location.href = 'pengembalian.html';
         } catch (err) {
             toast(err.message, 'error');

@@ -42,5 +42,6 @@ async function logout() {
         try { await apiPost('/api/auth/logout'); } catch (e) { /* tetap keluar */ }
     }
     localStorage.removeItem('currentUser');
+    if (typeof toastNanti === 'function') toastNanti('Berhasil keluar', 'info');
     location.href = '../auth/login.html';
 }
