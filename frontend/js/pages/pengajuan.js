@@ -218,6 +218,16 @@ form.addEventListener('submit', async e => {
         return;
     }
 
+    const pin = document.getElementById('pin').value;
+    if (!/^\d{4,6}$/.test(pin)) {
+        tampilError('PIN harus 4 sampai 6 angka');
+        return;
+    }
+    if (pin !== document.getElementById('pin2').value) {
+        tampilError('PIN dan ulangi PIN tidak sama');
+        return;
+    }
+
     const barang = [...daftar.querySelectorAll('.barang-row')].map(r => ({
         id_barang: Number(r.querySelector('select').value),
         jumlah: Number(r.querySelector('.jumlah').value),
@@ -241,6 +251,7 @@ form.addEventListener('submit', async e => {
             keperluan: document.getElementById('keperluan').value.trim(),
             tanggal_pinjam: tglPinjam,
             tanggal_kembali: tglKembali,
+            pin,
             barang,
         });
         toastNanti('Pengajuan berhasil dikirim!');

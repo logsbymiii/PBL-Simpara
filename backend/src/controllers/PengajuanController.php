@@ -44,9 +44,9 @@ class PengajuanController
             // 1. Simpan header pengajuan (status 'Menunggu' dan jam diajukan diisi otomatis oleh database)
             $stmt = $pdo->prepare(
                 'INSERT INTO pengajuan (id_oki, nama_peminjam, nim_peminjam, no_hp_peminjam,
-                                        nama_kegiatan, keperluan, tgl_pinjam, tgl_kembali)
+                                        nama_kegiatan, keperluan, tgl_pinjam, tgl_kembali, pin_hash)
                  VALUES (:oki, :nama, :nim, :hp, :kegiatan, :keperluan,
-                         CAST(:mulai AS TIMESTAMP), CAST(:selesai AS TIMESTAMP))
+                         CAST(:mulai AS TIMESTAMP), CAST(:selesai AS TIMESTAMP), :pin_hash)
                  RETURNING id_pengajuan'
             );
             $stmt->execute([
@@ -58,6 +58,8 @@ class PengajuanController
                 'keperluan' => $data['keperluan'],
                 'mulai'     => $data['tanggal_pinjam'],
                 'selesai'   => $data['tanggal_kembali'],
+                // PIN di-hash, TIDAK PERNAH disimpan apa adanya
+                'pin_hash'  => password_hash($data['pin'], PASSWORD_DEFAULT),
             ]);
             $id = (int)$stmt->fetchColumn();
 
@@ -254,7 +256,19 @@ class PengajuanController
         if ($user['role'] !== 'peminjam') {
             json_error('Hanya peminjam yang dapat membatalkan pengajuannya', 403);
         }
-        $id = self::parseId($params['id'] ?? '');
+        $id  = self::parseId($params['id'] ?? '');
+        $pin = (string)(get_json_body()['pin'] ?? '');
+
+        // PIN pengajuan wajib benar sebelum boleh dibatalkan
+        $stmt = db()->prepare('SELECT pin_hash FROM pengajuan WHERE id_pengajuan = :id AND id_oki = :oki');
+        $stmt->execute(['id' => $id, 'oki' => $user['id']]);
+        $baris = $stmt->fetch(PDO::FETCH_ASSOC);
+        if ($baris === false) {
+            json_error('Pengajuan tidak ditemukan', 404);
+        }
+        if ($baris['pin_hash'] !== null && !password_verify($pin, $baris['pin_hash'])) {
+            json_error('PIN salah', 403);
+        }
 
         // Prosedur memeriksa pemilik (OKI yang sama) dan status, lalu mencatat riwayat
         try {
@@ -380,8 +394,12 @@ class PengajuanController
         $nim       = trim((string)($body['nim_peminjam'] ?? $body['nim'] ?? ''));
         $hp        = trim((string)($body['no_hp_peminjam'] ?? ''));
         $kegiatan  = trim((string)($body['nama_kegiatan'] ?? ''));
+        $pin       = (string)($body['pin'] ?? '');
 
         $errors = [];
+        if (!preg_match('/^\d{4,6}$/', $pin)) {
+            $errors['pin'] = 'PIN harus 4 sampai 6 angka';
+        }
         if ($nama === '') {
             $errors['nama_peminjam'] = 'Nama peminjam wajib diisi';
         } elseif (mb_strlen($nama) > 100) {
@@ -458,6 +476,7 @@ class PengajuanController
             'tanggal_kembali' => $selesai,
             'keperluan'       => $keperluan,
             'barang'          => $barang,
+            'pin'             => $pin,
         ];
     }
 }

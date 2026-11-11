@@ -147,11 +147,44 @@ function tampilkanDetail(p, kondisiBarang) {
     }
 
 
+// Minta PIN lewat modal. Hasil: string PIN, atau null kalau dibatalkan.
+function mintaPin() {
+    return new Promise(selesai => {
+        const m = document.createElement('div');
+        m.className = 'modal show';
+        m.innerHTML = `
+        <form class="modal-box" role="dialog" aria-modal="true">
+          <h3>Batalkan Pengajuan</h3>
+          <p class="konfirmasi-isi">Masukkan PIN pengajuan ini untuk membatalkannya. Tindakan ini tidak bisa dibatalkan.</p>
+          <div class="form-group">
+            <input type="password" id="inputPin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6"
+              placeholder="PIN (4-6 angka)" autocomplete="off" required>
+          </div>
+          <div class="actions">
+            <button type="button" class="btn btn-gray">Kembali</button>
+            <button type="submit" class="btn btn-red">Batalkan</button>
+          </div>
+        </form>`;
+        const tutup = hasil => { document.removeEventListener('keydown', tombol); m.remove(); selesai(hasil); };
+        const tombol = e => { if (e.key === 'Escape') tutup(null); };
+        m.addEventListener('click', e => { if (e.target === m) tutup(null); });
+        m.querySelector('.btn-gray').addEventListener('click', () => tutup(null));
+        m.querySelector('form').addEventListener('submit', e => {
+            e.preventDefault();
+            tutup(m.querySelector('#inputPin').value);
+        });
+        document.addEventListener('keydown', tombol);
+        document.body.appendChild(m);
+        m.querySelector('#inputPin').focus();
+    });
+}
+
 async function batalkan(id, tombol) {
-    if (!await konfirmasi('Batalkan pengajuan ini? Tindakan ini tidak bisa dibatalkan.', { judul: 'Batalkan Pengajuan', ya: 'Batalkan', bahaya: true })) return;
+    const pin = await mintaPin();
+    if (pin === null) return;
     tombol.disabled = true;
     try {
-        await apiPost(`/api/pengajuan/${id}/batal`);
+        await apiPost(`/api/pengajuan/${id}/batal`, { pin });
         await muat(id);   // ambil data terbaru supaya status dan timeline ikut berubah
     } catch (e) {
         toast(e.message, 'error');   // mis. "pengajuan sudah diproses admin"
