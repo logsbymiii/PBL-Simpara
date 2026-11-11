@@ -93,6 +93,7 @@ tabel.addEventListener('click', async e => {
     if (!await konfirmasi('Yakin ingin menghapus barang ini?', { judul: 'Hapus Barang', ya: 'Hapus', bahaya: true })) return;
     try {
         await apiDelete(`/api/barang/${id}`);
+        toast('Barang berhasil dihapus', 'success');
         await muatBarang();
     } catch (err) {
         toast(err.message, 'error');   // mis. "Barang sudah pernah dipinjam, tidak dapat dihapus"
@@ -117,6 +118,7 @@ form.addEventListener('submit', async e => {
     try {
         if (editId) await apiPut(`/api/barang/${editId}`, body);
         else await apiPost('/api/barang', body);
+        toast(editId ? 'Barang berhasil diperbarui' : 'Barang berhasil ditambahkan', 'success');
         modal.classList.remove('show');
         await muatBarang();
     } catch (err) {

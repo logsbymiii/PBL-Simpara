@@ -185,6 +185,7 @@ async function batalkan(id, tombol) {
     tombol.disabled = true;
     try {
         await apiPost(`/api/pengajuan/${id}/batal`, { pin });
+        toast('Pengajuan berhasil dibatalkan', 'success');
         await muat(id);   // ambil data terbaru supaya status dan timeline ikut berubah
     } catch (e) {
         toast(e.message, 'error');   // mis. "pengajuan sudah diproses admin"

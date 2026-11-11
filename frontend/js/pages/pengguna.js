@@ -48,6 +48,7 @@ tabel.addEventListener('click', async e => {
     btn.disabled = true;
     try {
         await apiPost(`/api/pengguna/${btn.dataset.id}/${btn.dataset.aksi}`);
+        toast(btn.dataset.aksi === 'nonaktifkan' ? 'Akun berhasil dinonaktifkan' : 'Akun berhasil diaktifkan', 'success');
         await muat();
     } catch (err) {
         toast(err.message, 'error');

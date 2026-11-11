@@ -73,6 +73,7 @@ document.getElementById('btnSerahkan').addEventListener('click', async () => {
     try {
         await apiPost(`/api/pengajuan/${pilihId}/serah-terima`);
         modal.classList.remove('show');
+        toast('Barang berhasil diserahkan', 'success');
     } catch (err) {
        toast(err.message, 'error');
     }
