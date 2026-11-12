@@ -19,14 +19,14 @@
             <header class="topbar" id="topbar"></header>
             <main class="content">
                 <h1>Profil Saya</h1>
-                <p class="sub">Kelola informasi akun dan data diri kamu.</p>
+                <p class="sub">Kelola informasi akun OKI kamu.</p>
+                <p class="sub" id="infoProfil"></p>
 
                 <div class="card">
                     <div class="profile-grid">
                         <div class="profile-photo"><i class="bi bi-person-circle"></i></div>
                         <div>
-                            <div class="form-group"><label>Nama</label><input type="text" id="nama" readonly></div>
-                            <div class="form-group"><label>NIM</label><input type="text" id="nim" readonly></div>
+                            <div class="form-group"><label>Nama OKI</label><input type="text" id="nama" readonly></div>
                             <div class="form-group"><label>Email</label><input type="text" id="email" readonly></div>
                         </div>
                     </div>
@@ -50,7 +50,10 @@
         </div>
     </div>
 
+    <script src="../../js/components/ui.js"></script>
+    <script src="../../js/services/api.js"></script>
     <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
     <script src="../../js/utils/auth.js"></script>
     <script src="../../js/components/sidebar.js"></script>
     <script src="../../js/components/topbar.js"></script>

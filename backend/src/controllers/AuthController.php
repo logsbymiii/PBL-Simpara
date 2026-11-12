@@ -198,6 +198,57 @@ class AuthController
     // GET /api/auth/me
     public static function me(array $params = []): void
     {
-        json_success(requireLogin(), 'OK');
+        $user = requireLogin();
+
+        // Email OKI tidak ada di sesi; ambil terbaru dari database
+        if ($user['role'] === 'peminjam') {
+            $stmt = db()->prepare('SELECT email FROM oki WHERE id_oki = :id');
+            $stmt->execute(['id' => $user['id']]);
+            $user['email'] = $stmt->fetchColumn() ?: null;
+        }
+
+        json_success($user, 'OK');
+    }
+
+    // POST /api/auth/ubah-password   { "password_lama": "...", "password_baru": "..." }
+    // Untuk peminjam (OKI) maupun admin yang sedang login.
+    public static function ubahPassword(array $params = []): void
+    {
+        $user = requireLogin();
+        $body = get_json_body();
+        $lama = (string)($body['password_lama'] ?? '');
+        $baru = (string)($body['password_baru'] ?? '');
+
+        $errors = [];
+        if ($lama === '') {
+            $errors['password_lama'] = 'Password lama wajib diisi';
+        }
+        if (mb_strlen($baru) < 6) {
+            $errors['password_baru'] = 'Password baru minimal 6 karakter';
+        } elseif ($baru === $lama) {
+            $errors['password_baru'] = 'Password baru harus berbeda dari password lama';
+        }
+        if ($errors) {
+            json_error('Data tidak valid', 422, $errors);
+        }
+
+        $admin = $user['role'] === 'admin';
+        $tabel = $admin ? 'admin' : 'oki';
+        $kolom = $admin ? 'id_admin' : 'id_oki';
+
+        $pdo  = db();
+        $stmt = $pdo->prepare("SELECT password FROM {$tabel} WHERE {$kolom} = :id");
+        $stmt->execute(['id' => $user['id']]);
+        $hash = $stmt->fetchColumn();
+
+        if ($hash === false || !password_verify($lama, $hash)) {
+            json_error('Password lama salah', 403);
+        }
+
+        // Password di-hash, TIDAK PERNAH disimpan apa adanya
+        $stmt = $pdo->prepare("UPDATE {$tabel} SET password = :password WHERE {$kolom} = :id");
+        $stmt->execute(['password' => password_hash($baru, PASSWORD_DEFAULT), 'id' => $user['id']]);
+
+        json_success(null, 'Password berhasil diubah');
     }
 }
