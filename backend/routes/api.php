@@ -81,3 +81,5 @@ $router->get('/api/laporan/peminjaman',      [LaporanController::class, 'peminja
 $router->get('/api/laporan/mingguan',        [LaporanController::class, 'mingguan']);
 $router->get('/api/laporan/mingguan/detail', [LaporanController::class, 'mingguanDetail']);
 $router->get('/api/laporan/ringkasan',       [LaporanController::class, 'ringkasan']);
+
+$router->post('/api/auth/ubah-password', [AuthController::class, 'ubahPassword']);
