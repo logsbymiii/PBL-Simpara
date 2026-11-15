@@ -21,7 +21,7 @@ function tampilkan() {
         return `
     <tr class="${telat ? 'alert' : ''}">
       <td>${i + 1}</td>
-      <td>${esc(p.nama_peminjam)}</td>
+      <td>${esc(p.nama_peminjam)}<span class="oki-peminjam">${esc(p.nama_oki || '-')}</span></td>
       <td>${esc(p.barang)}</td>
       <td>${tgl(p.tanggal_pinjam)} – ${tgl(p.tanggal_kembali)}</td>
       <td>${esc(p.nama_kegiatan || '-')}</td>
