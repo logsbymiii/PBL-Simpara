@@ -29,13 +29,13 @@ function tampilkan() {
     const q = document.getElementById('cari').value.toLowerCase();
     const status = document.getElementById('filter').value;
     const hasil = semua.filter(p =>
-        (p.nama_peminjam + ' ' + p.barang).toLowerCase().includes(q) && (!status || p.status_tampil === status)
+        (p.nama_peminjam + ' ' + (p.nama_oki || '') + ' ' + p.barang).toLowerCase().includes(q) && (!status || p.status_tampil === status)
     );
 
     document.getElementById('tabel').innerHTML = hasil.length ? hasil.map((p, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td>${esc(p.nama_peminjam)}</td>
+      <td>${esc(p.nama_peminjam)}<span class="oki-peminjam">${esc(p.nama_oki || '-')}</span></td>
       <td>${esc(p.barang)}</td>
       <td>${tgl(p.tanggal_pinjam)} – ${tgl(p.tanggal_kembali)}</td>
       <td>${badge(p.status_tampil)}</td>

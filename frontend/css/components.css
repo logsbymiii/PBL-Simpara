@@ -523,6 +523,15 @@ tr.alert td {
     font-weight: 600;
 }
 
+/* Asal OKI di bawah nama peminjam (tabel admin) */
+.oki-peminjam {
+    display: block;
+    margin-top: 2px;
+    color: var(--muted);
+    font-size: 11px;
+    overflow-wrap: anywhere;   /* nama OKI panjang turun baris, tidak melebarkan tabel */
+}
+
 /* Kotak catatan penting di modal Serahkan Barang */
 .notice {
     background: var(--notice-bg);

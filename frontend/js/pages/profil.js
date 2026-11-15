@@ -8,6 +8,12 @@ function isi(id, nilai) {
     if (el) el.value = nilai || '-';
 }
 
+// Nama role untuk ditampilkan. Admin dibedakan lewat 'level' (admin / super_admin) dari server.
+function namaRole(akun) {
+    if (akun.role !== 'admin') return 'Peminjam (OKI)';
+    return akun.level === 'super_admin' ? 'Super Admin' : 'Admin';
+}
+
 async function muat() {
     const info = document.getElementById('infoProfil');
     try {
@@ -16,6 +22,7 @@ async function muat() {
         isi('username', akun.username);
         isi('jabatan', akun.jabatan);
         isi('email', akun.email);
+        isi('role', namaRole(akun));
     } catch (e) {
         if (info) info.textContent = e.message;
     }
