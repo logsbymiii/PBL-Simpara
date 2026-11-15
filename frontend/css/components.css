@@ -445,6 +445,9 @@ td {
     padding: 22px;
     width: 100%;
     max-width: 420px;
+    max-height: calc(100vh - 40px);    /* modal panjang tetap bisa digulir di HP pendek */
+    max-height: calc(100dvh - 40px);
+    overflow-y: auto;
 }
 
 .modal-box h3 {
@@ -1130,6 +1133,8 @@ tbody tr:hover { background: var(--input); }
         box-shadow: none;
     }
     .item:hover .img .bi { transform: none; }
+    tbody tr:hover { background: none; }
+    .btn-hapus:hover { color: var(--muted); }
     .btn:active { transform: none; opacity: .85; }
 }
 

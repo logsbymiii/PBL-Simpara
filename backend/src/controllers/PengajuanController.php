@@ -83,7 +83,7 @@ class PengajuanController
             }
 
             // Pesan dari RAISE EXCEPTION di database (stok kurang / tanggal agenda HMTI)
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 json_error($pesan, 409, $barangSaatIni !== null ? ['id_barang' => $barangSaatIni] : null);
             }
@@ -156,7 +156,7 @@ class PengajuanController
     public static function show(array $params): void
     {
         $user   = requireLogin();
-        $id     = self::parseId($params['id'] ?? '');
+        $id     = parse_id($params['id'] ?? '', 'pengajuan');
         $detail = self::ambilDetail($id);
 
         // Peminjam yang membuka pengajuan orang lain dianggap "tidak ditemukan"
@@ -174,7 +174,7 @@ class PengajuanController
     public static function setujui(array $params): void
     {
         $admin = requireAdmin();
-        $id    = self::parseId($params['id'] ?? '');
+        $id    = parse_id($params['id'] ?? '', 'pengajuan');
         self::pastikanAda($id);
 
         try {
@@ -184,7 +184,7 @@ class PengajuanController
             $stmt->execute(['id' => $id, 'admin' => $admin['id']]);
         } catch (PDOException $e) {
             // pesan dari RAISE EXCEPTION: stok kurang / agenda HMTI / sudah diproses
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 json_error($pesan, 409);
             }
@@ -199,7 +199,7 @@ class PengajuanController
     public static function tolak(array $params): void
     {
         $admin  = requireAdmin();
-        $id     = self::parseId($params['id'] ?? '');
+        $id     = parse_id($params['id'] ?? '', 'pengajuan');
         $alasan = trim((string)(get_json_body()['alasan'] ?? ''));
 
         if ($alasan === '') {
@@ -216,7 +216,7 @@ class PengajuanController
             );
             $stmt->execute(['id' => $id, 'admin' => $admin['id'], 'alasan' => $alasan]);
         } catch (PDOException $e) {
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 json_error($pesan, 409);
             }
@@ -231,14 +231,14 @@ class PengajuanController
     public static function serahTerima(array $params): void
     {
         $admin = requireAdmin();
-        $id    = self::parseId($params['id'] ?? '');
+        $id    = parse_id($params['id'] ?? '', 'pengajuan');
         self::pastikanAda($id);
 
         try {
             $stmt = db()->prepare('CALL sp_serah_terima_pengajuan(CAST(:id AS INT), CAST(:admin AS INT))');
             $stmt->execute(['id' => $id, 'admin' => $admin['id']]);
         } catch (PDOException $e) {
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 json_error($pesan, 409);
             }
@@ -256,8 +256,9 @@ class PengajuanController
         if ($user['role'] !== 'peminjam') {
             json_error('Hanya peminjam yang dapat membatalkan pengajuannya', 403);
         }
-        $id  = self::parseId($params['id'] ?? '');
+        $id  = parse_id($params['id'] ?? '', 'pengajuan');
         $pin = (string)(get_json_body()['pin'] ?? '');
+        cek_batas_percobaan('pin');
 
         // PIN pengajuan wajib benar sebelum boleh dibatalkan
         $stmt = db()->prepare('SELECT pin_hash FROM pengajuan WHERE id_pengajuan = :id AND id_oki = :oki');
@@ -266,16 +267,22 @@ class PengajuanController
         if ($baris === false) {
             json_error('Pengajuan tidak ditemukan', 404);
         }
-        if ($baris['pin_hash'] !== null && !password_verify($pin, $baris['pin_hash'])) {
+        // Pengajuan tanpa PIN tersimpan tidak boleh dibatalkan tanpa PIN; minta admin reset PIN
+        if (empty($baris['pin_hash'])) {
+            json_error('Pengajuan ini belum punya PIN. Hubungi admin untuk reset PIN.', 403);
+        }
+        if (!password_verify($pin, $baris['pin_hash'])) {
+            catat_percobaan_gagal('pin');
             json_error('PIN salah', 403);
         }
+        hapus_percobaan_gagal('pin');
 
         // Prosedur memeriksa pemilik (OKI yang sama) dan status, lalu mencatat riwayat
         try {
             $stmt = db()->prepare('CALL sp_batal_pengajuan(CAST(:id AS INT), CAST(:oki AS INT))');
             $stmt->execute(['id' => $id, 'oki' => $user['id']]);
         } catch (PDOException $e) {
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 // pengajuan bukan milik OKI ini / tidak ada -> 404; sudah diproses -> 409
                 json_error($pesan, str_contains($pesan, 'tidak ditemukan') ? 404 : 409);
@@ -284,6 +291,32 @@ class PengajuanController
         }
 
         json_success(self::ambilDetail($id), 'Pengajuan dibatalkan');
+    }
+
+    // POST /api/pengajuan/{id}/reset-pin  (admin)
+    // Body JSON: { "pin": "1234" }  -> PIN baru (4-6 angka) untuk membatalkan pengajuan.
+    // Hanya untuk pengajuan yang masih Menunggu, karena PIN hanya dipakai saat membatalkan.
+    public static function resetPin(array $params): void
+    {
+        requireAdmin();
+        $id  = parse_id($params['id'] ?? '', 'pengajuan');
+        $pin = (string)(get_json_body()['pin'] ?? '');
+
+        if (!preg_match('/^\d{4,6}$/', $pin)) {
+            json_error('Data tidak valid', 422, ['pin' => 'PIN harus 4 sampai 6 angka']);
+        }
+        self::pastikanAda($id);
+
+        // PIN di-hash, TIDAK PERNAH disimpan apa adanya
+        $stmt = db()->prepare(
+            "UPDATE pengajuan SET pin_hash = :pin_hash WHERE id_pengajuan = :id AND status = 'Menunggu'"
+        );
+        $stmt->execute(['pin_hash' => password_hash($pin, PASSWORD_DEFAULT), 'id' => $id]);
+
+        if ($stmt->rowCount() === 0) {
+            json_error('PIN hanya bisa direset untuk pengajuan yang masih menunggu verifikasi', 409);
+        }
+        json_success(null, 'PIN berhasil direset');
     }
 
     // ---------- fungsi bantu ----------
@@ -349,50 +382,17 @@ class PengajuanController
         return $header;
     }
 
-    // Ambil pesan bersih dari RAISE EXCEPTION (SQLSTATE P0001); null kalau error jenis lain
-    private static function pesanRaise(PDOException $e): ?string
-    {
-        if (($e->errorInfo[0] ?? '') !== 'P0001') {
-            return null;
-        }
-        $pesan = (string)($e->errorInfo[2] ?? '');
-        $pesan = preg_replace('/^\s*(?:\d+\s+)?ERROR:\s*/', '', $pesan) ?? $pesan;
-        $pesan = explode("\n", $pesan)[0];
-        return trim($pesan);
-    }
-
-    // ID dari URL harus angka positif
-    private static function parseId(mixed $nilai): int
-    {
-        $nilai = (string)$nilai;
-        if (!ctype_digit($nilai) || (int)$nilai < 1) {
-            json_error('ID pengajuan tidak valid', 422);
-        }
-        return (int)$nilai;
-    }
-
-    // Terima "2026-11-10 08:00" atau "2026-11-10T08:00"; null kalau salah
-    private static function parseWaktu(mixed $nilai): ?string
-    {
-        $nilai = trim(str_replace('T', ' ', (string)$nilai));
-        $dt    = DateTime::createFromFormat('Y-m-d H:i', $nilai);
-
-        if ($dt === false || $dt->format('Y-m-d H:i') !== $nilai) {
-            return null;
-        }
-        return $nilai;
-    }
-
     // Validasi body pembuatan pengajuan
     private static function validasi(array $body): array
     {
-        $mulai     = self::parseWaktu($body['tanggal_pinjam'] ?? '');
-        $selesai   = self::parseWaktu($body['tanggal_kembali'] ?? '');
+        $mulai     = parse_waktu($body['tanggal_pinjam'] ?? '');
+        $selesai   = parse_waktu($body['tanggal_kembali'] ?? '');
         $keperluan = trim((string)($body['keperluan'] ?? ''));
         $mentah    = $body['barang'] ?? null;
         $nama      = trim((string)($body['nama_peminjam'] ?? ''));
         $nim       = trim((string)($body['nim_peminjam'] ?? $body['nim'] ?? ''));
-        $hp        = trim((string)($body['no_hp_peminjam'] ?? ''));
+        // No HP boleh ditulis dengan spasi atau tanda hubung (0812-3456-7890); disimpan tanpa itu
+        $hp        = preg_replace('/[\s-]+/', '', trim((string)($body['no_hp_peminjam'] ?? ''))) ?? '';
         $kegiatan  = trim((string)($body['nama_kegiatan'] ?? ''));
         $pin       = (string)($body['pin'] ?? '');
 
@@ -407,11 +407,11 @@ class PengajuanController
         }
         if ($nim === '') {
             $errors['nim_peminjam'] = 'NIM peminjam wajib diisi';
-        } elseif (mb_strlen($nim) > 20) {
-            $errors['nim_peminjam'] = 'NIM maksimal 20 karakter';
+        } elseif (!preg_match('/^\d{5,20}$/', $nim)) {
+            $errors['nim_peminjam'] = 'NIM harus berupa angka (5 sampai 20 digit)';
         }
-        if (mb_strlen($hp) > 20) {
-            $errors['no_hp_peminjam'] = 'No HP maksimal 20 karakter';
+        if ($hp !== '' && !preg_match('/^\+?\d{8,15}$/', $hp)) {
+            $errors['no_hp_peminjam'] = 'No HP harus berupa angka 8 sampai 15 digit (boleh diawali +)';
         }
         if ($kegiatan === '') {
             $errors['nama_kegiatan'] = 'Nama kegiatan wajib diisi';
@@ -424,8 +424,9 @@ class PengajuanController
         if ($selesai === null) {
             $errors['tanggal_kembali'] = 'Tanggal dan jam kembali wajib diisi, format YYYY-MM-DD HH:MM';
         }
-        if ($mulai !== null && substr($mulai, 0, 10) < date('Y-m-d')) {
-            $errors['tanggal_pinjam'] = 'Tanggal pinjam tidak boleh di masa lalu';
+        // Bandingkan sampai jam:menit. Zona waktu PHP = Asia/Jakarta (bootstrap.php), sama dengan now_wib().
+        if ($mulai !== null && $mulai < date('Y-m-d H:i')) {
+            $errors['tanggal_pinjam'] = 'Waktu pinjam tidak boleh di masa lalu';
         }
         if ($mulai !== null && $selesai !== null && $selesai < $mulai) {
             $errors['tanggal_kembali'] = 'Waktu kembali tidak boleh sebelum waktu pinjam';

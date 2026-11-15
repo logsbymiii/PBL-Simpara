@@ -40,7 +40,7 @@ class PenggunaController
     {
         requireAdmin();
 
-        $oki = self::cariOki(self::parseId($params['id'] ?? ''));
+        $oki = self::cariOki(parse_id($params['id'] ?? '', 'akun'));
         if ($oki === false) {
             json_error('Akun OKI tidak ditemukan', 404);
         }
@@ -70,7 +70,7 @@ class PenggunaController
     private static function ubahStatus(array $params, string $status): void
     {
         requireAdmin();
-        $id = self::parseId($params['id'] ?? '');
+        $id = parse_id($params['id'] ?? '', 'akun');
 
         $stmt = db()->prepare('UPDATE oki SET status_akun = :status WHERE id_oki = :id');
         $stmt->execute(['status' => $status, 'id' => $id]);
@@ -92,13 +92,4 @@ class PenggunaController
         return $stmt->fetch();
     }
 
-    // ID dari URL harus angka positif
-    private static function parseId(mixed $nilai): int
-    {
-        $nilai = (string)$nilai;
-        if (!ctype_digit($nilai) || (int)$nilai < 1) {
-            json_error('ID akun tidak valid', 422);
-        }
-        return (int)$nilai;
-    }
 }

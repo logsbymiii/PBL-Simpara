@@ -64,6 +64,7 @@ $router->post('/api/pengajuan/{id}/setujui', [PengajuanController::class, 'setuj
 $router->post('/api/pengajuan/{id}/tolak',   [PengajuanController::class, 'tolak']);
 $router->post('/api/pengajuan/{id}/serah-terima', [PengajuanController::class, 'serahTerima']);
 $router->post('/api/pengajuan/{id}/batal',   [PengajuanController::class, 'batal']);
+$router->post('/api/pengajuan/{id}/reset-pin', [PengajuanController::class, 'resetPin']);
 
 // Pengembalian
 $router->get('/api/pengembalian/dipinjam',        [PengembalianController::class, 'dipinjam']);

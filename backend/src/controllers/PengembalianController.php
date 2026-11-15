@@ -31,7 +31,7 @@ class PengembalianController
     public static function show(array $params): void
     {
         $user = requireLogin();
-        $id   = self::parseId($params['id'] ?? '');
+        $id   = parse_id($params['id'] ?? '', 'pengajuan');
         $data = self::ambilPengembalian($id);
 
         // Peminjam hanya boleh melihat pengajuan miliknya
@@ -51,7 +51,7 @@ class PengembalianController
     public static function store(array $params): void
     {
         $admin = requireAdmin();
-        $id    = self::parseId($params['id'] ?? '');
+        $id    = parse_id($params['id'] ?? '', 'pengajuan');
         $data  = self::validasi(get_json_body());
 
         $cek = db()->prepare('SELECT 1 FROM pengajuan WHERE id_pengajuan = :id');
@@ -76,7 +76,7 @@ class PengembalianController
                 'catatan' => $data['catatan'],
             ]);
         } catch (PDOException $e) {
-            $pesan = self::pesanRaise($e);
+            $pesan = pesan_raise($e);
             if ($pesan !== null) {
                 json_error($pesan, 409);
             }
@@ -132,40 +132,6 @@ class PengembalianController
         return $pengajuan;
     }
 
-    // Ambil pesan bersih dari RAISE EXCEPTION (SQLSTATE P0001); null kalau error jenis lain
-    private static function pesanRaise(PDOException $e): ?string
-    {
-        if (($e->errorInfo[0] ?? '') !== 'P0001') {
-            return null;
-        }
-        $pesan = (string)($e->errorInfo[2] ?? '');
-        $pesan = preg_replace('/^\s*(?:\d+\s+)?ERROR:\s*/', '', $pesan) ?? $pesan;
-        $pesan = explode("\n", $pesan)[0];
-        return trim($pesan);
-    }
-
-    // ID dari URL harus angka positif
-    private static function parseId(mixed $nilai): int
-    {
-        $nilai = (string)$nilai;
-        if (!ctype_digit($nilai) || (int)$nilai < 1) {
-            json_error('ID pengajuan tidak valid', 422);
-        }
-        return (int)$nilai;
-    }
-
-    // Terima "2026-11-04 16:00" atau "2026-11-04T16:00"; null kalau salah
-    private static function parseWaktu(mixed $nilai): ?string
-    {
-        $nilai = trim(str_replace('T', ' ', (string)$nilai));
-        $dt    = DateTime::createFromFormat('Y-m-d H:i', $nilai);
-
-        if ($dt === false || $dt->format('Y-m-d H:i') !== $nilai) {
-            return null;
-        }
-        return $nilai;
-    }
-
     // Validasi body pencatatan pengembalian
     private static function validasi(array $body): array
     {
@@ -173,7 +139,7 @@ class PengembalianController
         // Kosong -> pakai waktu sekarang
         $waktu   = ($waktuMentah === null || $waktuMentah === '')
             ? date('Y-m-d H:i')
-            : self::parseWaktu($waktuMentah);
+            : parse_waktu($waktuMentah);
         $catatan = trim((string)($body['catatan'] ?? ''));
         $mentah  = $body['barang'] ?? null;
 

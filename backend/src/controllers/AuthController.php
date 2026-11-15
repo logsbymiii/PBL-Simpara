@@ -40,6 +40,8 @@ class AuthController
         }
         if (mb_strlen($password) < 6) {
             $errors['password'] = 'Password minimal 6 karakter';
+        } elseif (strlen($password) > 72) { // bcrypt hanya membaca 72 byte pertama
+            $errors['password'] = 'Password maksimal 72 karakter';
         }
         if ($errors) {
             json_error('Data tidak valid', 422, $errors);
@@ -88,6 +90,7 @@ class AuthController
     {
         $body = get_json_body();
         $role = (string)($body['role'] ?? 'peminjam');
+        cek_batas_percobaan('login'); // maks. 5 gagal per 10 menit
 
         if ($role === 'admin') {
             self::loginAdmin($body);
@@ -121,6 +124,7 @@ class AuthController
 
         // Pesan sengaja disamakan: jangan beri tahu mana yang salah
         if ($row === false || !password_verify($password, $row['password'])) {
+            catat_percobaan_gagal('login');
             json_error('OKI atau password salah', 401);
         }
         if ($row['status_akun'] !== 'Aktif') {
@@ -155,6 +159,7 @@ class AuthController
         $row = $stmt->fetch();
 
         if ($row === false || !password_verify($password, $row['password'])) {
+            catat_percobaan_gagal('login');
             json_error('Username atau password salah', 401);
         }
         if ($row['status_akun'] !== 'Aktif') {
@@ -179,6 +184,7 @@ class AuthController
     {
         start_session();
         session_regenerate_id(true); // ganti ID session setelah login (anti session fixation)
+        hapus_percobaan_gagal('login');
         $_SESSION['user'] = $user;
     }
 
@@ -225,6 +231,8 @@ class AuthController
         }
         if (mb_strlen($baru) < 6) {
             $errors['password_baru'] = 'Password baru minimal 6 karakter';
+        } elseif (strlen($baru) > 72) { // bcrypt hanya membaca 72 byte pertama
+            $errors['password_baru'] = 'Password baru maksimal 72 karakter';
         } elseif ($baru === $lama) {
             $errors['password_baru'] = 'Password baru harus berbeda dari password lama';
         }

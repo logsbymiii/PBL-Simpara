@@ -1,14 +1,3 @@
-function getAllUsers() {
-    const stored = JSON.parse(localStorage.getItem('users') || '[]');
-    return [...DUMMY_USERS, ...stored];
-}
-
-function registerUser(user) {
-    const stored = JSON.parse(localStorage.getItem('users') || '[]');
-    stored.push({ ...user, role: 'peminjam' });
-    localStorage.setItem('users', JSON.stringify(stored));
-}
-
 function simpanSesi(user) {
     if (user) localStorage.setItem('currentUser', JSON.stringify(user));
     return user || null;
