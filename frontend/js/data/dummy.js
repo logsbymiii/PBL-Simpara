@@ -28,6 +28,14 @@ function ikonBarang(b) {
     return `<i class="bi ${icon}"></i>`;
 }
 
+// Foto barang: kolom foto_barang hanya berisi nama file (mis. kamera.jpg) di assets/images/barang/.
+// akar = jalan dari halaman ke folder frontend ('../../' untuk pages/admin dan pages/peminjam).
+// Nama yang tidak cocok pola dianggap kosong, jadi tidak bisa menyisipkan path atau URL lain.
+function fotoBarang(b, akar = '../../') {
+    const nama = String((b && b.foto_barang) || '').trim();
+    return /^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(nama) ? `${akar}assets/images/barang/${nama}` : null;
+}
+
 // Waktu lokal dalam format 'YYYY-MM-DDTHH:mm'
 function waktuLokal(d = new Date()) {
     const pad = n => String(n).padStart(2, '0');

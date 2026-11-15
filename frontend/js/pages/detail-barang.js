@@ -17,10 +17,15 @@ function tampilkan(b) {
     const terpakai = b.kondisi === 'Baik' ? b.stok_total - b.stok_tersedia : 0;
 
     document.getElementById('statusBadge').innerHTML = badge(b.status, 'barang');
+    const foto = fotoBarang(b);
 
     box.innerHTML = `
     <div class="detail-card">
-      <div class="img">${ikonBarang(b)}</div>
+      ${foto
+        ? `<button type="button" class="img ada-foto" id="thumbFoto" aria-label="Lihat foto ${esc(b.nama_barang)}">
+             <img src="${esc(foto)}" alt="${esc(b.nama_barang)}" loading="lazy">
+           </button>`
+        : `<div class="img">${ikonBarang(b)}</div>`}
       <div class="detail-info">
         ${info('Nama Barang', esc(b.nama_barang))}
         ${info('Kode Barang', esc(b.kode_barang))}
@@ -44,7 +49,52 @@ function tampilkan(b) {
         aksi.innerHTML = `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow btn-sm">Ajukan Pinjam</a>`;
     }
 
+    // Tombol "Lihat Barang" hanya kalau ada foto yang valid
+    if (foto) {
+        aksi.insertAdjacentHTML('afterbegin',
+            '<button type="button" class="btn btn-gray btn-sm" id="btnLihatFoto"><i class="bi bi-image"></i> Lihat Barang</button>');
+        const thumb = document.getElementById('thumbFoto');
+        const tombolLihat = document.getElementById('btnLihatFoto');
+        const buka = () => bukaFoto(foto, b.nama_barang);
+        thumb.addEventListener('click', buka);
+        tombolLihat.addEventListener('click', buka);
+
+        // File foto tidak ada / gagal dimuat -> kembali ke ikon, tombol disembunyikan
+        thumb.querySelector('img').addEventListener('error', () => {
+            thumb.outerHTML = `<div class="img">${ikonBarang(b)}</div>`;
+            tombolLihat.remove();
+        });
+    }
+
     if (admin && riwayatBox) muatRiwayat(b.id_barang);
+}
+
+// Modal foto ukuran besar. Memakai .modal / .modal-box yang sama dengan konfirmasi() di ui.js.
+// Tutup lewat tombol Tutup, klik area gelap, atau Esc.
+function bukaFoto(src, nama) {
+    const m = document.createElement('div');
+    m.className = 'modal show modal-foto';
+    m.innerHTML = `
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <h3></h3>
+      <div class="foto-besar"><img></div>
+      <div class="actions"><button type="button" class="btn btn-gray">Tutup</button></div>
+    </div>`;
+    m.querySelector('h3').textContent = nama;
+    const img = m.querySelector('img');
+    img.src = src;
+    img.alt = nama;
+
+    const tombol = e => { if (e.key === 'Escape') tutup(); };
+    const tutup = () => {
+        document.removeEventListener('keydown', tombol);
+        m.remove();
+    };
+    m.addEventListener('click', e => { if (e.target === m) tutup(); });
+    m.querySelector('button').addEventListener('click', tutup);
+    document.addEventListener('keydown', tombol);
+    document.body.appendChild(m);
+    m.querySelector('button').focus();
 }
 
 async function hapus(idBarang, tombol) {
