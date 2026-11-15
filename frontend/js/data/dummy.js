@@ -36,6 +36,35 @@ function fotoBarang(b, akar = '../../') {
     return /^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(nama) ? `${akar}assets/images/barang/${nama}` : null;
 }
 
+// Modal foto ukuran besar (detail barang dan katalog guest). Memakai .modal / .modal-box yang sama
+// dengan konfirmasi() di ui.js. Tutup lewat tombol Tutup, klik area gelap, atau Esc.
+function bukaFoto(src, nama) {
+    const m = document.createElement('div');
+    m.className = 'modal show modal-foto';
+    m.innerHTML = `
+    <div class="modal-box" role="dialog" aria-modal="true">
+      <h3></h3>
+      <div class="foto-besar"><img></div>
+      <div class="actions"><button type="button" class="btn btn-gray">Tutup</button></div>
+    </div>`;
+    m.querySelector('h3').textContent = nama;
+    const img = m.querySelector('img');
+    img.alt = nama;
+    img.addEventListener('error', () => { img.parentElement.textContent = 'Foto tidak tersedia.'; });
+    img.src = src;
+
+    const tombol = e => { if (e.key === 'Escape') tutup(); };
+    const tutup = () => {
+        document.removeEventListener('keydown', tombol);
+        m.remove();
+    };
+    m.addEventListener('click', e => { if (e.target === m) tutup(); });
+    m.querySelector('button').addEventListener('click', tutup);
+    document.addEventListener('keydown', tombol);
+    document.body.appendChild(m);
+    m.querySelector('button').focus();
+}
+
 // Waktu lokal dalam format 'YYYY-MM-DDTHH:mm'
 function waktuLokal(d = new Date()) {
     const pad = n => String(n).padStart(2, '0');

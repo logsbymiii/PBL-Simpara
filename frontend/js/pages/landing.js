@@ -58,9 +58,20 @@ function tampilkanBarang() {
       <b>${esc(b.nama_barang)}</b><br>
       <small>${esc(b.nama_kategori || '')}</small><br>
       ${badge(b.status, 'barang')}<br><br>
+      ${fotoBarang(b, '')
+        ? `<button type="button" class="btn btn-yellow btn-sm" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button><br><br>`
+        : ''}
       <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
 }
+
+// Tombol "Lihat Barang" -> modal foto. index.html ada di root frontend, jadi akar foto ''.
+document.getElementById('daftar').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-foto]');
+    if (!btn) return;
+    const b = semuaBarang.find(x => String(x.id_barang) === btn.dataset.foto);
+    if (b) bukaFoto(fotoBarang(b, ''), b.nama_barang);
+});
 
 async function muatBarang() {
     const box = document.getElementById('daftar');
