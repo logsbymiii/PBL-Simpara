@@ -69,34 +69,6 @@ function tampilkan(b) {
     if (admin && riwayatBox) muatRiwayat(b.id_barang);
 }
 
-// Modal foto ukuran besar. Memakai .modal / .modal-box yang sama dengan konfirmasi() di ui.js.
-// Tutup lewat tombol Tutup, klik area gelap, atau Esc.
-function bukaFoto(src, nama) {
-    const m = document.createElement('div');
-    m.className = 'modal show modal-foto';
-    m.innerHTML = `
-    <div class="modal-box" role="dialog" aria-modal="true">
-      <h3></h3>
-      <div class="foto-besar"><img></div>
-      <div class="actions"><button type="button" class="btn btn-gray">Tutup</button></div>
-    </div>`;
-    m.querySelector('h3').textContent = nama;
-    const img = m.querySelector('img');
-    img.src = src;
-    img.alt = nama;
-
-    const tombol = e => { if (e.key === 'Escape') tutup(); };
-    const tutup = () => {
-        document.removeEventListener('keydown', tombol);
-        m.remove();
-    };
-    m.addEventListener('click', e => { if (e.target === m) tutup(); });
-    m.querySelector('button').addEventListener('click', tutup);
-    document.addEventListener('keydown', tombol);
-    document.body.appendChild(m);
-    m.querySelector('button').focus();
-}
-
 async function hapus(idBarang, tombol) {
     if (!await konfirmasi('Yakin ingin menghapus barang ini?', { judul: 'Hapus Barang', ya: 'Hapus', bahaya: true })) return;
     try {
