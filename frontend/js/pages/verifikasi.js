@@ -7,6 +7,9 @@ const formTolak = document.getElementById('formTolak');
 const tabel = document.getElementById('tabel');
 let menunggu = [];
 let tolakId = null;
+const modalPin = document.getElementById('modalPin');
+const formPin = document.getElementById('formPin');
+let pinId = null;
 
 const tgl = s => formatTanggal(String(s).replace(' ', 'T'));
 
@@ -26,6 +29,7 @@ function tampilkan() {
       <td><div class="actions-cell">
         <button class="btn btn-green btn-sm" data-aksi="setuju" data-id="${p.id_pengajuan}">Setujui</button>
         <button class="btn btn-red btn-sm" data-aksi="tolak" data-id="${p.id_pengajuan}">Tolak</button>
+        <button class="btn btn-gray btn-sm" data-aksi="pin" data-id="${p.id_pengajuan}">Reset PIN</button>
       </div></td>
     </tr>`;
     }).join('') : '<tr><td colspan="7" class="empty">Tidak ada pengajuan yang menunggu verifikasi.</td></tr>';
@@ -59,8 +63,17 @@ tabel.addEventListener('click', async e => {
         return;
     }
 
-    tolakId = id;
     const p = menunggu.find(x => x.id_pengajuan === id);
+
+    if (btn.dataset.aksi === 'pin') {
+        pinId = id;
+        document.getElementById('modalPinInfo').textContent = `${p.nama_peminjam}: ${p.barang}`;
+        formPin.reset();
+        modalPin.classList.add('show');
+        return;
+    }
+
+    tolakId = id;
     document.getElementById('modalInfo').textContent = `${p.nama_peminjam}: ${p.barang}`;
     formTolak.reset();
     modal.classList.add('show');
@@ -83,6 +96,29 @@ formTolak.addEventListener('submit', async e => {
     }
     tombol.disabled = false;
     muat();
+});
+
+// Reset PIN: admin memberi PIN baru kalau peminjam lupa PIN pembatalan
+document.getElementById('btnBatalPin').addEventListener('click', () => modalPin.classList.remove('show'));
+
+formPin.addEventListener('submit', async e => {
+    e.preventDefault();
+    const pin = document.getElementById('pinBaru').value;
+    if (!/^\d{4,6}$/.test(pin)) return toast('PIN harus 4 sampai 6 angka', 'error');
+    if (pin !== document.getElementById('pinBaru2').value) return toast('Ulangi PIN tidak sama', 'error');
+    if (!await konfirmasi('PIN lama tidak bisa dipakai lagi setelah direset. Lanjutkan?',
+        { judul: 'Reset PIN', ya: 'Reset PIN' })) return;
+
+    const tombol = formPin.querySelector('button[type="submit"]');
+    tombol.disabled = true;
+    try {
+        await apiPost(`/api/pengajuan/${pinId}/reset-pin`, { pin });
+        modalPin.classList.remove('show');
+        toast('PIN berhasil direset', 'success');
+    } catch (err) {
+        toast(err.message, 'error');   // mis. pengajuan sudah diproses
+    }
+    tombol.disabled = false;
 });
 
 muat();

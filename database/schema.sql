@@ -14,9 +14,12 @@ $$;
 CREATE TABLE oki (
     id_oki      INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nama_oki    VARCHAR(100) NOT NULL UNIQUE,
+    email       VARCHAR(100) NOT NULL,
     password    VARCHAR(255) NOT NULL,
     status_akun VARCHAR(20) NOT NULL DEFAULT 'Aktif'
-                CHECK (status_akun IN ('Aktif', 'Nonaktif'))
+                CHECK (status_akun IN ('Aktif', 'Nonaktif')),
+    -- nama constraint dipakai AuthController::register untuk pesan "Email sudah terdaftar"
+    CONSTRAINT oki_email_unik UNIQUE (email)
 );
 
 -- 2. Admin
@@ -86,6 +89,7 @@ CREATE TABLE pengajuan (
                          'Dikembalikan', 'Ditolak', 'Dibatalkan'
                      )),
     alasan_penolakan VARCHAR(255),
+    pin_hash         VARCHAR(255) NOT NULL,             -- hash PIN pembatalan (password_hash), bukan PIN asli
     CONSTRAINT chk_rentang_pengajuan
         CHECK (tgl_kembali >= tgl_pinjam),
     CONSTRAINT chk_alasan_penolakan

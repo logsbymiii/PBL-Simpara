@@ -65,8 +65,8 @@ class BarangController
     {
         requireLogin();
 
-        $mulai   = self::parseWaktu($_GET['mulai'] ?? '');
-        $selesai = self::parseWaktu($_GET['selesai'] ?? '');
+        $mulai   = parse_waktu($_GET['mulai'] ?? '');
+        $selesai = parse_waktu($_GET['selesai'] ?? '');
 
         if ($mulai === null || $selesai === null) {
             json_error('Parameter mulai dan selesai wajib, format YYYY-MM-DD HH:MM', 422);
@@ -97,7 +97,7 @@ class BarangController
     public static function show(array $params): void
     {
         // Publik: tamu (belum login) boleh melihat katalog.
-        $barang = self::cariBarang(self::parseId($params['id'] ?? ''));
+        $barang = self::cariBarang(parse_id($params['id'] ?? '', 'barang'));
         if ($barang === false) {
             json_error('Barang tidak ditemukan', 404);
         }
@@ -110,7 +110,7 @@ class BarangController
     {
         requireAdmin();
 
-        $id = self::parseId($params['id'] ?? '');
+        $id = parse_id($params['id'] ?? '', 'barang');
         if (self::cariBarang($id) === false) {
             json_error('Barang tidak ditemukan', 404);
         }
@@ -171,7 +171,7 @@ class BarangController
     public static function update(array $params): void
     {
         requireAdmin();
-        $id   = self::parseId($params['id'] ?? '');
+        $id   = parse_id($params['id'] ?? '', 'barang');
         $data = self::validasi(get_json_body());
 
         try {
@@ -202,7 +202,7 @@ class BarangController
     public static function destroy(array $params): void
     {
         requireAdmin();
-        $id = self::parseId($params['id'] ?? '');
+        $id = parse_id($params['id'] ?? '', 'barang');
 
         try {
             $stmt = db()->prepare('DELETE FROM barang WHERE id_barang = :id');
@@ -228,29 +228,6 @@ class BarangController
         $stmt = db()->prepare(self::SELECT_BARANG . ' WHERE v.id_barang = :id');
         $stmt->execute(['id' => $id]);
         return $stmt->fetch();
-    }
-
-    // ID dari URL harus angka positif
-    private static function parseId(mixed $nilai): int
-    {
-        $nilai = (string)$nilai;
-        if (!ctype_digit($nilai) || (int)$nilai < 1) {
-            json_error('ID barang tidak valid', 422);
-        }
-        return (int)$nilai;
-    }
-
-    // Terima "2026-11-10 08:00" atau "2026-11-10T08:00"; kembalikan null kalau salah
-    private static function parseWaktu(mixed $nilai): ?string
-    {
-        $nilai = trim(str_replace('T', ' ', (string)$nilai));
-        $dt    = DateTime::createFromFormat('Y-m-d H:i', $nilai);
-
-        // cek ketat: tanggal ngawur seperti 2026-02-31 ditolak
-        if ($dt === false || $dt->format('Y-m-d H:i') !== $nilai) {
-            return null;
-        }
-        return $nilai;
     }
 
     // Validasi body untuk tambah/edit; hasilnya siap dipakai sebagai parameter query

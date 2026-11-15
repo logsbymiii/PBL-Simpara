@@ -1,22 +1,23 @@
 SET search_path TO public;
 
--- Password di bawah sudah berupa hash bcrypt (backend memakai password_verify).
--- Password awal sama dengan seed lama. GANTI sebelum dipakai publik.
+-- Seed untuk database KOSONG yang baru dibuat dari schema.sql.
+-- PENTING: semua password dan PIN di file ini masih PLACEHOLDER (teks GANTI_...).
+-- GANTI setiap 'GANTI_...' dengan nilai asli SEBELUM file ini dijalankan, dan jangan
+-- commit nilai aslinya. Hash dibuat oleh PostgreSQL (pgcrypto, bcrypt); hasilnya
+-- bisa dibaca password_verify() di backend.
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
--- 1. Oki / organisasi asal peminjam
-INSERT INTO oki (nama_oki, password, status_akun) VALUES
-('HMTI', '$2y$10$tEQ/G4OV.UYtLvmmVqyX7eL5LaiaS4OxJKm/ELwG6qdBDO.vybMlS', 'Aktif'),
-('UKM Theateristic', '$2y$10$f.KsWxfWbbxPgmNmvBMAfOB4pBauUYRQFhEJpfEvAiTScsGhmbuqK', 'Aktif'),
-('UKM Musik', '$2y$10$iWO6Ny4H3E2lxH6TJ9ef4uNdNeHez2exE2ilJQ.q8AP9Wl3bnae.S', 'Aktif'),
-('BEM Fakultas', '$2y$10$7U86fqFDGgpOUjcoQO2/7ugNgMpn0ox8MH9itBaR3IswJKdkQXpQO', 'Aktif'),
-('UKM Fotografi', '$2y$10$B7OsnyRxSVNj485lSdt8veAJq./AmDi3i.uWUSv2NjjvUXhECcLHq', 'Aktif'),
-('UKM Olahraga', '$2y$10$Af/edKrPxCvzLNN5pxj/A.eeJIAKxIu35jJr0/D4GsdNbxJt2vs7i', 'Aktif');
+-- 1. Oki / organisasi asal peminjam (akun peminjam)
+INSERT INTO oki (nama_oki, email, password, status_akun) VALUES
+('UKM PP', 'pendidikan.penalaran@gmail.com', crypt('GANTI_PASSWORD_UKM_PP', gen_salt('bf', 10)), 'Aktif'),
+('UKM BKM', 'ukm.bkm@gmail.com', crypt('GANTI_PASSWORD_UKM_BKM', gen_salt('bf', 10)), 'Aktif'),
+('UKM Seni Theateristic', 'theateristic@polinema.ac.id', crypt('GANTI_PASSWORD_UKM_THEATERISTIC', gen_salt('bf', 10)), 'Aktif');
 
 -- 2. Admin
 insert into admin (username, password, nama_admin, jabatan, email, no_hp, role, status_akun) values
-('inventaris_hmti', '$2y$10$SPbamzFiR1U16yCGiAIhpuOKmu63K41d40Z2h.mpfJR3To8nmOLWK', 'Staf Inventaris', 'Staf Inventaris', null, null, 'admin', 'Aktif'),
-('ketua_hmti', '$2y$10$KDUCL4HFXedge65Xeb9oX.ugnMigKBEzW3y5IxV02kOprarDKYdne', 'Daffa Azzi', 'Ketua HMTI', null, null, 'super_admin', 'Aktif'),
-('admin', '$2y$10$lOUEA652dCMNl43pc2CnheZkOI30U7HEJ1mbqG3Rpqo17coe/AKHC', 'Administrator', 'Super Admin', null, null, 'super_admin', 'Aktif');
+('inventaris_hmti', crypt('GANTI_PASSWORD_INVENTARIS_HMTI', gen_salt('bf', 10)), 'Staf Inventaris', 'Staf Inventaris', null, null, 'admin', 'Aktif'),
+('ketua_hmti', crypt('GANTI_PASSWORD_KETUA_HMTI', gen_salt('bf', 10)), 'Daffa Azzi', 'Ketua HMTI', null, null, 'super_admin', 'Aktif'),
+('admin', crypt('GANTI_PASSWORD_ADMIN', gen_salt('bf', 10)), 'Administrator', 'Super Admin', null, null, 'super_admin', 'Aktif');
 
 -- 3. Kategori barang
 INSERT INTO kategori_barang (nama_kategori) VALUES
@@ -63,7 +64,7 @@ SELECT v.nama,
 INSERT INTO pengajuan (
     id_pengajuan, id_oki, nama_peminjam, nim_peminjam, no_hp_peminjam,
     nama_kegiatan, keperluan, tgl_pinjam, tgl_kembali,
-    status, tgl_diajukan, alasan_penolakan
+    status, tgl_diajukan, alasan_penolakan, pin_hash
 )
 OVERRIDING SYSTEM VALUE
 SELECT v.id,
@@ -77,19 +78,21 @@ SELECT v.id,
        t.hari_ini + v.hari_kembali + v.jam_kembali,
        v.status,
        t.hari_ini + v.hari_pengajuan + TIME '10:00',
-       v.alasan_penolakan
+       v.alasan_penolakan,
+       -- PIN pembatalan contoh. GANTI_PIN_CONTOH dengan PIN 4-6 angka sebelum dijalankan.
+       crypt('GANTI_PIN_CONTOH', gen_salt('bf', 10))
   FROM (SELECT now_wib()::DATE AS hari_ini) t
  CROSS JOIN (VALUES
-    (1, 'UKM Theateristic', 'Aqillah Zakky Ramadhana', '2310001', '081200000001', 'Dokumentasi latihan teater', 'Merekam latihan', -14, TIME '09:00', -12, TIME '17:00', 'Dikembalikan', -17, NULL),
-    (2, 'HMTI', 'Samudra Adhikara', '2310002', '081200000002', 'Presentasi proker HMTI', 'Rapat pleno', -10, TIME '08:00', -9, TIME '17:00', 'Dikembalikan', -13, NULL),
-    (3, 'UKM Musik', 'Luna Apriana', '2310003', '081200000003', 'Koordinasi panitia konser', 'Gladi bersih', -8, TIME '14:00', -7, TIME '22:00', 'Dikembalikan', -11, NULL),
-    (4, 'UKM Musik', 'Nadia Putri', '2310009', '081200000009', 'Acara gathering', 'Gathering anggota', -5, TIME '08:00', -4, TIME '17:00', 'Ditolak', -8, 'Barang sudah dipesan pihak lain'),
-    (5, 'UKM Fotografi', 'Dimas Pratama', '2310006', '081200000006', 'Workshop fotografi', 'Workshop internal', -3, TIME '09:00', -2, TIME '17:00', 'Dibatalkan', -6, NULL),
-    (6, 'BEM Fakultas', 'Citra Ayu', '2310004', '081200000004', 'Rapat kerja BEM', 'Presentasi proker', 1, TIME '08:00', 2, TIME '17:00', 'Disetujui', -2, NULL),
-    (7, 'UKM Theateristic', 'Aqillah Zakky Ramadhana', '2310001', '081200000001', 'Latihan pentas teater', 'Latihan vokal', -1, TIME '13:00', 1, TIME '17:00', 'Dipinjam', -3, NULL),
-    (8, 'BEM Fakultas', 'Citra Ayu', '2310004', '081200000004', 'Seminar fakultas', 'Seminar tamu', -4, TIME '08:00', -1, TIME '20:00', 'Dipinjam', -6, NULL),
-    (9, 'UKM Musik', 'Nadia Putri', '2310009', '081200000009', 'Latihan konser musik', 'Persiapan konser', 3, TIME '09:00', 4, TIME '21:00', 'Menunggu', 0, NULL),
-    (10, 'UKM Fotografi', 'Dimas Pratama', '2310006', '081200000006', 'Dokumentasi turnamen', 'Dokumentasi acara', 5, TIME '08:00', 5, TIME '17:00', 'Menunggu', 0, NULL)
+    (1, 'UKM Seni Theateristic', 'Aqillah Zakky Ramadhana', '2310001', '081200000001', 'Dokumentasi latihan teater', 'Merekam latihan', -14, TIME '09:00', -12, TIME '17:00', 'Dikembalikan', -17, NULL),
+    (2, 'UKM PP', 'Samudra Adhikara', '2310002', '081200000002', 'Presentasi proker UKM PP', 'Rapat pleno', -10, TIME '08:00', -9, TIME '17:00', 'Dikembalikan', -13, NULL),
+    (3, 'UKM BKM', 'Luna Apriana', '2310003', '081200000003', 'Koordinasi panitia bakti sosial', 'Gladi bersih', -8, TIME '14:00', -7, TIME '22:00', 'Dikembalikan', -11, NULL),
+    (4, 'UKM BKM', 'Nadia Putri', '2310009', '081200000009', 'Acara gathering', 'Gathering anggota', -5, TIME '08:00', -4, TIME '17:00', 'Ditolak', -8, 'Barang sudah dipesan pihak lain'),
+    (5, 'UKM PP', 'Dimas Pratama', '2310006', '081200000006', 'Workshop karya tulis', 'Workshop internal', -3, TIME '09:00', -2, TIME '17:00', 'Dibatalkan', -6, NULL),
+    (6, 'UKM PP', 'Citra Ayu', '2310004', '081200000004', 'Rapat kerja UKM PP', 'Presentasi proker', 1, TIME '08:00', 2, TIME '17:00', 'Disetujui', -2, NULL),
+    (7, 'UKM Seni Theateristic', 'Aqillah Zakky Ramadhana', '2310001', '081200000001', 'Latihan pentas teater', 'Latihan vokal', -1, TIME '13:00', 1, TIME '17:00', 'Dipinjam', -3, NULL),
+    (8, 'UKM PP', 'Citra Ayu', '2310004', '081200000004', 'Seminar penalaran', 'Seminar tamu', -4, TIME '08:00', -1, TIME '20:00', 'Dipinjam', -6, NULL),
+    (9, 'UKM BKM', 'Nadia Putri', '2310009', '081200000009', 'Persiapan bakti sosial', 'Rapat panitia', 3, TIME '09:00', 4, TIME '21:00', 'Menunggu', 0, NULL),
+    (10, 'UKM Seni Theateristic', 'Dimas Pratama', '2310006', '081200000006', 'Dokumentasi pentas', 'Dokumentasi acara', 5, TIME '08:00', 5, TIME '17:00', 'Menunggu', 0, NULL)
   ) AS v(
     id, nama_oki, nama_peminjam, nim, no_hp, nama_kegiatan, keperluan,
     hari_pinjam, jam_pinjam, hari_kembali, jam_kembali, status,

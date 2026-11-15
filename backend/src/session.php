@@ -48,6 +48,41 @@ function requireLogin(): array
     return $user;
 }
 
+// ---------- Batas percobaan gagal (login, PIN batal) ----------
+// Dihitung per session: maksimal 5 gagal dalam 10 menit, setelah itu ditolak sementara.
+const BATAS_GAGAL   = 5;
+const JENDELA_GAGAL = 600; // detik
+
+// Tolak (429) kalau percobaan gagal $jenis sudah mencapai batas
+function cek_batas_percobaan(string $jenis): void
+{
+    start_session();
+    $batasWaktu = time() - JENDELA_GAGAL;
+    $daftar     = array_values(array_filter(
+        $_SESSION['gagal'][$jenis] ?? [],
+        fn($waktu) => $waktu > $batasWaktu
+    ));
+    $_SESSION['gagal'][$jenis] = $daftar;
+
+    if (count($daftar) >= BATAS_GAGAL) {
+        $menit = max(1, (int)ceil(($daftar[0] + JENDELA_GAGAL - time()) / 60));
+        json_error("Terlalu banyak percobaan gagal. Coba lagi dalam {$menit} menit.", 429);
+    }
+}
+
+function catat_percobaan_gagal(string $jenis): void
+{
+    start_session();
+    $_SESSION['gagal'][$jenis][] = time();
+}
+
+// Dipanggil setelah berhasil, supaya hitungan mulai dari nol lagi
+function hapus_percobaan_gagal(string $jenis): void
+{
+    start_session();
+    unset($_SESSION['gagal'][$jenis]);
+}
+
 // Penjaga: endpoint ini hanya untuk admin
 function requireAdmin(): array
 {
