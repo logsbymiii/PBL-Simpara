@@ -296,6 +296,45 @@ td {
     font-size: 40px;
 }
 
+/* Thumbnail foto barang: kotak 4:3, foto utuh (contain) di latar putih */
+.detail-card .img.ada-foto {
+    width: 160px;
+    height: auto;
+    aspect-ratio: 4 / 3;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e5e5f5;
+    cursor: zoom-in;
+    font: inherit;
+}
+.detail-card .img.ada-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+/* Modal foto besar (detail barang) */
+.modal-foto .modal-box {
+    width: auto;
+    min-width: min(320px, 100%);
+    max-width: min(90vw, 900px);
+}
+.foto-besar {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #fff;
+    margin-bottom: 14px;
+}
+.foto-besar img {
+    display: block;
+    max-width: 100%;
+    max-height: 80vh;      /* fallback browser lama */
+    max-height: 70dvh;     /* sisa ruang untuk judul dan tombol Tutup */
+    object-fit: contain;
+}
+
 .detail-info {
     flex: 1;
     display: grid;

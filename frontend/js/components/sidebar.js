@@ -40,7 +40,7 @@ function renderSidebar(role, active) {
 
     document.getElementById('sidebar').innerHTML = `
     <div>
-      <div class="brand"><img src="../../assets/images/logo-hmti.png" alt="Logo HMTI"><span class="text">SIMPARA</span></div>
+      <div class="brand"><img src="../../assets/images/logo/logo-hmti.png" alt="Logo HMTI"><span class="text">SIMPARA</span></div>
       <nav class="menu">${links}</nav>
     </div>
     <a href="#" class="logout" id="btnLogout"><i class="bi bi-box-arrow-right"></i><span class="text">Keluar</span></a>`;
