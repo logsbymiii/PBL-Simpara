@@ -67,3 +67,5 @@ psql -h <host> -U <user> -d <database> -f database/seed.sql
 Sebelum menjalankan `seed.sql`, ganti semua teks `GANTI_...` (password akun dan PIN contoh) dengan nilai asli
 di salinan lokal, dan jangan commit nilai aslinya. Seed memakai ekstensi `pgcrypto` untuk membuat hash bcrypt.
 Bisa juga lewat pgAdmin atau SQL Editor Neon: buka file, salin isinya, jalankan berurutan.
+
+Foto barang disimpan sebagai aset di repo (`frontend/assets/images/barang/`, tanpa upload); kolom `barang.foto_barang` hanya berisi nama filenya, misalnya `kamera.jpg`.

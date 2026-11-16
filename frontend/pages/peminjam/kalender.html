@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kalender | SIMPARA</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css"
+        integrity="sha384-CK2SzKma4jA5H/MXDUU7i1TqZlCFaD4T01vtyDFvPlD97JQyS+IsSh1nI2EFbpyk" crossorigin="anonymous">
+    <link rel="stylesheet" href="../../css/variable.css">
+    <link rel="stylesheet" href="../../css/base.css">
+    <link rel="stylesheet" href="../../css/layout.css">
+    <link rel="stylesheet" href="../../css/components.css">
+    <link rel="stylesheet" href="../../css/pages/kalender.css">
+</head>
+
+<body>
+    <div class="layout">
+        <aside class="sidebar" id="sidebar"></aside>
+        <div class="main">
+            <header class="topbar" id="topbar"></header>
+            <main class="content">
+                <h1>Kalender Agenda HMTI</h1>
+                <p class="sub">Tanggal agenda HMTI dipakai untuk kegiatan internal, jadi <b>tidak bisa dipinjam</b>.
+                    Pilih tanggal lain saat mengajukan peminjaman.</p>
+
+                <div class="cal-bar">
+                    <div class="cal-nav">
+                        <button id="prev" aria-label="Bulan sebelumnya"><</button>
+                        <h2 id="judul"></h2>
+                        <button id="next" aria-label="Bulan berikutnya">></button>
+                    </div>
+                    <div class="legend">
+                        <span class="agenda">Agenda HMTI (tidak bisa dipinjam)</span>
+                    </div>
+                </div>
+
+                <p class="sub" id="infoKalender"></p>
+
+                <div class="cal-card">
+                    <div class="cal-grid" id="kalender"></div>
+                </div>
+
+                <div class="card agenda-daftar">
+                    <h3>Agenda Mendatang</h3>
+                    <div id="daftarAgenda"></div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="../../js/components/ui.js"></script>
+    <script src="../../js/services/api.js"></script>
+    <script src="../../js/data/dummy.js"></script>
+    <script src="../../js/utils/format.js"></script>
+    <script src="../../js/utils/auth.js"></script>
+    <script src="../../js/components/sidebar.js"></script>
+    <script src="../../js/components/topbar.js"></script>
+    <script src="../../js/pages/kalender-peminjam.js"></script>
+</body>
+
+</html>

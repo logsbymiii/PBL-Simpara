@@ -1,6 +1,9 @@
 function renderTopbar(user) {
     const judul = document.title.split('|')[0].trim();
-    const peran = user.role === 'admin' ? 'Admin' : 'Peminjam';
+    // Admin dibedakan lewat 'level' (admin / super_admin) yang dikirim server saat login
+    const peran = user.role !== 'admin' ? 'Peminjam'
+        : user.level === 'super_admin' ? 'Super Admin' : 'Admin';
+    const nama = esc(user.nama || peran);
 
     document.getElementById('topbar').innerHTML = `
     <div class="topbar-left">
@@ -8,9 +11,16 @@ function renderTopbar(user) {
       <span class="topbar-title">${esc(judul)}</span>
     </div>
     <div class="user">
-      <div class="avatar"><i class="bi bi-person-circle"></i></div>
-      <div class="user-info"><b>${esc(user.nama || peran)}</b><small>${peran}</small></div>
-      <button class="btn-logout-mobile" id="btnLogoutMobile" aria-label="Keluar"><i class="bi bi-box-arrow-right"></i></button>
+      <button type="button" class="user-btn" id="btnAkun" aria-haspopup="true" aria-expanded="false" aria-controls="menuAkun" aria-label="Menu akun">
+        <span class="avatar"><i class="bi bi-person-circle"></i></span>
+        <span class="user-info"><b>${nama}</b><small>${peran}</small></span>
+        <i class="bi bi-chevron-down user-caret"></i>
+      </button>
+      <div class="user-menu" id="menuAkun" hidden>
+        <div class="user-menu-info"><b>${nama}</b><small>${peran}</small></div>
+        <a href="profil.html"><i class="bi bi-person"></i> Profil</a>
+        <button type="button" id="btnKeluarMenu"><i class="bi bi-box-arrow-right"></i> Keluar</button>
+      </div>
     </div>`;
 
     document.getElementById('btnToggle').addEventListener('click', () => {
@@ -23,5 +33,26 @@ function renderTopbar(user) {
         localStorage.setItem('sidebarKecil', kecil ? '1' : '0');
     });
 
-    document.getElementById('btnLogoutMobile').addEventListener('click', () => logout());
+    // Dropdown akun: buka/tutup dengan klik atau sentuh, tutup saat klik di luar atau Esc
+    const btnAkun = document.getElementById('btnAkun');
+    const menuAkun = document.getElementById('menuAkun');
+    const aturMenu = buka => {
+        menuAkun.hidden = !buka;
+        btnAkun.setAttribute('aria-expanded', String(buka));
+    };
+    btnAkun.addEventListener('click', e => {
+        e.stopPropagation();
+        aturMenu(menuAkun.hidden);
+    });
+    document.addEventListener('click', e => {
+        if (!menuAkun.hidden && !menuAkun.contains(e.target)) aturMenu(false);
+    });
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && !menuAkun.hidden) {
+            aturMenu(false);
+            btnAkun.focus();
+        }
+    });
+
+    document.getElementById('btnKeluarMenu').addEventListener('click', () => logout());
 }

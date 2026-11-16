@@ -140,3 +140,55 @@
         padding: 1px 3px;
     }
 }
+/* ===== Kalender agenda HMTI (halaman peminjam) ===== */
+.agenda {
+    background: #ffe3e3;
+    color: var(--danger);
+}
+
+.event.agenda,
+.legend .agenda {
+    color: var(--danger);
+}
+
+.cal-day.terkunci {
+    background: #fff5f5;
+}
+
+.agenda-daftar {
+    margin-top: 16px;
+}
+
+.agenda-baris {
+    display: flex;
+    gap: 14px;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+
+.agenda-baris:last-child {
+    border-bottom: 0;
+}
+
+.agenda-baris small {
+    display: block;
+    color: var(--muted);
+}
+
+.agenda-tanggal {
+    flex-shrink: 0;
+    width: 120px;
+    color: var(--danger);
+}
+
+@media (max-width: 480px) {
+    .agenda-baris {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .agenda-tanggal {
+        width: auto;
+    }
+}

@@ -173,20 +173,71 @@
 .user-info small { opacity: .7; }
 
 /* ===== Mobile ===== */
-.drawer-backdrop,
-.btn-logout-mobile { display: none; }
+.drawer-backdrop { display: none; }
 
-.btn-logout-mobile {
+/* ===== Dropdown akun (avatar kanan atas) ===== */
+.user { position: relative; }
+.user-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
     border: 0;
-    background: var(--input);
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
-    color: var(--danger);
-    font-size: 16px;
+    background: none;
+    padding: 4px 6px;
+    border-radius: 10px;
+    font: inherit;
+    color: inherit;
     cursor: pointer;
-    place-items: center;
 }
+.user-btn[aria-expanded="true"] { background: var(--input); }
+.user-caret { font-size: 11px; opacity: .6; }
+.user-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 45;
+    min-width: 200px;
+    max-width: calc(100vw - 24px);
+    background: #fff;
+    border-radius: 10px;
+    box-shadow: 0 10px 30px rgba(20, 20, 90, .18);
+    padding: 6px;
+}
+.user-menu[hidden] { display: none; }
+.user-menu-info {
+    display: flex;
+    flex-direction: column;
+    padding: 8px 10px 10px;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 4px;
+    overflow-wrap: anywhere;
+}
+.user-menu-info small { color: var(--muted); }
+.user-menu a,
+.user-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px;           /* target sentuh cukup besar di HP */
+    border: 0;
+    background: none;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+    color: var(--text);
+    text-decoration: none;
+    text-align: left;
+    cursor: pointer;
+}
+/* hover hanya untuk mouse; di layar sentuh warnanya tidak menempel */
+@media (hover: hover) {
+    .user-btn:hover,
+    .user-menu a:hover,
+    .user-menu button:hover { background: var(--input); }
+}
+.user-menu #btnKeluarMenu,
+.user-menu #btnKeluarMenu .bi { color: var(--danger); }
 
 @media (max-width: 768px) {
     .topbar { padding: 10px 14px; position: sticky; top: 0; z-index: 30; }
@@ -255,7 +306,6 @@
     .layout.role-peminjam .sidebar .text { display: block; }
     .layout.role-peminjam .main { padding-bottom: 76px; }
     .layout.role-peminjam .menu-toggle { display: none; }
-    .layout.role-peminjam .btn-logout-mobile { display: grid; }
     .layout.role-peminjam .drawer-backdrop { display: none !important; }
 }
 

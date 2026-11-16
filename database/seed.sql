@@ -24,22 +24,23 @@ INSERT INTO kategori_barang (nama_kategori) VALUES
 ('Elektronik'), ('Audio'), ('Perlengkapan Acara');
 
 -- 4. Barang
-INSERT INTO barang (kode_barang, nama_barang, id_kategori, stok_total, kondisi)
-SELECT v.kode, v.nama, k.id_kategori, v.stok, v.kondisi
+-- foto_barang = nama file saja di frontend/assets/images/barang/ (bukan path atau URL)
+INSERT INTO barang (kode_barang, nama_barang, id_kategori, stok_total, kondisi, foto_barang)
+SELECT v.kode, v.nama, k.id_kategori, v.stok, v.kondisi, v.foto
   FROM (VALUES
-    ('BRG-001', 'Laptop', 'Elektronik', 3, 'Baik'),
-    ('BRG-002', 'Proyektor Epson', 'Elektronik', 1, 'Baik'),
-    ('BRG-003', 'Kamera', 'Elektronik', 3, 'Baik'),
-    ('BRG-004', 'Mikrofon', 'Audio', 4, 'Baik'),
-    ('BRG-005', 'Sound System', 'Audio', 1, 'Baik'),
-    ('BRG-006', 'White Screen', 'Perlengkapan Acara', 1, 'Baik'),
-    ('BRG-007', 'Kabel HDMI', 'Elektronik', 3, 'Baik'),
-    ('BRG-008', 'Handy Talky', 'Audio', 4, 'Baik'),
-    ('BRG-009', 'Karpet', 'Perlengkapan Acara', 2, 'Baik'),
-    ('BRG-010', 'Backdrop', 'Perlengkapan Acara', 1, 'Rusak'),
-    ('BRG-011', 'Tripod Kamera', 'Elektronik', 3, 'Baik'),
-    ('BRG-012', 'Terminal Kabel', 'Elektronik', 4, 'Baik')
-  ) AS v(kode, nama, kategori, stok, kondisi)
+    ('BRG-001', 'Laptop', 'Elektronik', 3, 'Baik', 'laptop.jpg'),
+    ('BRG-002', 'Proyektor Epson', 'Elektronik', 1, 'Baik', 'proyektor-epson.jpg'),
+    ('BRG-003', 'Kamera', 'Elektronik', 3, 'Baik', 'kamera.jpg'),
+    ('BRG-004', 'Mikrofon', 'Audio', 4, 'Baik', 'mikrofon.jpg'),
+    ('BRG-005', 'Sound System', 'Audio', 1, 'Baik', 'sound-system.jpg'),
+    ('BRG-006', 'White Screen', 'Perlengkapan Acara', 1, 'Baik', 'white-screen.jpg'),
+    ('BRG-007', 'Kabel HDMI', 'Elektronik', 3, 'Baik', 'kabel-hdmi.jpg'),
+    ('BRG-008', 'Handy Talky', 'Audio', 4, 'Baik', 'handy-talky.jpg'),
+    ('BRG-009', 'Karpet', 'Perlengkapan Acara', 2, 'Baik', 'karpet.jpg'),
+    ('BRG-010', 'Backdrop', 'Perlengkapan Acara', 1, 'Rusak', 'backdrop.jpg'),
+    ('BRG-011', 'Tripod Kamera', 'Elektronik', 3, 'Baik', 'tripod-kamera.jpg'),
+    ('BRG-012', 'Terminal Kabel', 'Elektronik', 4, 'Baik', 'terminal-kabel.jpg')
+  ) AS v(kode, nama, kategori, stok, kondisi, foto)
   JOIN kategori_barang k ON k.nama_kategori = v.kategori;
 
 -- 5. Agenda HMTI

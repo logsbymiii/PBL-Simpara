@@ -4,6 +4,7 @@ const MENU = {
         { label: 'Barang', href: 'daftar-barang.html', icon: 'bi-box-seam' },
         { label: 'Pengajuan', href: 'form-pengajuan.html', icon: 'bi-file-earmark-text' },
         { label: 'Riwayat', href: 'riwayat.html', icon: 'bi-clock-history' },
+        { label: 'Kalender', href: 'kalender.html', icon: 'bi-calendar3' },
         { label: 'Profil', href: 'profil.html', icon: 'bi-person' },
     ],
     admin: [
