@@ -24,14 +24,16 @@ function tampilkan() {
     <div class="item" style="--i:${i}">
       <div class="img">${ikonBarang(b)}</div>
       <b>${esc(b.nama_barang)}</b><br>
-      ${badge(b.status, 'barang')}<br>
-      ${fotoBarang(b)
-        ? `<button type="button" class="btn btn-yellow btn-sm" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button><br>`
-        : ''}
-      ${b.status === 'Tersedia'
+      ${badge(b.status, 'barang')}
+      <div class="item-aksi">
+        ${fotoBarang(b)
+            ? `<button type="button" class="btn btn-yellow" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button>`
+            : ''}
+        ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
-      <a href="detail-barang.html?id=${b.id_barang}" class="btn btn-gray">Detail</a>
+        <a href="detail-barang.html?id=${b.id_barang}" class="btn btn-gray">Detail</a>
+      </div>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
 }
 

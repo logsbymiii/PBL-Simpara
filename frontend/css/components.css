@@ -68,15 +68,27 @@
     filter: brightness(.95);
 }
 
-/* P3: ukuran & jarak button di halaman Daftar Barang peminjam */
+/* P3: tombol kartu Daftar Barang peminjam: bertumpuk, lebar dan tinggi sama, teks di tengah */
+.item-aksi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 10px;
+}
 .content #daftar .item .btn {
-    min-width: 96px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    width: 100%;
+    min-height: 32px;
     box-sizing: border-box;
     padding: 4px 8px;
     font-size: 11px;
-    line-height: 1.5;
-    border-radius: 4px;
-    margin: 6px 2px 0;
+    line-height: 1.3;
+    border-radius: 6px;
+    margin: 0;
+    text-decoration: none;
 }
 
 .badge {
