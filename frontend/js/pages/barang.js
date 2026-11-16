@@ -19,41 +19,23 @@ function tampilkan() {
         b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
-    const daftar = document.getElementById('daftar');
-    daftar.innerHTML = hasil.length ? hasil.map((b, i) => {
-        const foto = fotoBarang(b);   // pages/peminjam -> akar '../../'
-        return `
+    // Kartu memakai ikon; foto baru tampil di modal lewat tombol "Lihat Barang" (sama seperti katalog guest)
+    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map((b, i) => `
     <div class="item" style="--i:${i}">
-      ${foto
-        ? `<div class="img ada-foto"><img src="${esc(foto)}" alt="${esc(b.nama_barang)}" loading="lazy" data-id="${b.id_barang}"></div>`
-        : `<div class="img">${ikonBarang(b)}</div>`}
+      <div class="img">${ikonBarang(b)}</div>
       <b>${esc(b.nama_barang)}</b><br>
       ${badge(b.status, 'barang')}<br>
-      ${foto
+      ${fotoBarang(b)
         ? `<button type="button" class="btn btn-yellow btn-sm" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button><br>`
         : ''}
       ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
       <a href="detail-barang.html?id=${b.id_barang}" class="btn btn-gray">Detail</a>
-    </div>`;
-    }).join('') : '<p>Barang tidak ditemukan.</p>';
-
-    // Foto gagal dimuat -> kembali ke ikon, tombol Lihat Barang disembunyikan
-    daftar.querySelectorAll('.img.ada-foto img').forEach(img => {
-        img.addEventListener('error', () => {
-            const b = semuaBarang.find(x => String(x.id_barang) === img.dataset.id);
-            const tombol = daftar.querySelector(`button[data-foto="${img.dataset.id}"]`);
-            if (tombol) {
-                tombol.nextElementSibling?.remove();   // <br> setelah tombol
-                tombol.remove();
-            }
-            img.parentElement.outerHTML = `<div class="img">${ikonBarang(b)}</div>`;
-        });
-    });
+    </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
 }
 
-// Tombol "Lihat Barang" -> modal foto besar (sama seperti detail barang)
+// Tombol "Lihat Barang" -> modal foto besar (sama seperti detail barang). Akar foto '../../'.
 document.getElementById('daftar').addEventListener('click', e => {
     const btn = e.target.closest('button[data-foto]');
     if (!btn) return;
