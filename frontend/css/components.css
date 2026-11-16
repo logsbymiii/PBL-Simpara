@@ -192,6 +192,20 @@ td {
     margin-bottom: 8px;
 }
 
+/* Kartu barang dengan foto: foto utuh (contain) di latar putih, tinggi kotak tetap */
+.item .img.ada-foto {
+    height: 110px;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #e5e5f5;
+}
+.item .img.ada-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
 .toolbar {
     display: flex;
     gap: 10px;
