@@ -258,7 +258,7 @@ class PengajuanController
         }
         $id  = parse_id($params['id'] ?? '', 'pengajuan');
         $pin = (string)(get_json_body()['pin'] ?? '');
-        cek_batas_percobaan('pin');
+        cek_kunci_pin();   // 3 kali salah -> terkunci 5 menit (session.php)
 
         // PIN pengajuan wajib benar sebelum boleh dibatalkan
         $stmt = db()->prepare('SELECT pin_hash FROM pengajuan WHERE id_pengajuan = :id AND id_oki = :oki');
@@ -272,10 +272,10 @@ class PengajuanController
             json_error('Pengajuan ini belum punya PIN. Hubungi admin untuk reset PIN.', 403);
         }
         if (!password_verify($pin, $baris['pin_hash'])) {
-            catat_percobaan_gagal('pin');
-            json_error('PIN salah', 403);
+            $sisa = catat_pin_salah();   // kesempatan terakhir habis -> langsung 429
+            json_error("PIN salah, sisa {$sisa} kesempatan", 403, ['sisa_kesempatan' => $sisa]);
         }
-        hapus_percobaan_gagal('pin');
+        reset_pin_salah();
 
         // Prosedur memeriksa pemilik (OKI yang sama) dan status, lalu mencatat riwayat
         try {

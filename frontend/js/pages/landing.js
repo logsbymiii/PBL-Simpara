@@ -20,6 +20,7 @@ function tanggalIndo(iso) {
 // Semua barang dari server disimpan di sini. Pencarian dan filter status
 // dilakukan di browser, jadi mengetik di kotak cari tidak memanggil API terus-menerus.
 let semuaBarang = [];
+let halaman = 1;   // halaman katalog yang sedang tampil (6 kartu per halaman)
 
 async function muatAgenda() {
     const box = document.getElementById('daftarAgenda');
@@ -52,20 +53,32 @@ function tampilkanBarang() {
         b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
-    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map((b, i) => `
+    const daftar = document.getElementById('daftar');
+    const hal = paginasi(hasil, halaman, document.getElementById('paginasi'), n => {
+        halaman = n;
+        tampilkanBarang();
+        daftar.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+    halaman = hal.halaman;
+
+    // index.html ada di root frontend, jadi akar foto ''
+    daftar.innerHTML = hal.isi.length ? hal.isi.map((b, i) => `
     <div class="item" style="--i:${i}">
-      <div class="img">${ikonBarang(b)}</div>
+      ${gambarKartu(b, '')}
       <b>${esc(b.nama_barang)}</b><br>
       <small>${esc(b.nama_kategori || '')}</small><br>
-      ${badge(b.status, 'barang')}<br><br>
-      ${fotoBarang(b, '')
-        ? `<button type="button" class="btn btn-yellow btn-sm" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button><br><br>`
-        : ''}
-      <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
+      ${badge(b.status, 'barang')}
+      <div class="item-aksi">
+        ${fotoBarang(b, '')
+            ? `<button type="button" class="btn btn-yellow" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button>`
+            : ''}
+        <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
+      </div>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
+    pasangCadanganFoto(daftar, semuaBarang);
 }
 
-// Tombol "Lihat Barang" -> modal foto. index.html ada di root frontend, jadi akar foto ''.
+// Gambar kartu atau tombol "Lihat Barang" -> modal foto. Akar foto ''.
 document.getElementById('daftar').addEventListener('click', e => {
     const btn = e.target.closest('button[data-foto]');
     if (!btn) return;
@@ -75,7 +88,7 @@ document.getElementById('daftar').addEventListener('click', e => {
 
 async function muatBarang() {
     const box = document.getElementById('daftar');
-    box.innerHTML = skeletonKartu();
+    box.innerHTML = skeletonKartu(PER_HALAMAN);
     try {
         semuaBarang = await apiGet('/api/barang');
         tampilkanBarang();
@@ -84,7 +97,9 @@ async function muatBarang() {
     }
 }
 
-document.getElementById('cari').addEventListener('input', tampilkanBarang);
-document.getElementById('filter').addEventListener('change', tampilkanBarang);
+// Cari/filter baru -> mulai lagi dari halaman 1
+const ulangDariAwal = () => { halaman = 1; tampilkanBarang(); };
+document.getElementById('cari').addEventListener('input', ulangDariAwal);
+document.getElementById('filter').addEventListener('change', ulangDariAwal);
 muatAgenda();
 muatBarang();

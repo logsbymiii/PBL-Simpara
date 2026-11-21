@@ -70,3 +70,29 @@ const apiGet    = (path, params) => apiRequest('GET', path + buatQuery(params));
 const apiPost   = (path, body)   => apiRequest('POST', path, body ?? {});
 const apiPut    = (path, body)   => apiRequest('PUT', path, body ?? {});
 const apiDelete = (path)         => apiRequest('DELETE', path);
+
+// Kirim file (mis. foto barang) apa adanya sebagai body. Memakai XMLHttpRequest supaya
+// progres unggah bisa ditampilkan: onProgress(persen 0-100). Hasil sama seperti apiRequest.
+function apiUnggah(path, file, onProgress) {
+    return new Promise((berhasil, gagal) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', API_BASE_URL + path);
+        xhr.withCredentials = true;   // cookie sesi ikut terkirim
+        xhr.setRequestHeader('Content-Type', file.type || 'application/octet-stream');
+        if (onProgress) {
+            xhr.upload.onprogress = e => { if (e.lengthComputable) onProgress(Math.round(e.loaded / e.total * 100)); };
+        }
+        xhr.onload = () => {
+            let json = null;
+            try { json = JSON.parse(xhr.responseText); } catch (e) { /* abaikan */ }
+            if (xhr.status >= 200 && xhr.status < 300 && json && json.success !== false) {
+                berhasil(json.data);
+                return;
+            }
+            if (xhr.status === 401) redirectKeLogin();
+            gagal(new ApiError((json && json.message) || 'Gagal mengunggah file', xhr.status, json && json.errors));
+        };
+        xhr.onerror = () => gagal(new ApiError('Tidak bisa terhubung ke server. Pastikan back-end sudah berjalan.', 0));
+        xhr.send(file);
+    });
+}

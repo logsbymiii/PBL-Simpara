@@ -3,6 +3,7 @@ renderSidebar('peminjam', 'Barang');
 renderTopbar(user);
 
 let semuaBarang = [];
+let halaman = 1;   // halaman katalog yang sedang tampil (6 kartu per halaman)
 
 function tampilkanStatistik() {
     const hitung = s => semuaBarang.filter(b => b.status === s).length;
@@ -19,10 +20,18 @@ function tampilkan() {
         b.nama_barang.toLowerCase().includes(q) && (!status || b.status === status)
     );
 
-    // Kartu memakai ikon; foto baru tampil di modal lewat tombol "Lihat Barang" (sama seperti katalog guest)
-    document.getElementById('daftar').innerHTML = hasil.length ? hasil.map((b, i) => `
+    const daftar = document.getElementById('daftar');
+    const hal = paginasi(hasil, halaman, document.getElementById('paginasi'), n => {
+        halaman = n;
+        tampilkan();
+        daftar.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+    halaman = hal.halaman;
+
+    // Foto tampil di atas kartu (klik = modal); tanpa foto -> ikon. Sama seperti katalog guest.
+    daftar.innerHTML = hal.isi.length ? hal.isi.map((b, i) => `
     <div class="item" style="--i:${i}">
-      <div class="img">${ikonBarang(b)}</div>
+      ${gambarKartu(b)}
       <b>${esc(b.nama_barang)}</b><br>
       ${badge(b.status, 'barang')}
       <div class="item-aksi">
@@ -35,9 +44,10 @@ function tampilkan() {
         <a href="detail-barang.html?id=${b.id_barang}" class="btn btn-gray">Detail</a>
       </div>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
+    pasangCadanganFoto(daftar, semuaBarang);
 }
 
-// Tombol "Lihat Barang" -> modal foto besar (sama seperti detail barang). Akar foto '../../'.
+// Gambar kartu atau tombol "Lihat Barang" -> modal foto besar. Akar foto '../../'.
 document.getElementById('daftar').addEventListener('click', e => {
     const btn = e.target.closest('button[data-foto]');
     if (!btn) return;
@@ -47,7 +57,7 @@ document.getElementById('daftar').addEventListener('click', e => {
 
 async function muat() {
     const daftar = document.getElementById('daftar');
-    daftar.innerHTML = skeletonKartu();
+    daftar.innerHTML = skeletonKartu(PER_HALAMAN);
     try {
         semuaBarang = await apiGet('/api/barang');
         tampilkanStatistik();
@@ -57,6 +67,8 @@ async function muat() {
     }
 }
 
-document.getElementById('cari').addEventListener('input', tampilkan);
-document.getElementById('filter').addEventListener('change', tampilkan);
+// Cari/filter baru -> mulai lagi dari halaman 1
+const ulangDariAwal = () => { halaman = 1; tampilkan(); };
+document.getElementById('cari').addEventListener('input', ulangDariAwal);
+document.getElementById('filter').addEventListener('change', ulangDariAwal);
 muat();

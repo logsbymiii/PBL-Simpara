@@ -48,10 +48,54 @@ function requireLogin(): array
     return $user;
 }
 
-// ---------- Batas percobaan gagal (login, PIN batal) ----------
+// ---------- Batas percobaan gagal login ----------
 // Dihitung per session: maksimal 5 gagal dalam 10 menit, setelah itu ditolak sementara.
 const BATAS_GAGAL   = 5;
 const JENDELA_GAGAL = 600; // detik
+
+// ---------- Batas PIN pembatalan pengajuan ----------
+// Per session: 3 kali PIN salah -> terkunci 5 menit. Hitungan direset setelah PIN benar.
+const BATAS_PIN_SALAH = 3;
+const LAMA_KUNCI_PIN  = 300; // detik
+
+// Tolak (429) selama masih terkunci. errors.retry_after = sisa detik (juga header Retry-After).
+function cek_kunci_pin(): void
+{
+    start_session();
+    $sisa = (int)($_SESSION['kunci_pin'] ?? 0) - time();
+    if ($sisa > 0) {
+        tolak_pin_terkunci($sisa);
+    }
+    unset($_SESSION['kunci_pin']);
+}
+
+// Catat satu PIN salah. Kalau sudah mencapai batas -> langsung kunci dan jawab 429.
+// Kalau belum, kembalikan sisa kesempatan.
+function catat_pin_salah(): int
+{
+    start_session();
+    $salah = (int)($_SESSION['pin_salah'] ?? 0) + 1;
+    if ($salah >= BATAS_PIN_SALAH) {
+        unset($_SESSION['pin_salah']);
+        $_SESSION['kunci_pin'] = time() + LAMA_KUNCI_PIN;
+        tolak_pin_terkunci(LAMA_KUNCI_PIN);
+    }
+    $_SESSION['pin_salah'] = $salah;
+    return BATAS_PIN_SALAH - $salah;
+}
+
+function reset_pin_salah(): void
+{
+    start_session();
+    unset($_SESSION['pin_salah'], $_SESSION['kunci_pin']);
+}
+
+function tolak_pin_terkunci(int $detik): never
+{
+    header('Retry-After: ' . $detik);
+    $waktu = sprintf('%02d:%02d', intdiv($detik, 60), $detik % 60);
+    json_error("PIN salah " . BATAS_PIN_SALAH . " kali. Coba lagi dalam {$waktu}.", 429, ['retry_after' => $detik]);
+}
 
 // Tolak (429) kalau percobaan gagal $jenis sudah mencapai batas
 function cek_batas_percobaan(string $jenis): void

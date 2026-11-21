@@ -32,6 +32,27 @@ function skeletonKartu(n = 8) {
       <div class="sk-baris pendek"></div>
     </div>`).join('');
 }
+
+// Katalog barang: 6 kartu per halaman (3 x 2 di desktop)
+const PER_HALAMAN = 6;
+
+// Potong 'daftar' untuk halaman ke-'halaman' dan gambar tombol Sebelumnya/Berikutnya di 'wadah'.
+// pindah(n) dipanggil saat tombol diklik. Hasil: { isi, halaman } (halaman sudah dibatasi 1..total).
+function paginasi(daftar, halaman, wadah, pindah) {
+    const total = Math.max(1, Math.ceil(daftar.length / PER_HALAMAN));
+    const h = Math.min(Math.max(1, halaman), total);
+
+    wadah.innerHTML = total > 1 ? `
+    <button type="button" class="btn btn-gray btn-sm" data-arah="-1" ${h === 1 ? 'disabled' : ''}><i class="bi bi-chevron-left"></i> Sebelumnya</button>
+    <span>Halaman ${h} dari ${total}</span>
+    <button type="button" class="btn btn-gray btn-sm" data-arah="1" ${h === total ? 'disabled' : ''}>Berikutnya <i class="bi bi-chevron-right"></i></button>` : '';
+    wadah.onclick = e => {
+        const btn = e.target.closest('button[data-arah]');
+        if (btn) pindah(h + Number(btn.dataset.arah));
+    };
+
+    return { isi: daftar.slice((h - 1) * PER_HALAMAN, h * PER_HALAMAN), halaman: h };
+}
 // Angka di kartu statistik menghitung naik dari 0 saat nilainya terisi dari API
 (function () {
     const hitungNaik = (el, target) => {

@@ -68,14 +68,14 @@
     filter: brightness(.95);
 }
 
-/* P3: tombol kartu Daftar Barang peminjam: bertumpuk, lebar dan tinggi sama, teks di tengah */
+/* P3: tombol kartu katalog (peminjam dan guest): bertumpuk, lebar dan tinggi sama, teks di tengah */
 .item-aksi {
     display: flex;
     flex-direction: column;
     gap: 6px;
     margin-top: 10px;
 }
-.content #daftar .item .btn {
+.item-aksi .btn {
     display: flex;
     align-items: center;
     justify-content: center;
@@ -204,6 +204,52 @@ td {
     margin-bottom: 8px;
 }
 
+/* ===== Katalog barang (Daftar Barang peminjam + guest): 3 kolom desktop, 2 tablet, 1 HP ===== */
+.grid-items.grid-katalog {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+}
+/* Kotak gambar rasio tetap 4:3 (foto, ikon, maupun skeleton), jadi layout tidak melompat saat foto dimuat */
+.grid-katalog .item .img {
+    height: auto;
+    aspect-ratio: 4 / 3;
+    font-size: 40px;
+}
+.grid-katalog .item .img.ada-foto {
+    width: 100%;
+    padding: 6px;
+    background: #fff;
+    border: 1px solid #e5e5f5;
+    cursor: zoom-in;
+    font: inherit;
+}
+.grid-katalog .item .img.ada-foto img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.paginasi {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: var(--muted);
+}
+.paginasi:empty { display: none; }
+.paginasi .btn:disabled { opacity: .5; cursor: default; }
+
+@media (max-width: 1024px) {
+    .grid-items.grid-katalog { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 560px) {
+    .grid-items.grid-katalog { grid-template-columns: 1fr; gap: 12px; }
+    .paginasi { gap: 8px; }
+}
+
 .toolbar {
     display: flex;
     gap: 10px;
@@ -325,6 +371,41 @@ td {
     height: 100%;
     object-fit: contain;
 }
+
+/* Unggah foto barang (form tambah/edit admin) */
+.foto-unggah {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.foto-pratinjau {
+    flex-shrink: 0;
+    width: 96px;
+    aspect-ratio: 4 / 3;
+    padding: 4px;
+    background: #fff;
+    border: 1px solid #e5e5f5;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-size: 30px;
+}
+.foto-pratinjau img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+.foto-unggah-aksi {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+}
+.foto-unggah-aksi input[type="file"] { font-size: 12px; max-width: 100%; }
+.foto-unggah-aksi .btn { align-self: flex-start; }
+.foto-unggah-aksi .hint { overflow-wrap: anywhere; }
 
 /* Modal foto besar (detail barang) */
 .modal-foto .modal-box {
@@ -647,6 +728,28 @@ tr.alert td {
     margin-top: 18px;
 }
 
+/* Detail barang: Sedang/akan dipinjam (daftar, bukan tabel, supaya rapi di HP) */
+#peminjamanAktif {
+    margin-top: 18px;
+}
+.pinjam-baris {
+    display: grid;
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.6fr) auto;
+    gap: 6px 14px;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    font-size: 13px;
+}
+.pinjam-baris:last-child { border-bottom: 0; }
+.pinjam-oki { overflow-wrap: anywhere; }
+.pinjam-oki small { display: block; color: var(--muted); }
+.pinjam-tgl { color: var(--muted); }
+@media (max-width: 560px) {
+    .pinjam-baris { grid-template-columns: 1fr auto; }
+    .pinjam-tgl { grid-column: 1 / -1; grid-row: 2; }
+}
+
 .form-kondisi .actions {
     text-align: right;
 }
@@ -814,6 +917,9 @@ tr.alert td {
 
 /* Modal konfirmasi */
 .konfirmasi-isi { color: var(--muted); margin-bottom: 18px; line-height: 1.5; }
+/* Pesan di modal PIN: sisa kesempatan / countdown kunci */
+.pin-pesan { color: var(--danger); font-size: 13px; font-weight: 600; min-height: 1.2em; margin: -6px 0 12px; }
+.pin-pesan:empty { display: none; }
 .modal-box .actions .btn + .btn { margin-left: 8px; }
 /* ===== Mobile: komponen ===== */
 @media (max-width: 768px) {

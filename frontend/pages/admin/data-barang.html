@@ -88,6 +88,16 @@
                     </select>
                 </div>
             </div>
+            <div class="form-group"><label for="fotoFile">Foto Barang</label>
+                <div class="foto-unggah">
+                    <div class="foto-pratinjau" id="fotoPratinjau"></div>
+                    <div class="foto-unggah-aksi">
+                        <input type="file" id="fotoFile" accept="image/jpeg,image/png,image/webp">
+                        <small class="hint" id="fotoInfo">JPEG, PNG, atau WebP. Otomatis dikecilkan (maks. 800 px, di bawah 300 KB).</small>
+                        <button type="button" class="btn btn-gray btn-sm" id="btnHapusFoto" hidden><i class="bi bi-trash"></i> Hapus foto unggahan</button>
+                    </div>
+                </div>
+            </div>
             <div class="actions">
                 <button type="button" class="btn btn-gray" id="btnBatal">Batal</button>
                 <button type="submit" class="btn btn-yellow">Simpan</button>
