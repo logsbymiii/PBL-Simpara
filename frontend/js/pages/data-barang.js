@@ -64,9 +64,112 @@ function tampilErrorModal(pesan, errors) {
     errorModal.style.display = 'block';
 }
  
+// ---------- Foto barang (unggahan admin) ----------
+const FOTO_MAKS = 300 * 1024;   // sama dengan batas di BarangController
+const fotoFile = document.getElementById('fotoFile');
+const fotoPratinjau = document.getElementById('fotoPratinjau');
+const fotoInfo = document.getElementById('fotoInfo');
+const btnHapusFoto = document.getElementById('btnHapusFoto');
+const INFO_FOTO = fotoInfo.textContent;
+let fotoBaru = null;   // Blob JPEG hasil pengecilan, menunggu diunggah saat Simpan
+
+// Pratinjau: src foto (atau null -> ikon barang)
+function tampilPratinjau(src, barang) {
+    fotoPratinjau.innerHTML = src
+        ? `<img src="${esc(src)}" alt="Pratinjau foto">`
+        : ikonBarang(barang);
+    const img = fotoPratinjau.querySelector('img');
+    if (img) img.addEventListener('error', () => { fotoPratinjau.innerHTML = ikonBarang(barang); });
+}
+
+// Kecilkan foto di browser: sisi terpanjang maks. 800 px, JPEG kualitas 0.8
+// (diturunkan bertahap sampai di bawah 300 KB). PNG transparan diberi latar putih.
+async function kecilkanFoto(file) {
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) {
+        throw new Error('File harus berupa gambar JPEG, PNG, atau WebP');
+    }
+    const url = URL.createObjectURL(file);
+    try {
+        const img = await new Promise((ok, gagal) => {
+            const i = new Image();
+            i.onload = () => ok(i);
+            i.onerror = () => gagal(new Error('File gambar tidak bisa dibaca'));
+            i.src = url;
+        });
+        const skala = Math.min(1, 800 / Math.max(img.naturalWidth, img.naturalHeight));
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.naturalWidth * skala);
+        canvas.height = Math.round(img.naturalHeight * skala);
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#fff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        for (const kualitas of [0.8, 0.7, 0.6, 0.5]) {
+            const blob = await new Promise(ok => canvas.toBlob(ok, 'image/jpeg', kualitas));
+            if (blob && blob.size <= FOTO_MAKS) return blob;
+        }
+        throw new Error('Foto masih lebih dari 300 KB setelah dikecilkan. Coba foto lain.');
+    } finally {
+        URL.revokeObjectURL(url);
+    }
+}
+
+fotoFile.addEventListener('change', async () => {
+    const file = fotoFile.files[0];
+    fotoBaru = null;
+    if (!file) return;
+    fotoInfo.textContent = 'Mengecilkan foto...';
+    try {
+        fotoBaru = await kecilkanFoto(file);
+        tampilPratinjau(URL.createObjectURL(fotoBaru));
+        fotoInfo.textContent = `Siap diunggah (${Math.round(fotoBaru.size / 1024)} KB). Klik Simpan untuk mengunggah.`;
+    } catch (err) {
+        fotoFile.value = '';
+        fotoInfo.textContent = INFO_FOTO;
+        toast(err.message, 'error');
+    }
+});
+
+// Unggah foto ke barang 'id', dengan progres di bawah input. true kalau berhasil.
+async function unggahFoto(id) {
+    try {
+        await apiUnggah(`/api/barang/${id}/foto`, fotoBaru, persen => {
+            fotoInfo.textContent = `Mengunggah foto... ${persen}%`;
+        });
+        return true;
+    } catch (err) {
+        toast(`Data barang tersimpan, tapi foto gagal diunggah: ${err.message}`, 'error');
+        return false;
+    }
+}
+
+btnHapusFoto.addEventListener('click', async () => {
+    if (!editId) return;
+    if (!await konfirmasi('Hapus foto unggahan? Barang akan kembali memakai foto bawaan.',
+        { judul: 'Hapus Foto', ya: 'Hapus', bahaya: true })) return;
+    btnHapusFoto.disabled = true;
+    try {
+        const b = await apiDelete(`/api/barang/${editId}/foto`);
+        toast('Foto unggahan dihapus', 'success');
+        btnHapusFoto.hidden = true;
+        tampilPratinjau(fotoBarang(b), b);
+        await muatBarang();
+    } catch (err) {
+        toast(err.message, 'error');
+    } finally {
+        btnHapusFoto.disabled = false;
+    }
+});
+
 function bukaModal(barang) {
     editId = barang ? barang.id_barang : null;
     errorModal.style.display = 'none';
+    fotoBaru = null;
+    fotoFile.value = '';
+    fotoInfo.textContent = INFO_FOTO;
+    tampilPratinjau(barang ? fotoBarang(barang) : null, barang);
+    btnHapusFoto.hidden = !(barang && Number(barang.foto_upload) > 0);
     document.getElementById('modalJudul').textContent = barang ? 'Edit Barang' : 'Tambah Barang';
     document.getElementById('kode').value = barang ? barang.kode_barang : '';
     document.getElementById('nama').value = barang ? barang.nama_barang : '';
@@ -116,9 +219,14 @@ form.addEventListener('submit', async e => {
     const tombol = form.querySelector('button[type="submit"]');
     tombol.disabled = true;
     try {
-        if (editId) await apiPut(`/api/barang/${editId}`, body);
-        else await apiPost('/api/barang', body);
-        toast(editId ? 'Barang berhasil diperbarui' : 'Barang berhasil ditambahkan', 'success');
+        const hasil = editId
+            ? await apiPut(`/api/barang/${editId}`, body)
+            : await apiPost('/api/barang', body);
+        // Foto baru (kalau dipilih) diunggah setelah data barang tersimpan, karena butuh id_barang
+        const fotoOk = fotoBaru ? await unggahFoto(hasil.id_barang) : true;
+        if (fotoOk) {
+            toast(editId ? 'Barang berhasil diperbarui' : 'Barang berhasil ditambahkan', 'success');
+        }
         modal.classList.remove('show');
         await muatBarang();
     } catch (err) {

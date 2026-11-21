@@ -147,8 +147,16 @@ function tampilkanDetail(p, kondisiBarang) {
     }
 
 
-// Minta PIN lewat modal. Hasil: string PIN, atau null kalau dibatalkan.
-function mintaPin() {
+// ---------- PIN pembatalan: 3 kali salah -> terkunci 5 menit (diatur server) ----------
+// Waktu selesai kunci (ms) disimpan, bukan sisa detiknya, supaya countdown tetap benar
+// walaupun modal ditutup lalu dibuka lagi, atau halaman dimuat ulang.
+const KUNCI_PIN = 'kunciPinSampai';
+const kunciPinSampai = () => Number(sessionStorage.getItem(KUNCI_PIN)) || 0;
+const mmss = detik => `${String(Math.floor(detik / 60)).padStart(2, '0')}:${String(detik % 60).padStart(2, '0')}`;
+
+// Modal PIN. Selama modal terbuka, PIN salah tidak menutup modal: tampil sisa kesempatan,
+// dan saat terkunci tampil countdown mm:ss. Hasil: true kalau pengajuan berhasil dibatalkan.
+function mintaPinDanBatalkan(id) {
     return new Promise(selesai => {
         const m = document.createElement('div');
         m.className = 'modal show';
@@ -160,37 +168,95 @@ function mintaPin() {
             <input type="password" id="inputPin" inputmode="numeric" pattern="[0-9]{4,6}" maxlength="6"
               placeholder="PIN (4-6 angka)" autocomplete="off" required>
           </div>
+          <p class="pin-pesan" id="pinPesan" aria-live="polite"></p>
           <div class="actions">
             <button type="button" class="btn btn-gray">Kembali</button>
             <button type="submit" class="btn btn-red">Batalkan</button>
           </div>
         </form>`;
-        const tutup = hasil => { document.removeEventListener('keydown', tombol); m.remove(); selesai(hasil); };
-        const tombol = e => { if (e.key === 'Escape') tutup(null); };
-        m.addEventListener('click', e => { if (e.target === m) tutup(null); });
-        m.querySelector('.btn-gray').addEventListener('click', () => tutup(null));
-        m.querySelector('form').addEventListener('submit', e => {
+        const form = m.querySelector('form');
+        const input = m.querySelector('#inputPin');
+        const pesan = m.querySelector('#pinPesan');
+        const kirim = m.querySelector('button[type="submit"]');
+        let timer = null;
+
+        // Hitung mundur dari waktu selesai kunci; tombol aktif lagi otomatis saat habis
+        const perbaruiKunci = () => {
+            const sisa = Math.ceil((kunciPinSampai() - Date.now()) / 1000);
+            if (sisa > 0) {
+                kirim.disabled = true;
+                input.disabled = true;
+                pesan.textContent = `Terlalu banyak PIN salah. Coba lagi dalam ${mmss(sisa)}`;
+                return;
+            }
+            clearInterval(timer);
+            timer = null;
+            if (kunciPinSampai()) {
+                sessionStorage.removeItem(KUNCI_PIN);
+                pesan.textContent = 'Silakan coba lagi.';
+            }
+            kirim.disabled = false;
+            input.disabled = false;
+        };
+        const mulaiKunci = detik => {
+            sessionStorage.setItem(KUNCI_PIN, String(Date.now() + detik * 1000));
+            perbaruiKunci();
+            if (!timer) timer = setInterval(perbaruiKunci, 1000);
+        };
+
+        const tutup = hasil => {
+            clearInterval(timer);
+            document.removeEventListener('keydown', tombol);
+            m.remove();
+            selesai(hasil);
+        };
+        const tombol = e => { if (e.key === 'Escape') tutup(false); };
+        m.addEventListener('click', e => { if (e.target === m) tutup(false); });
+        m.querySelector('.btn-gray').addEventListener('click', () => tutup(false));
+
+        form.addEventListener('submit', async e => {
             e.preventDefault();
-            tutup(m.querySelector('#inputPin').value);
+            kirim.disabled = true;
+            pesan.textContent = '';
+            try {
+                await apiPost(`/api/pengajuan/${id}/batal`, { pin: input.value });
+                tutup(true);
+                return;
+            } catch (err) {
+                const info = err.errors || {};
+                if (err.status === 429 && info.retry_after) {
+                    input.value = '';
+                    mulaiKunci(Number(info.retry_after));
+                    return;
+                }
+                pesan.textContent = err.message;   // mis. "PIN salah, sisa 2 kesempatan"
+                if (info.sisa_kesempatan !== undefined) {
+                    input.value = '';
+                    input.focus();
+                }
+            }
+            kirim.disabled = false;
         });
+
         document.addEventListener('keydown', tombol);
         document.body.appendChild(m);
-        m.querySelector('#inputPin').focus();
+        if (kunciPinSampai() > Date.now()) {
+            perbaruiKunci();
+            timer = setInterval(perbaruiKunci, 1000);
+        } else {
+            input.focus();
+        }
     });
 }
 
 async function batalkan(id, tombol) {
-    const pin = await mintaPin();
-    if (pin === null) return;
     tombol.disabled = true;
-    try {
-        await apiPost(`/api/pengajuan/${id}/batal`, { pin });
+    if (await mintaPinDanBatalkan(id)) {
         toast('Pengajuan berhasil dibatalkan', 'success');
         await muat(id);   // ambil data terbaru supaya status dan timeline ikut berubah
-    } catch (e) {
-        toast(e.message, 'error');   // mis. "pengajuan sudah diproses admin"
-        tombol.disabled = false;
+        return;
     }
+    tombol.disabled = false;
 }
 
 async function muat(id) {

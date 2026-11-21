@@ -66,7 +66,28 @@ function tampilkan(b) {
         });
     }
 
+    muatPeminjamanAktif(b.id_barang);
     if (admin && riwayatBox) muatRiwayat(b.id_barang);
+}
+
+// Sedang/akan dipinjam: hanya nama OKI, tanggal, jumlah, dan status (tanpa data pribadi peminjam)
+async function muatPeminjamanAktif(idBarang) {
+    const kotak = document.getElementById('peminjamanAktif');
+    if (!kotak) return;
+    const judul = '<h3>Sedang/akan dipinjam</h3>';
+    kotak.innerHTML = judul + '<p class="empty">Memuat...</p>';
+    try {
+        const data = await apiGet(`/api/barang/${idBarang}/peminjaman`);
+        const tgl = s => formatTanggalJam(String(s).replace(' ', 'T'));
+        kotak.innerHTML = judul + (data.length ? data.map(p => `
+        <div class="pinjam-baris">
+          <div class="pinjam-oki"><b>${esc(p.nama_oki)}</b><small>${p.jumlah} unit</small></div>
+          <div class="pinjam-tgl">${tgl(p.tanggal_pinjam)} – ${tgl(p.tanggal_kembali)}</div>
+          <div>${badge(p.status_tampil)}</div>
+        </div>`).join('') : '<p class="empty">Belum ada peminjaman aktif.</p>');
+    } catch (e) {
+        kotak.innerHTML = judul + `<p class="empty">${esc(e.message)}</p>`;
+    }
 }
 
 async function hapus(idBarang, tombol) {

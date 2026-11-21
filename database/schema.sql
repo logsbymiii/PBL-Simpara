@@ -52,7 +52,13 @@ CREATE TABLE barang (
     id_kategori INT NOT NULL REFERENCES kategori_barang(id_kategori),
     stok_total  INT NOT NULL CHECK (stok_total >= 0),
     kondisi     VARCHAR(20) NOT NULL CHECK (kondisi IN ('Baik', 'Rusak')),
-    foto_barang VARCHAR(255)
+    foto_barang VARCHAR(255),                   -- nama file foto bawaan di frontend/assets/images/barang/
+    foto_data   BYTEA,                          -- foto unggahan admin (maks. 300 KB), didahulukan dari foto_barang
+    foto_mime   VARCHAR(30),                    -- image/jpeg, image/png, atau image/webp
+    CONSTRAINT chk_foto_upload CHECK (
+        (foto_data IS NULL) = (foto_mime IS NULL)
+        AND (foto_mime IS NULL OR foto_mime IN ('image/jpeg', 'image/png', 'image/webp'))
+    )
 );
 
 -- 5. Agenda HMTI
@@ -234,7 +240,9 @@ SELECT b.id_barang,
            WHEN b.kondisi = 'Rusak' THEN 'Tidak Tersedia'
            WHEN s.stok_tersedia = 0 THEN 'Dipinjam'
            ELSE 'Tersedia'
-       END AS status
+       END AS status,
+       -- penanda foto unggahan (ukuran byte, NULL kalau tidak ada); isi bytea sengaja tidak dimuat
+       octet_length(b.foto_data) AS foto_upload
   FROM barang b
  CROSS JOIN LATERAL (
      SELECT fn_stok_tersedia(

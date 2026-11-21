@@ -28,12 +28,44 @@ function ikonBarang(b) {
     return `<i class="bi ${icon}"></i>`;
 }
 
-// Foto barang: kolom foto_barang hanya berisi nama file (mis. kamera.jpg) di assets/images/barang/.
-// akar = jalan dari halaman ke folder frontend ('../../' untuk pages/admin dan pages/peminjam).
-// Nama yang tidak cocok pola dianggap kosong, jadi tidak bisa menyisipkan path atau URL lain.
+// Foto barang, urutan prioritas:
+// 1. Foto unggahan admin (disimpan di database). foto_upload dari server = penanda versi,
+//    dipakai sebagai cache-buster supaya foto baru langsung tampil setelah diganti.
+// 2. File statis: kolom foto_barang hanya berisi nama file (mis. kamera.jpg) di assets/images/barang/.
+//    akar = jalan dari halaman ke folder frontend ('../../' untuk pages/admin dan pages/peminjam).
+//    Nama yang tidak cocok pola dianggap kosong, jadi tidak bisa menyisipkan path atau URL lain.
 function fotoBarang(b, akar = '../../') {
-    const nama = String((b && b.foto_barang) || '').trim();
+    if (!b) return null;
+    const versi = Number(b.foto_upload);
+    if (versi > 0 && Number(b.id_barang) > 0) {
+        const basis = typeof API_BASE_URL === 'string' ? API_BASE_URL : '';
+        return `${basis}/api/barang/${Number(b.id_barang)}/foto?v=${versi}`;
+    }
+    const nama = String(b.foto_barang || '').trim();
     return /^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(nama) ? `${akar}assets/images/barang/${nama}` : null;
+}
+
+// Bagian gambar di atas kartu katalog: foto (klik = buka modal) atau ikon kalau tidak ada foto
+function gambarKartu(b, akar = '../../') {
+    const foto = fotoBarang(b, akar);
+    return foto
+        ? `<button type="button" class="img ada-foto" data-foto="${b.id_barang}" aria-label="Lihat foto ${esc(b.nama_barang)}">
+             <img src="${esc(foto)}" alt="${esc(b.nama_barang)}" loading="lazy">
+           </button>`
+        : `<div class="img">${ikonBarang(b)}</div>`;
+}
+
+// Foto kartu gagal dimuat -> kembali ke ikon, tombol "Lihat Barang" kartu itu ikut disembunyikan
+function pasangCadanganFoto(wadah, daftarBarang) {
+    wadah.querySelectorAll('.img.ada-foto img').forEach(img => {
+        img.addEventListener('error', () => {
+            const kotak = img.parentElement;
+            const id = kotak.dataset.foto;
+            const b = daftarBarang.find(x => String(x.id_barang) === id);
+            wadah.querySelectorAll(`.btn[data-foto="${id}"]`).forEach(t => t.remove());
+            kotak.outerHTML = `<div class="img">${ikonBarang(b)}</div>`;
+        });
+    });
 }
 
 // Modal foto ukuran besar (detail barang dan katalog guest). Memakai .modal / .modal-box yang sama

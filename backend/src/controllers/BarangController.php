@@ -3,10 +3,14 @@ declare(strict_types=1);
 
 class BarangController
 {
+    // Foto unggahan admin: maksimal 300 KB, hanya JPEG/PNG/WebP (frontend sudah mengecilkan dulu)
+    private const FOTO_MAKS = 300 * 1024;
+    private const FOTO_MIME = ['image/jpeg', 'image/png', 'image/webp'];
+
     // Kolom yang dikirim ke front-end. stok_tersedia & status sudah dihitung oleh view.
     private const SELECT_BARANG =
         'SELECT v.id_barang, v.kode_barang, v.nama_barang, v.id_kategori, k.nama_kategori,
-                v.stok_total, v.stok_tersedia, v.status, v.kondisi, v.foto_barang
+                v.stok_total, v.stok_tersedia, v.status, v.kondisi, v.foto_barang, v.foto_upload
          FROM v_barang_hari_ini v
          LEFT JOIN kategori_barang k ON k.id_kategori = v.id_kategori';
 
@@ -129,6 +133,123 @@ class BarangController
         json_success($stmt->fetchAll());
     }
 
+    // GET /api/barang/{id}/peminjaman  (peminjam & admin)
+    // Peminjaman yang sedang/akan memakai barang ini, terdekat di atas. Status yang dianggap
+    // aktif sama dengan fn_stok_tersedia: Disetujui (sampai tgl_kembali) dan Dipinjam (sampai
+    // benar-benar dikembalikan, termasuk yang terlambat). Menunggu belum menahan stok.
+    // Sengaja TIDAK mengirim nama peminjam, NIM, no HP, maupun PIN; cukup nama OKI.
+    public static function peminjaman(array $params): void
+    {
+        requireLogin();
+        $id = parse_id($params['id'] ?? '', 'barang');
+        self::pastikanBarangAda($id);
+
+        $stmt = db()->prepare(
+            "SELECT o.nama_oki, p.tgl_pinjam AS tanggal_pinjam, p.tgl_kembali AS tanggal_kembali,
+                    d.jumlah, p.status_tampil
+             FROM detail_pengajuan d
+             JOIN v_pengajuan_status p ON p.id_pengajuan = d.id_pengajuan
+             JOIN oki o                ON o.id_oki       = p.id_oki
+             WHERE d.id_barang = :id
+               AND (p.status = 'Dipinjam'
+                    OR (p.status = 'Disetujui' AND p.tgl_kembali >= now_wib()))
+             ORDER BY p.tgl_pinjam, p.id_pengajuan"
+        );
+        $stmt->execute(['id' => $id]);
+        json_success($stmt->fetchAll());
+    }
+
+    // POST /api/barang/{id}/foto  (admin)
+    // Body = isi file gambar apa adanya (bukan JSON/multipart), mis. Content-Type: image/jpeg.
+    public static function fotoUnggah(array $params): void
+    {
+        requireAdmin();
+        $id = parse_id($params['id'] ?? '', 'barang');
+
+        // Tolak lebih awal kalau ukuran yang dikirim browser sudah melebihi batas
+        if ((int)($_SERVER['CONTENT_LENGTH'] ?? 0) > self::FOTO_MAKS) {
+            json_error('Ukuran foto maksimal 300 KB', 413);
+        }
+        // Baca paling banyak batas + 1 byte, supaya ketahuan kalau ternyata lebih besar
+        $isi = file_get_contents('php://input', false, null, 0, self::FOTO_MAKS + 1);
+        if ($isi === false || $isi === '') {
+            json_error('File foto kosong', 422);
+        }
+        if (strlen($isi) > self::FOTO_MAKS) {
+            json_error('Ukuran foto maksimal 300 KB', 413);
+        }
+
+        // Jenis file dicek dari ISI file (header gambar), bukan dari nama file atau Content-Type
+        $info = @getimagesizefromstring($isi);
+        $mime = is_array($info) ? (string)($info['mime'] ?? '') : '';
+        if (!in_array($mime, self::FOTO_MIME, true)) {
+            json_error('File harus berupa gambar JPEG, PNG, atau WebP', 415);
+        }
+
+        $stmt = db()->prepare('UPDATE barang SET foto_data = :data, foto_mime = :mime WHERE id_barang = :id');
+        $stmt->bindValue(':data', $isi, PDO::PARAM_LOB);
+        $stmt->bindValue(':mime', $mime);
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
+        $stmt->execute();
+
+        if ($stmt->rowCount() === 0) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+        json_success(self::cariBarang($id), 'Foto barang berhasil diunggah');
+    }
+
+    // GET /api/barang/{id}/foto  (publik, dipakai <img>)
+    // Kirim foto unggahan dengan Content-Type asli + Cache-Control + ETag. 404 kalau tidak ada.
+    public static function fotoTampil(array $params): void
+    {
+        $id = parse_id($params['id'] ?? '', 'barang');
+
+        // Ambil mime dan ETag dulu (tanpa isi foto), supaya 304 tidak perlu mengirim bytea
+        $stmt = db()->prepare(
+            'SELECT foto_mime, md5(foto_data) AS etag FROM barang WHERE id_barang = :id AND foto_data IS NOT NULL'
+        );
+        $stmt->execute(['id' => $id]);
+        $meta = $stmt->fetch();
+        if ($meta === false) {
+            json_error('Foto tidak ditemukan', 404);
+        }
+
+        $etag = '"' . $meta['etag'] . '"';
+        header('Cache-Control: public, max-age=86400');   // URL frontend memakai ?v=versi
+        header('ETag: ' . $etag);
+        if (str_contains((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''), $etag)) {
+            http_response_code(304);
+            exit;
+        }
+
+        $stmt = db()->prepare('SELECT foto_data FROM barang WHERE id_barang = :id');
+        $stmt->execute(['id' => $id]);
+        $stmt->bindColumn(1, $data, PDO::PARAM_LOB);
+        $stmt->fetch(PDO::FETCH_BOUND);
+        // pdo_pgsql mengembalikan bytea sebagai stream
+        $isi = is_resource($data) ? (string)stream_get_contents($data) : (string)$data;
+
+        header('Content-Type: ' . $meta['foto_mime']);
+        header('Content-Length: ' . strlen($isi));
+        header('X-Content-Type-Options: nosniff');
+        echo $isi;
+        exit;
+    }
+
+    // DELETE /api/barang/{id}/foto  (admin) -> hapus foto unggahan, kembali ke foto bawaan
+    public static function fotoHapus(array $params): void
+    {
+        requireAdmin();
+        $id = parse_id($params['id'] ?? '', 'barang');
+
+        $stmt = db()->prepare('UPDATE barang SET foto_data = NULL, foto_mime = NULL WHERE id_barang = :id');
+        $stmt->execute(['id' => $id]);
+        if ($stmt->rowCount() === 0) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+        json_success(self::cariBarang($id), 'Foto unggahan dihapus, kembali ke foto bawaan');
+    }
+
     // GET /api/kategori  -> isi dropdown kategori di form admin
     public static function kategori(array $params = []): void
     {
@@ -221,6 +342,16 @@ class BarangController
     }
 
     // ---------- fungsi bantu ----------
+
+    // 404 kalau barang tidak ada (cek ringan, tanpa menghitung stok di view)
+    private static function pastikanBarangAda(int $id): void
+    {
+        $stmt = db()->prepare('SELECT 1 FROM barang WHERE id_barang = :id');
+        $stmt->execute(['id' => $id]);
+        if ($stmt->fetchColumn() === false) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+    }
 
     // Ambil satu barang dari view (false kalau tidak ada)
     private static function cariBarang(int $id): array|false
