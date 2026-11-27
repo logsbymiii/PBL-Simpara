@@ -33,8 +33,8 @@ function skeletonKartu(n = 8) {
     </div>`).join('');
 }
 
-// Katalog barang: 6 kartu per halaman (3 x 2 di desktop)
-const PER_HALAMAN = 6;
+// Katalog barang: 12 kartu per halaman (4 x 3 di desktop, 3 kolom tablet, 2 kolom HP)
+const PER_HALAMAN = 12;   // katalog: 4 kolom x 3 baris di desktop
 
 // Potong 'daftar' untuk halaman ke-'halaman' dan gambar tombol Sebelumnya/Berikutnya di 'wadah'.
 // pindah(n) dipanggil saat tombol diklik. Hasil: { isi, halaman } (halaman sudah dibatasi 1..total).

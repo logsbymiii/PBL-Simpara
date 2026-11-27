@@ -36,14 +36,22 @@ async function muatBarang() {
     box.innerHTML = skeletonKartu(4);
     try {
         const semua = await apiGet('/api/barang');
-        box.innerHTML = semua.slice(0, 4).map((b, i) => `
+        const terbaru = semua.slice(0, 4);
+        box.innerHTML = terbaru.map((b, i) => `
   <div class="item" style="--i:${i}">
-    <div class="img">${ikonBarang(b)}</div>
+    ${gambarKartu(b)}
     <b>${esc(b.nama_barang)}</b><br>${badge(b.status, 'barang')}<br><br>
     ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
   </div>`).join('');
+        pasangCadanganFoto(box, terbaru);
+        // Klik foto -> modal foto penuh (sama seperti Daftar Barang)
+        box.onclick = e => {
+            const btn = e.target.closest('button[data-foto]');
+            const b = btn && terbaru.find(x => String(x.id_barang) === btn.dataset.foto);
+            if (b) bukaFoto(b);
+        };
     } catch (e) {
         box.innerHTML = `<p>${esc(e.message || 'Gagal memuat barang.')}</p>`;
     }

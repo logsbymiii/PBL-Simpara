@@ -22,8 +22,8 @@ function tampilkan(b) {
     box.innerHTML = `
     <div class="detail-card">
       ${foto
-        ? `<button type="button" class="img ada-foto" id="thumbFoto" aria-label="Lihat foto ${esc(b.nama_barang)}">
-             <img src="${esc(foto)}" alt="${esc(b.nama_barang)}" loading="lazy">
+        ? `<button type="button" class="img ada-foto" id="thumbFoto" aria-label="Lihat foto barang ${esc(b.nama_barang)}">
+             <img ${atributFoto(b)} alt="${esc(b.nama_barang)}" loading="lazy">
            </button>`
         : `<div class="img">${ikonBarang(b)}</div>`}
       <div class="detail-info">
@@ -49,20 +49,12 @@ function tampilkan(b) {
         aksi.innerHTML = `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow btn-sm">Ajukan Pinjam</a>`;
     }
 
-    // Tombol "Lihat Barang" hanya kalau ada foto yang valid
+    // Klik foto -> modal foto penuh. Foto gagal dimuat (proxy dan file statis) -> kembali ke ikon.
     if (foto) {
-        aksi.insertAdjacentHTML('afterbegin',
-            '<button type="button" class="btn btn-gray btn-sm" id="btnLihatFoto"><i class="bi bi-image"></i> Lihat Barang</button>');
         const thumb = document.getElementById('thumbFoto');
-        const tombolLihat = document.getElementById('btnLihatFoto');
-        const buka = () => bukaFoto(foto, b.nama_barang);
-        thumb.addEventListener('click', buka);
-        tombolLihat.addEventListener('click', buka);
-
-        // File foto tidak ada / gagal dimuat -> kembali ke ikon, tombol disembunyikan
+        thumb.addEventListener('click', () => bukaFoto(b));
         thumb.querySelector('img').addEventListener('error', () => {
             thumb.outerHTML = `<div class="img">${ikonBarang(b)}</div>`;
-            tombolLihat.remove();
         });
     }
 

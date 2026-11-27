@@ -22,7 +22,9 @@ function tampilkan() {
     tabel.innerHTML = hasil.length ? hasil.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang"><span class="ico">${ikonBarang(b)}</span>${esc(b.nama_barang)}</a></td>
+      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang"><span class="ico${fotoBarang(b) ? ' ico-foto' : ''}">${fotoBarang(b)
+            ? `<img ${atributFoto(b)} alt="" loading="lazy">`
+            : ikonBarang(b)}</span>${esc(b.nama_barang)}</a></td>
       <td>${b.stok_tersedia} / ${b.stok_total}</td>
       <td>${badge(b.kondisi)}</td>
       <td>${badge(b.status, 'barang')}</td>
@@ -33,6 +35,16 @@ function tampilkan() {
     </tr>`).join('') : '<tr><td colspan="6" class="empty">Barang tidak ditemukan.</td></tr>';
 }
  
+// Foto kecil di tabel gagal dimuat (proxy dan file statis) -> ikon barang.
+// Fase capture karena event error tidak naik (bubble) dari <img>.
+tabel.addEventListener('error', e => {
+    const kotak = e.target instanceof HTMLImageElement ? e.target.closest('.ico-foto') : null;
+    if (!kotak) return;
+    const id = Number(new URL(kotak.closest('a').href).searchParams.get('id'));
+    kotak.classList.remove('ico-foto');
+    kotak.innerHTML = ikonBarang(daftar.find(b => b.id_barang === id));
+}, true);
+
 // Ambil ulang daftar barang dari server. Mengembalikan true kalau berhasil.
 async function muatBarang() {
     try {
@@ -73,10 +85,11 @@ const btnHapusFoto = document.getElementById('btnHapusFoto');
 const INFO_FOTO = fotoInfo.textContent;
 let fotoBaru = null;   // Blob JPEG hasil pengecilan, menunggu diunggah saat Simpan
 
-// Pratinjau: src foto (atau null -> ikon barang)
+// Pratinjau: src foto (atau null -> ikon barang). Foto barang tersimpan memakai cadangan file statis.
 function tampilPratinjau(src, barang) {
+    const cadangan = barang && src === fotoBarang(barang) ? fotoCadangan(barang) : null;
     fotoPratinjau.innerHTML = src
-        ? `<img src="${esc(src)}" alt="Pratinjau foto">`
+        ? `<img src="${esc(src)}"${cadangan ? ` data-cadangan="${esc(cadangan)}"` : ''} alt="Pratinjau foto">`
         : ikonBarang(barang);
     const img = fotoPratinjau.querySelector('img');
     if (img) img.addEventListener('error', () => { fotoPratinjau.innerHTML = ikonBarang(barang); });
@@ -134,9 +147,13 @@ fotoFile.addEventListener('change', async () => {
 // Unggah foto ke barang 'id', dengan progres di bawah input. true kalau berhasil.
 async function unggahFoto(id) {
     try {
-        await apiUnggah(`/api/barang/${id}/foto`, fotoBaru, persen => {
+        const hasil = await apiUnggah(`/api/barang/${id}/foto`, fotoBaru, persen => {
             fotoInfo.textContent = `Mengunggah foto... ${persen}%`;
         });
+        // Server jatuh ke penyimpanan database kalau R2 tidak aktif/gagal: foto tetap tersimpan
+        if (hasil && hasil.penyimpanan === 'database') {
+            toast('Foto tersimpan di database (penyimpanan R2 tidak aktif atau sedang gagal)', 'info');
+        }
         return true;
     } catch (err) {
         toast(`Data barang tersimpan, tapi foto gagal diunggah: ${err.message}`, 'error');
@@ -169,7 +186,8 @@ function bukaModal(barang) {
     fotoFile.value = '';
     fotoInfo.textContent = INFO_FOTO;
     tampilPratinjau(barang ? fotoBarang(barang) : null, barang);
-    btnHapusFoto.hidden = !(barang && Number(barang.foto_upload) > 0);
+    // foto_unggahan dari server: true kalau ada unggahan admin (di R2 maupun database)
+    btnHapusFoto.hidden = !(barang && barang.foto_unggahan === true);
     document.getElementById('modalJudul').textContent = barang ? 'Edit Barang' : 'Tambah Barang';
     document.getElementById('kode').value = barang ? barang.kode_barang : '';
     document.getElementById('nama').value = barang ? barang.nama_barang : '';

@@ -1,5 +1,5 @@
 // Ikon barang: dicocokkan dari nama barang, cadangannya dari kategori, terakhir kotak biasa.
-// (Nanti kalau sudah ada foto asli, tampilkan <img> di sini.)
+// Dipakai hanya kalau barang tidak punya foto atau fotonya gagal dimuat.
 const IKON_NAMA = [
     ['laptop', 'bi-laptop-fill'],
     ['proyektor', 'bi-projector-fill'],
@@ -28,49 +28,78 @@ function ikonBarang(b) {
     return `<i class="bi ${icon}"></i>`;
 }
 
-// Foto barang, urutan prioritas:
-// 1. Foto unggahan admin (disimpan di database). foto_upload dari server = penanda versi,
-//    dipakai sebagai cache-buster supaya foto baru langsung tampil setelah diganti.
-// 2. File statis: kolom foto_barang hanya berisi nama file (mis. kamera.jpg) di assets/images/barang/.
-//    akar = jalan dari halaman ke folder frontend ('../../' untuk pages/admin dan pages/peminjam).
-//    Nama yang tidak cocok pola dianggap kosong, jadi tidak bisa menyisipkan path atau URL lain.
-function fotoBarang(b, akar = '../../') {
-    if (!b) return null;
-    const versi = Number(b.foto_upload);
-    if (versi > 0 && Number(b.id_barang) > 0) {
-        const basis = typeof API_BASE_URL === 'string' ? API_BASE_URL : '';
-        return `${basis}/api/barang/${Number(b.id_barang)}/foto?v=${versi}`;
-    }
+// Foto barang selalu diminta lewat proxy backend: GET /api/barang/{id}/foto. Backend mengambilnya
+// dari database (unggahan lama) atau Cloudflare R2 (key barang/<foto_barang>), jadi browser tidak
+// perlu mengakses r2.dev (diblokir di sebagian jaringan). Versi (?v=) dari foto_barang/foto_upload
+// supaya foto baru langsung tampil setelah diganti.
+const POLA_FOTO = /^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/;
+
+function fotoBarang(b) {
+    if (!b || !(Number(b.id_barang) > 0)) return null;
     const nama = String(b.foto_barang || '').trim();
-    return /^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/.test(nama) ? `${akar}assets/images/barang/${nama}` : null;
+    const upload = Number(b.foto_upload) || 0;
+    if (upload <= 0 && !POLA_FOTO.test(nama)) return null;
+    const basis = typeof API_BASE_URL === 'string' ? API_BASE_URL : '';
+    return `${basis}/api/barang/${Number(b.id_barang)}/foto?v=${encodeURIComponent(`${nama}-${upload}`)}`;
 }
+
+// Cadangan kalau proxy/R2 gagal: file statis bawaan di frontend/assets/images/barang/<foto_barang>.
+// akar = jalan dari halaman ke folder frontend ('../../' untuk pages/admin dan pages/peminjam, '' untuk index.html).
+// Nama yang tidak cocok pola dianggap kosong, jadi tidak bisa menyisipkan path atau URL lain.
+// Unggahan admin di R2 ("<slug>-<id>-<timestamp>.jpg") tidak ada di repo, jadi cadangannya foto bawaan
+// menurut nama barang (huruf kecil, selain huruf/angka jadi '-', mis. kabel-hdmi.jpg), sama dengan server.
+function fotoCadangan(b, akar = '../../') {
+    let nama = String((b && b.foto_barang) || '').trim();
+    if (/-\d+-\d{10}\.(jpg|png|webp)$/.test(nama) || (!nama && b && Number(b.foto_upload) > 0)) {
+        nama = String(b.nama_barang || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') + '.jpg';
+    }
+    return POLA_FOTO.test(nama) && !nama.includes('..') ? `${akar}assets/images/barang/${nama}` : null;
+}
+
+// Atribut <img> untuk foto barang: src proxy + data-cadangan (dipakai pendengar error di bawah)
+function atributFoto(b, akar = '../../') {
+    const cadangan = fotoCadangan(b, akar);
+    return `src="${esc(fotoBarang(b))}"${cadangan ? ` data-cadangan="${esc(cadangan)}"` : ''}`;
+}
+
+// Satu pendengar untuk SEMUA foto barang: kalau proxy gagal, coba file statis sekali.
+// Fase capture + stopImmediatePropagation: pendengar error milik halaman (ganti ke ikon)
+// baru jalan kalau file statis juga gagal.
+document.addEventListener('error', e => {
+    const img = e.target;
+    if (!(img instanceof HTMLImageElement) || !img.dataset.cadangan) return;
+    const cadangan = img.dataset.cadangan;
+    delete img.dataset.cadangan;
+    e.stopImmediatePropagation();
+    img.src = cadangan;
+}, true);
 
 // Bagian gambar di atas kartu katalog: foto (klik = buka modal) atau ikon kalau tidak ada foto
 function gambarKartu(b, akar = '../../') {
-    const foto = fotoBarang(b, akar);
-    return foto
-        ? `<button type="button" class="img ada-foto" data-foto="${b.id_barang}" aria-label="Lihat foto ${esc(b.nama_barang)}">
-             <img src="${esc(foto)}" alt="${esc(b.nama_barang)}" loading="lazy">
+    return fotoBarang(b)
+        ? `<button type="button" class="img ada-foto" data-foto="${b.id_barang}" aria-label="Lihat foto barang ${esc(b.nama_barang)}">
+             <img ${atributFoto(b, akar)} alt="${esc(b.nama_barang)}" loading="lazy">
            </button>`
         : `<div class="img">${ikonBarang(b)}</div>`;
 }
 
-// Foto kartu gagal dimuat -> kembali ke ikon, tombol "Lihat Barang" kartu itu ikut disembunyikan
+// Foto kartu gagal dimuat (proxy dan file statis) -> kembali ke ikon (tidak bisa diklik lagi)
 function pasangCadanganFoto(wadah, daftarBarang) {
     wadah.querySelectorAll('.img.ada-foto img').forEach(img => {
         img.addEventListener('error', () => {
             const kotak = img.parentElement;
-            const id = kotak.dataset.foto;
-            const b = daftarBarang.find(x => String(x.id_barang) === id);
-            wadah.querySelectorAll(`.btn[data-foto="${id}"]`).forEach(t => t.remove());
+            const b = daftarBarang.find(x => String(x.id_barang) === kotak.dataset.foto);
             kotak.outerHTML = `<div class="img">${ikonBarang(b)}</div>`;
         });
     });
 }
 
-// Modal foto ukuran besar (detail barang dan katalog guest). Memakai .modal / .modal-box yang sama
-// dengan konfirmasi() di ui.js. Tutup lewat tombol Tutup, klik area gelap, atau Esc.
-function bukaFoto(src, nama) {
+// Modal foto ukuran besar (detail barang, Daftar Barang, katalog guest). Memakai .modal / .modal-box
+// yang sama dengan konfirmasi() di ui.js. Tutup lewat tombol Tutup, klik area gelap, atau Esc.
+// b = objek barang; akar sama seperti fotoCadangan().
+function bukaFoto(b, akar = '../../') {
+    const nama = b.nama_barang;
+    const cadangan = fotoCadangan(b, akar);
     const m = document.createElement('div');
     m.className = 'modal show modal-foto';
     m.innerHTML = `
@@ -83,7 +112,8 @@ function bukaFoto(src, nama) {
     const img = m.querySelector('img');
     img.alt = nama;
     img.addEventListener('error', () => { img.parentElement.textContent = 'Foto tidak tersedia.'; });
-    img.src = src;
+    if (cadangan) img.dataset.cadangan = cadangan;   // proxy gagal -> file statis dulu
+    img.src = fotoBarang(b);
 
     const tombol = e => { if (e.key === 'Escape') tutup(); };
     const tutup = () => {
