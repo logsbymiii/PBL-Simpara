@@ -10,7 +10,9 @@ class BarangController
     // Kolom yang dikirim ke front-end. stok_tersedia & status sudah dihitung oleh view.
     private const SELECT_BARANG =
         'SELECT v.id_barang, v.kode_barang, v.nama_barang, v.id_kategori, k.nama_kategori,
-                v.stok_total, v.stok_tersedia, v.status, v.kondisi, v.foto_barang, v.foto_upload
+                v.stok_total, v.stok_tersedia, v.status, v.kondisi, v.foto_barang, v.foto_upload,
+                (v.foto_upload IS NOT NULL
+                 OR v.foto_barang ~ (\'-\' || v.id_barang || \'-[0-9]{10}[.](jpg|png|webp)$\')) AS foto_unggahan
          FROM v_barang_hari_ini v
          LEFT JOIN kategori_barang k ON k.id_kategori = v.id_kategori';
 
@@ -161,6 +163,8 @@ class BarangController
 
     // POST /api/barang/{id}/foto  (admin)
     // Body = isi file gambar apa adanya (bukan JSON/multipart), mis. Content-Type: image/jpeg.
+    // Disimpan ke R2 dengan key "barang/<slug-nama>-<id>-<timestamp>.<ext>", lalu foto_barang diisi
+    // nama file itu. Kalau R2 tidak aktif/gagal, jatuh kembali ke kolom BYTEA (foto_data/foto_mime).
     public static function fotoUnggah(array $params): void
     {
         requireAdmin();
@@ -186,67 +190,127 @@ class BarangController
             json_error('File harus berupa gambar JPEG, PNG, atau WebP', 415);
         }
 
+        $stmt = db()->prepare('SELECT nama_barang, foto_barang FROM barang WHERE id_barang = :id');
+        $stmt->execute(['id' => $id]);
+        $lama = $stmt->fetch();
+        if ($lama === false) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+
+        $ext  = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'][$mime];
+        $nama = self::slug($lama['nama_barang']) . '-' . $id . '-' . time() . '.' . $ext;
+
+        if (r2Put('barang/' . $nama, $isi, $mime)) {
+            $stmt = db()->prepare(
+                'UPDATE barang SET foto_barang = :nama, foto_data = NULL, foto_mime = NULL WHERE id_barang = :id'
+            );
+            $stmt->execute(['nama' => $nama, 'id' => $id]);
+
+            // Unggahan lama di R2 tidak dipakai lagi (foto bawaan tidak pernah dihapus)
+            if (self::fotoUnggahanR2($lama['foto_barang'], $id)) {
+                r2Delete('barang/' . $lama['foto_barang']);
+            }
+            json_success(self::cariBarang($id) + ['penyimpanan' => 'r2'], 'Foto barang berhasil diunggah');
+        }
+
+        // Cadangan: R2 tidak aktif atau gagal -> simpan di database seperti sebelumnya
         $stmt = db()->prepare('UPDATE barang SET foto_data = :data, foto_mime = :mime WHERE id_barang = :id');
         $stmt->bindValue(':data', $isi, PDO::PARAM_LOB);
         $stmt->bindValue(':mime', $mime);
         $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
-
-        if ($stmt->rowCount() === 0) {
-            json_error('Barang tidak ditemukan', 404);
-        }
-        json_success(self::cariBarang($id), 'Foto barang berhasil diunggah');
+        json_success(
+            self::cariBarang($id) + ['penyimpanan' => 'database'],
+            r2Aktif()
+                ? 'Foto disimpan di database karena penyimpanan R2 sedang gagal'
+                : 'Foto disimpan di database (penyimpanan R2 belum diaktifkan)'
+        );
     }
 
-    // GET /api/barang/{id}/foto  (publik, dipakai <img>)
-    // Kirim foto unggahan dengan Content-Type asli + Cache-Control + ETag. 404 kalau tidak ada.
+    // GET /api/barang/{id}/foto  (publik, dipakai <img>; proxy supaya browser tidak perlu akses r2.dev)
+    // Urutan sumber: (a) foto_data BYTEA lama, (b) objek R2 "barang/<foto_barang>", (c) 404.
+    // Header: Content-Type asli, Cache-Control 1 hari, ETag + 304 untuk If-None-Match.
     public static function fotoTampil(array $params): void
     {
         $id = parse_id($params['id'] ?? '', 'barang');
 
-        // Ambil mime dan ETag dulu (tanpa isi foto), supaya 304 tidak perlu mengirim bytea
+        // Metadata saja dulu (tanpa isi bytea), supaya 304 tidak perlu memuat foto
         $stmt = db()->prepare(
-            'SELECT foto_mime, md5(foto_data) AS etag FROM barang WHERE id_barang = :id AND foto_data IS NOT NULL'
+            'SELECT foto_barang, foto_mime, md5(foto_data) AS md5_data FROM barang WHERE id_barang = :id'
         );
         $stmt->execute(['id' => $id]);
         $meta = $stmt->fetch();
         if ($meta === false) {
+            json_error('Barang tidak ditemukan', 404);
+        }
+
+        // (a) Foto BYTEA dari migrasi 2026-11-21
+        if ($meta['md5_data'] !== null) {
+            self::kirimFotoJikaBerubah('"' . $meta['md5_data'] . '"');
+            $stmt = db()->prepare('SELECT foto_data FROM barang WHERE id_barang = :id');
+            $stmt->execute(['id' => $id]);
+            $stmt->bindColumn(1, $data, PDO::PARAM_LOB);
+            $stmt->fetch(PDO::FETCH_BOUND);
+            // pdo_pgsql mengembalikan bytea sebagai stream
+            $isi = is_resource($data) ? (string)stream_get_contents($data) : (string)$data;
+            self::kirimFoto($isi, $meta['foto_mime']);
+        }
+
+        // (b) Objek R2. Nama file divalidasi supaya tidak bisa keluar dari folder barang/
+        $nama = (string)($meta['foto_barang'] ?? '');
+        if (!self::namaFotoValid($nama)) {
             json_error('Foto tidak ditemukan', 404);
         }
-
-        $etag = '"' . $meta['etag'] . '"';
-        header('Cache-Control: public, max-age=86400');   // URL frontend memakai ?v=versi
-        header('ETag: ' . $etag);
-        if (str_contains((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''), $etag)) {
-            http_response_code(304);
-            exit;
+        // Nama file unggahan selalu baru (ada timestamp), jadi ETag cukup dari namanya;
+        // browser yang sudah punya foto mendapat 304 tanpa backend menghubungi R2.
+        self::kirimFotoJikaBerubah('"r2-' . md5($nama) . '"');
+        $objek = r2Get('barang/' . $nama);
+        if ($objek === null) {
+            // (c) Tidak ada / R2 gagal -> 404; frontend jatuh ke file statis bawaan
+            header_remove('ETag');
+            header_remove('Cache-Control');
+            json_error('Foto tidak ditemukan', 404);
         }
-
-        $stmt = db()->prepare('SELECT foto_data FROM barang WHERE id_barang = :id');
-        $stmt->execute(['id' => $id]);
-        $stmt->bindColumn(1, $data, PDO::PARAM_LOB);
-        $stmt->fetch(PDO::FETCH_BOUND);
-        // pdo_pgsql mengembalikan bytea sebagai stream
-        $isi = is_resource($data) ? (string)stream_get_contents($data) : (string)$data;
-
-        header('Content-Type: ' . $meta['foto_mime']);
-        header('Content-Length: ' . strlen($isi));
-        header('X-Content-Type-Options: nosniff');
-        echo $isi;
-        exit;
+        $mime = in_array($objek['content_type'], self::FOTO_MIME, true)
+            ? $objek['content_type']
+            : self::mimeDariNama($nama);
+        self::kirimFoto($objek['body'], $mime);
     }
 
-    // DELETE /api/barang/{id}/foto  (admin) -> hapus foto unggahan, kembali ke foto bawaan
+    // DELETE /api/barang/{id}/foto  (admin) -> hapus foto unggahan, kembali ke foto bawaan.
+    // Foto bawaan (mis. kamera.jpg) tidak pernah dihapus dari R2.
     public static function fotoHapus(array $params): void
     {
         requireAdmin();
         $id = parse_id($params['id'] ?? '', 'barang');
 
-        $stmt = db()->prepare('UPDATE barang SET foto_data = NULL, foto_mime = NULL WHERE id_barang = :id');
+        $stmt = db()->prepare(
+            'SELECT nama_barang, foto_barang, foto_data IS NOT NULL AS ada_bytea FROM barang WHERE id_barang = :id'
+        );
         $stmt->execute(['id' => $id]);
-        if ($stmt->rowCount() === 0) {
+        $b = $stmt->fetch();
+        if ($b === false) {
             json_error('Barang tidak ditemukan', 404);
         }
+
+        $unggahanR2 = self::fotoUnggahanR2($b['foto_barang'], $id);
+        if (!$b['ada_bytea'] && !$unggahanR2) {
+            json_error('Barang ini tidak punya foto unggahan', 409);
+        }
+
+        $fotoBarang = $b['foto_barang'];
+        if ($unggahanR2) {
+            if (!r2Delete('barang/' . $b['foto_barang'])) {
+                error_log("Objek foto unggahan barang {$id} gagal dihapus dari R2");   // tetap lanjut
+            }
+            // Foto bawaan mengikuti nama barang: huruf kecil, spasi jadi '-' (mis. kabel-hdmi.jpg)
+            $fotoBarang = self::slug($b['nama_barang']) . '.jpg';
+        }
+
+        $stmt = db()->prepare(
+            'UPDATE barang SET foto_barang = :nama, foto_data = NULL, foto_mime = NULL WHERE id_barang = :id'
+        );
+        $stmt->execute(['nama' => $fotoBarang, 'id' => $id]);
         json_success(self::cariBarang($id), 'Foto unggahan dihapus, kembali ke foto bawaan');
     }
 
@@ -342,6 +406,53 @@ class BarangController
     }
 
     // ---------- fungsi bantu ----------
+
+    // Nama file foto aman: huruf/angka/titik/strip/garis bawah + ekstensi gambar, tanpa '..' atau '/'
+    private static function namaFotoValid(string $nama): bool
+    {
+        return !str_contains($nama, '..')
+            && preg_match('/^[A-Za-z0-9._-]+\.(jpg|jpeg|png|webp)$/', $nama) === 1;
+    }
+
+    // Unggahan admin di R2 berpola "<slug>-<id>-<timestamp 10 digit>.<ext>"; selain itu foto bawaan
+    private static function fotoUnggahanR2(?string $nama, int $id): bool
+    {
+        return $nama !== null && self::namaFotoValid($nama)
+            && preg_match('/-' . $id . '-\d{10}\.(jpg|png|webp)$/', $nama) === 1;
+    }
+
+    // "Kabel HDMI" -> "kabel-hdmi" (sama dengan aturan nama file foto bawaan)
+    private static function slug(string $teks): string
+    {
+        $slug = trim((string)preg_replace('/[^a-z0-9]+/', '-', strtolower($teks)), '-');
+        return substr($slug !== '' ? $slug : 'barang', 0, 60);
+    }
+
+    private static function mimeDariNama(string $nama): string
+    {
+        $ext = strtolower(pathinfo($nama, PATHINFO_EXTENSION));
+        return ['png' => 'image/png', 'webp' => 'image/webp'][$ext] ?? 'image/jpeg';
+    }
+
+    // Pasang header cache; kalau browser sudah punya versi yang sama -> 304 dan selesai
+    private static function kirimFotoJikaBerubah(string $etag): void
+    {
+        header('Cache-Control: public, max-age=86400');   // URL frontend memakai ?v=versi
+        header('ETag: ' . $etag);
+        if (str_contains((string)($_SERVER['HTTP_IF_NONE_MATCH'] ?? ''), $etag)) {
+            http_response_code(304);
+            exit;
+        }
+    }
+
+    private static function kirimFoto(string $isi, string $mime): never
+    {
+        header('Content-Type: ' . $mime);
+        header('Content-Length: ' . strlen($isi));
+        header('X-Content-Type-Options: nosniff');
+        echo $isi;
+        exit;
+    }
 
     // 404 kalau barang tidak ada (cek ringan, tanpa menghitung stok di view)
     private static function pastikanBarangAda(int $id): void

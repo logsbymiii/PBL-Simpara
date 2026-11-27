@@ -20,7 +20,7 @@ function tanggalIndo(iso) {
 // Semua barang dari server disimpan di sini. Pencarian dan filter status
 // dilakukan di browser, jadi mengetik di kotak cari tidak memanggil API terus-menerus.
 let semuaBarang = [];
-let halaman = 1;   // halaman katalog yang sedang tampil (6 kartu per halaman)
+let halaman = 1;   // halaman katalog yang sedang tampil (PER_HALAMAN = 12 kartu)
 
 async function muatAgenda() {
     const box = document.getElementById('daftarAgenda');
@@ -69,21 +69,18 @@ function tampilkanBarang() {
       <small>${esc(b.nama_kategori || '')}</small><br>
       ${badge(b.status, 'barang')}
       <div class="item-aksi">
-        ${fotoBarang(b, '')
-            ? `<button type="button" class="btn btn-yellow" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button>`
-            : ''}
         <a href="pages/auth/login.html" class="btn btn-gray">Masuk untuk meminjam</a>
       </div>
     </div>`).join('') : '<p>Barang tidak ditemukan.</p>';
     pasangCadanganFoto(daftar, semuaBarang);
 }
 
-// Gambar kartu atau tombol "Lihat Barang" -> modal foto. Akar foto ''.
+// Klik gambar kartu -> modal foto. Akar foto ''.
 document.getElementById('daftar').addEventListener('click', e => {
     const btn = e.target.closest('button[data-foto]');
     if (!btn) return;
     const b = semuaBarang.find(x => String(x.id_barang) === btn.dataset.foto);
-    if (b) bukaFoto(fotoBarang(b, ''), b.nama_barang);
+    if (b) bukaFoto(b, '');
 });
 
 async function muatBarang() {

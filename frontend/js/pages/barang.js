@@ -3,7 +3,7 @@ renderSidebar('peminjam', 'Barang');
 renderTopbar(user);
 
 let semuaBarang = [];
-let halaman = 1;   // halaman katalog yang sedang tampil (6 kartu per halaman)
+let halaman = 1;   // halaman katalog yang sedang tampil (PER_HALAMAN = 12 kartu)
 
 function tampilkanStatistik() {
     const hitung = s => semuaBarang.filter(b => b.status === s).length;
@@ -28,16 +28,13 @@ function tampilkan() {
     });
     halaman = hal.halaman;
 
-    // Foto tampil di atas kartu (klik = modal); tanpa foto -> ikon. Sama seperti katalog guest.
+    // Foto tampil di atas kartu (klik foto = modal foto penuh); tanpa foto -> ikon. Sama seperti katalog guest.
     daftar.innerHTML = hal.isi.length ? hal.isi.map((b, i) => `
     <div class="item" style="--i:${i}">
       ${gambarKartu(b)}
       <b>${esc(b.nama_barang)}</b><br>
       ${badge(b.status, 'barang')}
       <div class="item-aksi">
-        ${fotoBarang(b)
-            ? `<button type="button" class="btn btn-yellow" data-foto="${b.id_barang}"><i class="bi bi-image"></i> Lihat Barang</button>`
-            : ''}
         ${b.status === 'Tersedia'
             ? `<a href="form-pengajuan.html?barang=${encodeURIComponent(b.nama_barang)}" class="btn btn-yellow">Ajukan</a>`
             : `<button class="btn btn-gray" disabled>Tidak tersedia</button>`}
@@ -47,12 +44,12 @@ function tampilkan() {
     pasangCadanganFoto(daftar, semuaBarang);
 }
 
-// Gambar kartu atau tombol "Lihat Barang" -> modal foto besar. Akar foto '../../'.
+// Klik gambar kartu -> modal foto besar. Akar foto '../../'.
 document.getElementById('daftar').addEventListener('click', e => {
     const btn = e.target.closest('button[data-foto]');
     if (!btn) return;
     const b = semuaBarang.find(x => String(x.id_barang) === btn.dataset.foto);
-    if (b) bukaFoto(fotoBarang(b), b.nama_barang);
+    if (b) bukaFoto(b);
 });
 
 async function muat() {

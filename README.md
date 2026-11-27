@@ -53,8 +53,14 @@ Dockerfile       image backend (php:8.3-apache)
 | `DB_PASS` | password database |
 | `DB_SSLMODE` | mode SSL (Neon butuh SSL); kosongkan untuk lokal tanpa SSL |
 | `CORS_ORIGIN` | alamat frontend yang boleh memanggil API |
+| `R2_ACCOUNT_ID` | ID akun Cloudflare untuk R2 (opsional) |
+| `R2_ACCESS_KEY_ID` | access key token API R2 (opsional) |
+| `R2_SECRET_ACCESS_KEY` | secret key token API R2 (opsional) |
+| `R2_BUCKET` | nama bucket R2 untuk foto barang (opsional) |
 
-Di Docker/server, variabel yang sama diisi lewat environment, bukan file `.env`.
+Di Docker/server, variabel yang sama diisi lewat environment, bukan file `.env` (sudah diteruskan lewat
+`PassEnv` di `docker/apache.conf`). Kalau salah satu `R2_*` kosong, R2 dianggap tidak aktif dan aplikasi tetap jalan.
+Nilai `R2_*` adalah rahasia: jangan ditulis di file yang di-commit.
 
 ## Import database
 
@@ -74,20 +80,35 @@ yang belum pernah dijalankan, urut sesuai tanggal di nama file.
 
 ## Fitur dan endpoint penting
 
-**Foto barang.** Ada dua sumber, dengan urutan prioritas:
-1. Foto unggahan admin, disimpan di database (`barang.foto_data` BYTEA + `foto_mime`), maksimal 300 KB, JPEG/PNG/WebP.
-   Form tambah/edit barang mengecilkan foto di browser dulu (sisi terpanjang 800 px, JPEG).
-2. Foto bawaan sebagai aset di repo (`frontend/assets/images/barang/`); kolom `barang.foto_barang` hanya berisi
-   nama filenya, misalnya `kamera.jpg`.
+**Foto barang (Cloudflare R2 lewat proxy backend).** Foto barang, baik bawaan maupun unggahan admin, disimpan di
+bucket R2 dengan key `barang/<nama file>`. Kolom `barang.foto_barang` hanya berisi nama filenya, misalnya `kamera.jpg`.
+Browser **tidak** mengambil foto dari URL `r2.dev`, karena domain itu diblokir di sebagian jaringan (mis. jaringan
+kampus/operator tertentu). Semua foto diminta lewat backend: `GET /api/barang/{id}/foto`. Backend mengambil objeknya
+dari R2 dengan S3 API bertanda tangan AWS Signature V4 (`backend/src/R2.php`, tanpa SDK), lalu meneruskannya ke browser.
 
-Daftar barang tidak memuat isi foto; view `v_barang_hari_ini` hanya mengirim penanda `foto_upload` (ukuran byte),
-yang dipakai frontend sebagai versi URL foto. Katalog (peminjam dan guest) menampilkan 6 kartu per halaman.
+Urutan sumber di `GET /api/barang/{id}/foto`:
+1. `foto_data` (BYTEA, unggahan lama dari migrasi 2026-11-21, atau cadangan saat R2 tidak aktif), lalu
+2. objek R2 `barang/<foto_barang>`, lalu
+3. 404. Frontend kemudian memakai file statis `frontend/assets/images/barang/<nama>` sebagai cadangan, lalu ikon.
+
+Unggahan admin disimpan ke R2 sebagai `barang/<slug-nama>-<id>-<timestamp>.<ext>` dan `foto_barang` diganti ke nama
+itu. Kalau R2 tidak aktif atau gagal, foto disimpan ke kolom BYTEA (respons memberi tahu `penyimpanan: database`).
+Menghapus foto unggahan menghapus objek R2-nya (foto bawaan tidak pernah dihapus) dan mengembalikan `foto_barang`
+ke foto bawaan menurut nama barang (huruf kecil, spasi jadi `-`, `.jpg`). Form tambah/edit barang mengecilkan foto
+di browser dulu (sisi terpanjang 800 px, JPEG, di bawah 300 KB). Aset UI (logo, ikon) tetap di repo.
+
+Foto bawaan dari repo diunggah ke R2 sekali dengan `php backend/tools/r2_unggah_bawaan.php` (membaca `R2_*` dari
+`backend/.env`). Tanda tangan SigV4 bisa diuji tanpa kredensial asli: `php backend/tests/sigv4_test.php`
+(memakai vektor uji publik AWS).
+
+Daftar barang tidak memuat isi foto; view `v_barang_hari_ini` hanya mengirim penanda `foto_upload` (ukuran BYTEA),
+dan versi URL foto dibentuk dari `foto_barang` + `foto_upload`. Katalog (peminjam dan guest) menampilkan 12 kartu per halaman (4 kolom desktop, 3 tablet, 2 HP); foto diklik untuk membuka modal foto penuh.
 
 | Endpoint | Akses | Keterangan |
 |---|---|---|
-| `GET /api/barang/{id}/foto` | publik | foto unggahan (Content-Type asli, Cache-Control, ETag), 404 kalau tidak ada |
-| `POST /api/barang/{id}/foto` | admin | body = isi file gambar; jenis dicek dari isi file, maks. 300 KB |
-| `DELETE /api/barang/{id}/foto` | admin | hapus foto unggahan, kembali ke foto bawaan |
+| `GET /api/barang/{id}/foto` | publik | proxy foto (BYTEA atau R2), Content-Type asli, Cache-Control 1 hari, ETag/304, 404 kalau tidak ada |
+| `POST /api/barang/{id}/foto` | admin | body = isi file gambar; jenis dicek dari isi file, maks. 300 KB; ke R2, cadangan BYTEA |
+| `DELETE /api/barang/{id}/foto` | admin | hapus foto unggahan (R2 atau BYTEA), kembali ke foto bawaan |
 | `GET /api/barang/{id}/peminjaman` | login | peminjaman aktif/mendatang barang itu (status Disetujui/Dipinjam): nama OKI, tanggal, jumlah, status. Tanpa nama peminjam, NIM, no HP, atau PIN |
 
 **Batas percobaan (dihitung per session).**

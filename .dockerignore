@@ -14,6 +14,8 @@ backend/.env.*
 *.log
 
 # Tidak dipakai image backend
+backend/tests
+backend/tools
 frontend
 database
 README.md
