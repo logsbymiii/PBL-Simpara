@@ -613,25 +613,36 @@ td {
     font-size: 16px;
 }
 
-/* Foto kecil di tabel Data Barang admin (pengganti ikon) */
-.nama-barang .ico.ico-foto {
+/* Thumbnail foto barang (thumbBarang di dummy.js): tabel Data Barang admin, Detail Peminjaman,
+   picker form pengajuan. Rasio tetap 4:3 supaya tinggi baris konsisten; foto utuh (contain). */
+.thumb-barang {
     display: inline-grid;
     place-items: center;
-    width: 40px;
-    height: auto;
+    width: 44px;
     aspect-ratio: 4 / 3;
+    box-sizing: border-box;
     padding: 2px;
     background: #fff;
     border: 1px solid #e5e5f5;
     border-radius: 6px;
     vertical-align: middle;
     flex-shrink: 0;
+    overflow: hidden;
+    font-size: 16px;
 }
-.nama-barang .ico.ico-foto img {
+.thumb-barang img {
     display: block;
     width: 100%;
     height: 100%;
     object-fit: contain;
+}
+.thumb-barang .bi { color: var(--blue); }
+
+/* Daftar barang di Detail Peminjaman: thumbnail di kiri, nama/kondisi/catatan di kanan */
+.item-list li.item-thumb {
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .avatar .bi {
@@ -1236,17 +1247,7 @@ tbody tr:hover { background: var(--input); }
 .picker-label small { font-weight: 500; color: var(--muted); }
 .picker-placeholder { color: var(--muted); font-weight: 500; padding: 7px 0; }
 
-.picker-ikon {
-    width: 34px;
-    height: 34px;
-    flex-shrink: 0;
-    display: grid;
-    place-items: center;
-    background: #fff;
-    border-radius: 8px;
-    font-size: 18px;
-}
-.picker-ikon .bi { color: var(--blue); }
+.picker .thumb-barang { width: 46px; }
 
 .picker-panel {
     display: none;

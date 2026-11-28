@@ -64,15 +64,32 @@ function atributFoto(b, akar = '../../') {
 
 // Satu pendengar untuk SEMUA foto barang: kalau proxy gagal, coba file statis sekali.
 // Fase capture + stopImmediatePropagation: pendengar error milik halaman (ganti ke ikon)
-// baru jalan kalau file statis juga gagal.
+// baru jalan kalau file statis juga gagal. Thumbnail dari thumbBarang() (punya data-ikon)
+// langsung diganti ikon di sini, jadi halamannya tidak perlu pendengar sendiri.
 document.addEventListener('error', e => {
     const img = e.target;
-    if (!(img instanceof HTMLImageElement) || !img.dataset.cadangan) return;
-    const cadangan = img.dataset.cadangan;
-    delete img.dataset.cadangan;
-    e.stopImmediatePropagation();
-    img.src = cadangan;
+    if (!(img instanceof HTMLImageElement)) return;
+    if (img.dataset.cadangan) {
+        const cadangan = img.dataset.cadangan;
+        delete img.dataset.cadangan;
+        e.stopImmediatePropagation();
+        img.src = cadangan;
+    } else if (img.dataset.ikon && img.parentElement) {
+        e.stopImmediatePropagation();
+        img.parentElement.innerHTML = img.dataset.ikon;
+    }
 }, true);
+
+// Thumbnail kecil foto barang (tabel Data Barang admin, Detail Peminjaman, picker form pengajuan).
+// Kotak rasio tetap 4:3 (lebar diatur CSS .thumb-barang), foto utuh (object-fit: contain).
+// Urutan: foto proxy -> file statis (data-cadangan) -> ikon (data-ikon, oleh pendengar di atas).
+// b cukup berisi id_barang, nama_barang, foto_barang (foto_upload/nama_kategori opsional).
+function thumbBarang(b, akar = '../../') {
+    const ikon = ikonBarang(b);
+    return fotoBarang(b)
+        ? `<span class="thumb-barang"><img ${atributFoto(b, akar)} data-ikon="${esc(ikon)}" alt="" loading="lazy"></span>`
+        : `<span class="thumb-barang">${ikon}</span>`;
+}
 
 // Bagian gambar di atas kartu katalog: foto (klik = buka modal) atau ikon kalau tidak ada foto
 function gambarKartu(b, akar = '../../') {

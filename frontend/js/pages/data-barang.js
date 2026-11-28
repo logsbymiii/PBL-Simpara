@@ -22,9 +22,7 @@ function tampilkan() {
     tabel.innerHTML = hasil.length ? hasil.map((b, i) => `
     <tr>
       <td>${i + 1}</td>
-      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang"><span class="ico${fotoBarang(b) ? ' ico-foto' : ''}">${fotoBarang(b)
-            ? `<img ${atributFoto(b)} alt="" loading="lazy">`
-            : ikonBarang(b)}</span>${esc(b.nama_barang)}</a></td>
+      <td><a href="detail-barang.html?id=${b.id_barang}" class="nama-barang">${thumbBarang(b)}${esc(b.nama_barang)}</a></td>
       <td>${b.stok_tersedia} / ${b.stok_total}</td>
       <td>${badge(b.kondisi)}</td>
       <td>${badge(b.status, 'barang')}</td>
@@ -35,15 +33,7 @@ function tampilkan() {
     </tr>`).join('') : '<tr><td colspan="6" class="empty">Barang tidak ditemukan.</td></tr>';
 }
  
-// Foto kecil di tabel gagal dimuat (proxy dan file statis) -> ikon barang.
-// Fase capture karena event error tidak naik (bubble) dari <img>.
-tabel.addEventListener('error', e => {
-    const kotak = e.target instanceof HTMLImageElement ? e.target.closest('.ico-foto') : null;
-    if (!kotak) return;
-    const id = Number(new URL(kotak.closest('a').href).searchParams.get('id'));
-    kotak.classList.remove('ico-foto');
-    kotak.innerHTML = ikonBarang(daftar.find(b => b.id_barang === id));
-}, true);
+// Foto kecil di tabel: thumbBarang() (dummy.js) sudah menangani fallback file statis -> ikon.
 
 // Ambil ulang daftar barang dari server. Mengembalikan true kalau berhasil.
 async function muatBarang() {
