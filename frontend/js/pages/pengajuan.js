@@ -49,7 +49,7 @@ function segarkanPicker(row) {
     const label = row.querySelector('.picker-label');
     const b = cariBarang(select.value);
     label.innerHTML = b
-        ? `<span class="picker-ikon">${ikonBarang(b)}</span><span>${esc(b.nama_barang)} <small>(stok ${b.stok_tersedia})</small></span>`
+        ? `${thumbBarang(b)}<span>${esc(b.nama_barang)} <small>(stok ${b.stok_tersedia})</small></span>`
         : '<span class="picker-placeholder">Pilih barang</span>';
 }
 
@@ -71,7 +71,7 @@ function bukaPicker(row) {
             const b = cariBarang(o.value);
             return `
         <button type="button" class="picker-opsi${o.value === select.value ? ' dipilih' : ''}" data-nilai="${o.value}"${o.disabled ? ' disabled' : ''}>
-          <span class="picker-ikon">${ikonBarang(b)}</span>
+          ${thumbBarang(b)}
           <span class="picker-nama">${esc(b.nama_barang)}<small>${esc(b.nama_kategori || '')}</small></span>
           <span class="picker-stok">${o.disabled ? 'Sudah dipilih' : `stok ${b.stok_tersedia}`}</span>
         </button>`;

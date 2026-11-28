@@ -105,20 +105,31 @@ const buatTimeline = (p) => {
 function tampilkanDetail(p, kondisiBarang) {
     document.getElementById('statusBadge').innerHTML = badge(p.status_tampil);
 
-    // Kondisi & catatan per barang hanya ada setelah barang dikembalikan
+    // Kondisi & catatan per barang hanya ada setelah barang dikembalikan.
+    // Tiap barang diberi thumbnail foto (fallback file statis -> ikon, lihat thumbBarang di dummy.js).
     const daftarItem = p.barang.map(it => {
         const k = kondisiBarang[it.id_barang] || {};
         return `
-      <li>
-        <b>${esc(it.nama_barang)} ×${it.jumlah}</b>
-        ${k.kondisi_kembali ? `<span class="kondisi ${k.kondisi_kembali === 'Baik' ? 'baik' : 'rusak'}">${esc(k.kondisi_kembali)}</span>` : ''}
-        ${k.catatan ? `<small>${esc(k.catatan)}</small>` : ''}
+      <li class="item-thumb">
+        ${thumbBarang(it)}
+        <div>
+          <b>${esc(it.nama_barang)} ×${it.jumlah}</b>
+          ${k.kondisi_kembali ? `<span class="kondisi ${k.kondisi_kembali === 'Baik' ? 'baik' : 'rusak'}">${esc(k.kondisi_kembali)}</span>` : ''}
+          ${k.catatan ? `<small>${esc(k.catatan)}</small>` : ''}
+        </div>
       </li>`;
     }).join('');
 
+    // Gambar besar di kiri: foto barang pertama yang punya foto (klik = modal foto penuh), kalau tidak ada -> ikon
+    const utama = p.barang.find(it => fotoBarang(it));
+
     box.innerHTML = `
     <div class="detail-card">
-      <div class="img">${ikonBarang(null)}</div>
+      ${utama
+        ? `<button type="button" class="img ada-foto" id="thumbFoto" aria-label="Lihat foto barang ${esc(utama.nama_barang)}">
+             <img ${atributFoto(utama)} alt="${esc(utama.nama_barang)}" loading="lazy">
+           </button>`
+        : `<div class="img">${ikonBarang(p.barang[0] || null)}</div>`}
       <div class="detail-info">
         <div class="info"><small class="info-label">Barang yang Dipinjam</small><ul class="item-list">${daftarItem}</ul></div>
         ${info('Peminjam', esc(p.nama_peminjam))}
@@ -132,6 +143,15 @@ function tampilkanDetail(p, kondisiBarang) {
         ${info('Keperluan', esc(p.keperluan || '-'), true)}
       </div>
     </div>`;
+
+    // Foto utama: klik -> modal; gagal dimuat (proxy dan file statis) -> kembali ke ikon
+    if (utama) {
+        const thumb = document.getElementById('thumbFoto');
+        thumb.addEventListener('click', () => bukaFoto(utama));
+        thumb.querySelector('img').addEventListener('error', () => {
+            thumb.outerHTML = `<div class="img">${ikonBarang(utama)}</div>`;
+        });
+    }
 
     tracking.innerHTML = `
         <h3>Tracking Proses</h3>

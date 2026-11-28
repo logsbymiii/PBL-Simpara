@@ -370,7 +370,7 @@ class PengajuanController
         }
 
         $stmt = db()->prepare(
-            'SELECT d.id_barang, b.kode_barang, b.nama_barang, d.jumlah
+            'SELECT d.id_barang, b.kode_barang, b.nama_barang, b.foto_barang, d.jumlah
              FROM detail_pengajuan d
              JOIN barang b ON b.id_barang = d.id_barang
              WHERE d.id_pengajuan = :id
