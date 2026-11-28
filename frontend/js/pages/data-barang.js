@@ -268,3 +268,6 @@ async function mulai() {
 }
  
 mulai();
+
+// Kembali lewat tombol Back (halaman dipulihkan dari cache browser): ambil ulang supaya stok terbaru
+window.addEventListener('pageshow', e => { if (e.persisted) muatBarang(); });
