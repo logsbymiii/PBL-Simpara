@@ -27,6 +27,7 @@ async function apiRequest(method, path, body) {
     const opsi = {
         method,
         credentials: 'include',   // WAJIB: supaya cookie sesi ikut terkirim dan diterima
+        cache: 'no-store',        // jangan pakai salinan lama: stok dan status harus selalu terbaru
         headers: {},
     };
     if (body !== undefined) {
